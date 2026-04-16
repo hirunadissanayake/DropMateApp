@@ -7,6 +7,8 @@ import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import SignupScreen from '../screens/SignupScreen';
 import VerificationScreen from '../screens/VerificationScreen';
+import VerificationSuccessScreen from '../screens/VerificationSuccessScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -14,6 +16,8 @@ export type RootStackParamList = {
   RoleSelection: undefined;
   Signup: { role: 'CUSTOMER' | 'TRAVELER' };
   Verification: { role: 'CUSTOMER' | 'TRAVELER' };
+  VerificationSuccess: undefined;
+  ForgotPassword: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -47,6 +51,14 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="Verification" 
           component={VerificationScreen} 
+        />
+        <Stack.Screen 
+          name="VerificationSuccess" 
+          component={VerificationSuccessScreen} 
+        />
+        <Stack.Screen 
+          name="ForgotPassword" 
+          component={ForgotPasswordScreen} 
         />
       </Stack.Navigator>
     </NavigationContainer>

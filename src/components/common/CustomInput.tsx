@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     color: Colors.text.secondary,
-    letterSpacing: 1.2,
     marginBottom: 8,
     marginLeft: 4,
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',

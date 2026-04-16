@@ -17,6 +17,7 @@ import Svg, { Path, Rect, Circle, Defs, LinearGradient as SvgGradient, Stop } fr
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import BackButton from '../components/common/BackButton';
+import ScreenHeader from '../components/common/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -76,15 +77,10 @@ const RoleSelectionScreen = ({ navigation }: any) => {
       />
 
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <BackButton onPress={() => navigation.goBack()} />
-          <View style={styles.stepIndicator}>
-            <View style={[styles.stepDot, styles.activeStep]} />
-            <View style={styles.stepDot} />
-            <View style={styles.stepDot} />
-          </View>
-          <View style={{ width: 44 }} />
-        </View>
+        <ScreenHeader 
+          onBack={() => navigation.goBack()} 
+          currentStep={1} 
+        />
 
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
@@ -208,28 +204,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    height: 60,
-    marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  stepDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(0, 108, 82, 0.1)',
-  },
-  activeStep: {
-    width: 24,
-    backgroundColor: Colors.primary,
   },
   scrollContent: {
     flexGrow: 1,

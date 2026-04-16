@@ -102,7 +102,10 @@ const LoginScreen = ({ navigation }: any) => {
                 />
 
                 <View style={styles.passwordContainer}>
-                  <TouchableOpacity style={styles.forgotPasswordButton}>
+                  <TouchableOpacity 
+                    style={styles.forgotPasswordButton}
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                  >
                     <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                   </TouchableOpacity>
                   <CustomInput
@@ -212,7 +215,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 40 : 60,
   },
   logoRow: {
     flexDirection: 'row',

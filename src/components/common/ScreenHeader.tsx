@@ -1,0 +1,78 @@
+import React from 'react';
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import BackButton from './BackButton';
+import { Colors } from '../../constants/Colors';
+
+interface ScreenHeaderProps {
+  onBack: () => void;
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+const ScreenHeader: React.FC<ScreenHeaderProps> = ({
+  onBack,
+  currentStep,
+  totalSteps = 3,
+}) => {
+  return (
+    <View style={styles.header}>
+      <BackButton onPress={onBack} />
+      
+      {currentStep !== undefined && (
+        <View style={styles.stepIndicator}>
+          {Array.from({ length: totalSteps }).map((_, index) => {
+            const stepNum = index + 1;
+            const isActive = stepNum === currentStep;
+            return (
+              <View 
+                key={index} 
+                style={[
+                  styles.stepDot, 
+                  isActive && styles.activeStep
+                ]} 
+              />
+            );
+          })}
+        </View>
+      )}
+      
+      {/* Spacer to keep step indicator centered */}
+      <View style={styles.spacer} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    height: 60,
+    marginTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 36 : 0,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  stepDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(0, 108, 82, 0.1)',
+  },
+  activeStep: {
+    width: 24,
+    backgroundColor: Colors.primary,
+  },
+  spacer: {
+    width: 44, // Matches BackButton width for perfect centering
+  },
+});
+
+export default ScreenHeader;
