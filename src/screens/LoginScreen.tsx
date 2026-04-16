@@ -20,7 +20,7 @@ import CustomInput from '../components/common/CustomInput';
 
 const { width } = Dimensions.get('window');
 
-const LoginScreen = () => {
+const LoginScreen = ({ navigation }: any) => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -153,7 +153,7 @@ const LoginScreen = () => {
               {/* Footer */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Don't have an account? </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('RoleSelection')}>
                   <Text style={styles.createAccountText}>Create Account</Text>
                 </TouchableOpacity>
               </View>

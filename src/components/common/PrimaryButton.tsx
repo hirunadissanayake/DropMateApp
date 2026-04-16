@@ -17,6 +17,7 @@ interface PrimaryButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  icon?: React.ReactNode;
 }
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -25,6 +26,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   loading = false,
   style,
   textStyle,
+  icon,
 }) => {
   return (
     <TouchableOpacity
@@ -36,7 +38,10 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
-        <Text style={[styles.text, textStyle]}>{text}</Text>
+        <View style={styles.contentContainer}>
+          <Text style={[styles.text, textStyle]}>{text}</Text>
+          {icon && <View style={styles.iconWrapper}>{icon}</View>}
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -62,6 +67,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     backgroundColor: 'transparent',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  iconWrapper: {
+    marginLeft: 2,
   },
 });
 
