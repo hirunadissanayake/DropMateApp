@@ -9,6 +9,8 @@ import SignupScreen from '../screens/SignupScreen';
 import VerificationScreen from '../screens/VerificationScreen';
 import VerificationSuccessScreen from '../screens/VerificationSuccessScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import VerifyOTPScreen from '../screens/VerifyOTPScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -18,6 +20,8 @@ export type RootStackParamList = {
   Verification: { role: 'CUSTOMER' | 'TRAVELER' };
   VerificationSuccess: undefined;
   ForgotPassword: undefined;
+  VerifyOTP: { phoneNumber: string };
+  ResetPassword: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -59,6 +63,14 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="ForgotPassword" 
           component={ForgotPasswordScreen} 
+        />
+        <Stack.Screen 
+          name="VerifyOTP" 
+          component={VerifyOTPScreen} 
+        />
+        <Stack.Screen 
+          name="ResetPassword" 
+          component={ResetPasswordScreen} 
         />
       </Stack.Navigator>
     </NavigationContainer>

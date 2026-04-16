@@ -23,8 +23,7 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleSendOTP = () => {
-    // Navigate to OTP Verification (to be implemented)
-    console.log('Sending OTP to:', phoneNumber);
+    navigation.navigate('VerifyOTP', { phoneNumber });
   };
 
   return (
