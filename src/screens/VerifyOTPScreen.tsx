@@ -17,14 +17,26 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
+import * as authService from '../services/authService';
+import { ActivityIndicator } from 'react-native';
+import { useAuthStore } from '../store/authStore';
+import { useRegistrationStore } from '../store/registrationStore';
+import Toast from 'react-native-toast-message';
+
+
 
 const { width } = Dimensions.get('window');
 
 const VerifyOTPScreen = ({ navigation, route }: any) => {
-  const { phoneNumber = '(555) ••• ••94' } = route.params || {};
+  const { phoneNumber, flow = 'REGISTRATION' } = route.params || {};
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(58);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const clearRegistrationData = useRegistrationStore((state) => state.clearData);
+
 
   // Countdown timer logic
   useEffect(() => {
@@ -44,11 +56,45 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const handleVerify = () => {
-    if (otp.length === 6) {
-      navigation.navigate('ResetPassword');
+  const handleVerify = async () => {
+    if (otp.length !== 6) {
+      Toast.show({
+        type: 'info',
+        text1: 'Invalid Code',
+        text2: 'Please enter a complete 6-digit code.'
+      });
+      return;
+    }
+
+
+    setLoading(true);
+    try {
+      const response = await authService.verifyOtp(phoneNumber, otp);
+      console.log('OTP Verification success:', response);
+      
+      if (flow === 'REGISTRATION') {
+        // For registration, we might get a token and user after OTP
+        if (response.token && response.user) {
+          setAuth(response.token, response.user);
+        }
+        clearRegistrationData();
+        navigation.navigate('VerificationSuccess');
+      } else {
+        navigation.navigate('ResetPassword');
+      }
+    } catch (error: any) {
+      console.error('OTP Verification error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Verification Failed',
+        text2: error.message || 'The OTP you entered is incorrect.'
+      });
+    } finally {
+
+      setLoading(false);
     }
   };
+
 
   const renderOtpBoxes = () => {
     const boxes = [];
@@ -152,6 +198,7 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
             <PrimaryButton 
               text="Verify" 
               onPress={handleVerify}
+              loading={loading}
               style={styles.verifyButton}
               icon={
                 <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -159,6 +206,7 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
                 </Svg>
               }
             />
+
 
             {/* Info Card */}
             <View style={styles.infoCard}>

@@ -17,6 +17,9 @@ import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import BackButton from '../components/common/BackButton';
 import ScreenHeader from '../components/common/ScreenHeader';
+import Toast from 'react-native-toast-message';
+
+import { useRegistrationStore } from '../store/registrationStore';
 
 interface InputFieldProps {
   label: string;
@@ -24,18 +27,19 @@ interface InputFieldProps {
   icon: (color: string) => React.ReactNode;
   value: string;
   onChangeText: (text: string) => void;
-  secureTextEntry?: boolean;
-  isPassword?: boolean;
   onToggleSecure?: () => void;
+  maxLength?: number;
+  isPassword?: boolean;
+  error?: string;
 }
 
-const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword }: Partial<InputFieldProps>) => {
+const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword, maxLength, error }: Partial<InputFieldProps>) => {
   const [internalSecure, setInternalSecure] = useState(true);
   
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, error ? { borderColor: '#D32F2F' } : {}]}>
         <View style={styles.iconBox}>
           {icon && icon(Colors.text.tertiary)}
         </View>
@@ -46,7 +50,9 @@ const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword 
           value={value}
           onChangeText={onChangeText || (() => {})}
           secureTextEntry={isPassword ? internalSecure : false}
+          maxLength={maxLength}
         />
+
         {isPassword && (
           <TouchableOpacity 
             style={styles.eyeIconBox} 
@@ -70,13 +76,15 @@ const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword 
           </TouchableOpacity>
         )}
       </View>
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
 
 const SignupScreen = ({ navigation, route }: any) => {
   const { role } = route.params || { role: 'CUSTOMER' };
-  
+  const updateRegistrationData = useRegistrationStore((state) => state.updateData);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -85,10 +93,66 @@ const SignupScreen = ({ navigation, route }: any) => {
     confirmPassword: '',
   });
   const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState<any>({});
+
+  const isFormValid = 
+    formData.fullName.trim() !== '' &&
+    formData.email.trim() !== '' &&
+    formData.phone.trim() !== '' &&
+    formData.password.trim() !== '' &&
+    formData.confirmPassword.trim() !== '' &&
+    agreed;
 
   const handleSignup = () => {
-    console.log('Signup attempted:', formData);
-    navigation.navigate('Verification', { role });
+    const { fullName, email, phone, password, confirmPassword } = formData;
+    const newErrors: any = {};
+
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    } else if (/^\d+$/.test(fullName)) {
+      newErrors.fullName = 'Name cannot be only numbers';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!phoneRegex.test(phone)) {
+      newErrors.phone = 'Must be exactly 10 digits';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Must be at least 6 characters';
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!agreed) {
+      Toast.show({ type: 'info', text1: 'Terms & Conditions', text2: 'Please accept to proceed.' });
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0 && agreed) {
+      updateRegistrationData({
+        ...formData,
+        roleRequested: role as 'CUSTOMER' | 'TRAVELER',
+        termsAccepted: agreed,
+      });
+      navigation.navigate('Verification', { role });
+    }
   };
 
   return (
@@ -127,6 +191,7 @@ const SignupScreen = ({ navigation, route }: any) => {
                 placeholder="Enter your full name"
                 value={formData.fullName}
                 onChangeText={(t) => setFormData({ ...formData, fullName: t })}
+                error={errors.fullName}
                 icon={(c) => (
                   <Svg width="18" height="18" viewBox="0 0 16 16" fill="none">
                     <Path d="M8 8C6.9 8 5.95833 7.60833 5.175 6.825C4.39167 6.04167 4 5.1 4 4C4 2.9 4.39167 1.95833 5.175 1.175C5.95833 0.391667 6.9 0 8 0C9.1 0 10.0417 0.391667 10.825 1.175C11.6083 1.95833 12 2.9 12 4C12 5.1 11.6083 6.04167 10.825 6.825C10.0417 7.60833 9.1 8 8 8Z" fill={c} />
@@ -139,7 +204,8 @@ const SignupScreen = ({ navigation, route }: any) => {
                 label="EMAIL ADDRESS"
                 placeholder="name@example.com"
                 value={formData.email}
-                onChangeText={(t) => setFormData({ ...formData, email: t })}
+                onChangeText={(t) => setFormData({ ...formData, email: t.toLowerCase() })}
+                error={errors.email}
                 icon={(c) => (
                   <Svg width="20" height="16" viewBox="0 0 20 16" fill="none">
                     <Path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14V2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0H18C18.55 0 19.0208 0.195833 19.4125 0.5875C19.8042 0.979167 20 1.45 20 2V14C20 14.55 19.8042 15.0208 19.4125 15.4125C19.0208 15.8042 18.55 16 18 16H2ZM10 9L2 4V14H18V4L10 9ZM10 7L18 2H2L10 7Z" fill={c} />
@@ -151,7 +217,12 @@ const SignupScreen = ({ navigation, route }: any) => {
                 label="PHONE NUMBER"
                 placeholder="0771234567"
                 value={formData.phone}
-                onChangeText={(t) => setFormData({ ...formData, phone: t })}
+                maxLength={10}
+                onChangeText={(t) => {
+                  const numericValue = t.replace(/[^0-9]/g, '');
+                  setFormData({ ...formData, phone: numericValue });
+                }}
+                error={errors.phone}
                 icon={(c) => (
                   <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <Path d="M16.95 18C14.8667 18 12.8083 17.5458 10.775 16.6375C8.74167 15.7292 6.89167 14.4417 5.225 12.775C3.55833 11.1083 2.27083 9.25833 1.3625 7.225C0.454167 5.19167 0 3.13333 0 1.05C0 0.75 0.1 0.5 0.3 0.3C0.5 0.1 0.75 0 1.05 0H5.1C5.33333 0 5.54167 0.0791667 5.725 0.2375C5.90833 0.395833 6.01667 0.583333 6.05 0.8H6.7 4.3C6.73333 4.56667 6.725 4.79167 6.675 4.975C6.625 5.15833 6.53333 5.31667 6.4 5.45L3.975 7.9C4.30833 8.51667 4.70417 9.1125 5.1625 9.6875C5.62083 10.2625 6.125 10.8167 6.675 11.35C7.19167 11.8667 7.73333 12.3458 8.3 12.7875C8.86667 13.2292 9.46667 13.6333 10.1 14L12.45 11.65C12.6 11.5 12.7958 11.3875 13.0375 11.3125C13.2792 11.2375 13.5167 11.2167 13.75 11.25L17.2 11.95C17.4333 12.0167 17.625 12.1375 17.775 12.3125C17.925 12.4875 18 12.6833 18 12.9V16.95C18 17.25 17.9 17.5 17.7 17.7C17.5 17.9 17.25 18 16.95 18Z" fill={c} />
@@ -165,6 +236,7 @@ const SignupScreen = ({ navigation, route }: any) => {
                 isPassword
                 value={formData.password}
                 onChangeText={(t) => setFormData({ ...formData, password: t })}
+                error={errors.password}
                 icon={(c) => (
                   <Svg width="16" height="21" viewBox="0 0 16 21" fill="none">
                     <Path d="M2 21C1.45 21 0.979167 20.8042 0.5875 20.4125C0.195833 20.0208 0 19.55 0 19V9C0 8.45 0.195833 7.97917 0.5875 7.5875C0.979167 7.19583 1.45 7 2 7H3V5C3 3.61667 3.4875 2.4375 4.4625 1.4625C5.4375 0.4875 6.61667 0 8 0C9.38333 0 10.5625 0.4875 11.5375 1.4625C12.5125 2.4375 13 3.61667 13 5V7H14C14.55 7 15.0208 7.19583 15.4125 7.5875C15.8042 7.97917 16 8.45 16 9V19C16 19.55 15.8042 20.0208 15.4125 20.4125C15.0208 20.8042 14.55 21 14 21H2ZM8 16C8.55 16 9.02083 15.8042 9.4125 15.4125C9.80417 15.0208 10 14.55 10 14C10 13.45 9.80417 12.9792 9.4125 12.5875C9.02083 12.1958 8.55 12 8 12C7.45 12 6.97917 12.1958 6.5875 12.5875C6.19583 12.9792 6 13.45 6 14C6 14.55 6.19583 15.0208 6.5875 15.4125C6.97917 15.8042 7.45 16 8 16ZM5 7H11V5C11 4.16667 10.7083 3.45833 10.125 2.875C9.54167 2.29167 8.83333 2 8 2C7.16667 2 6.45833 2.29167 5.875 2.875C5.29167 3.45833 5 4.16667 5 5V7Z" fill={c} />
@@ -178,6 +250,7 @@ const SignupScreen = ({ navigation, route }: any) => {
                 isPassword
                 value={formData.confirmPassword}
                 onChangeText={(t) => setFormData({ ...formData, confirmPassword: t })}
+                error={errors.confirmPassword}
                 icon={(c) => (
                   <Svg width="16" height="21" viewBox="0 0 16 21" fill="none">
                     <Path d="M2 21C1.45 21 0.979167 20.8042 0.5875 20.4125C0.195833 20.0208 0 19.55 0 19V9C0 8.45 0.195833 7.97917 0.5875 7.5875C0.979167 7.19583 1.45 7 2 7H3V5C3 3.61667 3.4875 2.4375 4.4625 1.4625C5.4375 0.4875 6.61667 0 8 0C9.38333 0 10.5625 0.4875 11.5375 1.4625C12.5125 2.4375 13 3.61667 13 5V7H14C14.55 7 15.0208 7.19583 15.4125 7.5875C15.8042 7.97917 16 8.45 16 9V19C16 19.55 15.8042 20.0208 15.4125 20.4125C15.0208 20.8042 14.55 21 14 21H2ZM8 16C8.55 16 9.02083 15.8042 9.4125 15.4125C9.80417 15.0208 10 14.55 10 14C10 13.45 9.80417 12.9792 9.4125 12.5875C9.02083 12.1958 8.55 12 8 12C7.45 12 6.97917 12.1958 6.5875 12.5875C6.19583 12.9792 6 13.45 6 14C6 14.55 6.19583 15.0208 6.5875 15.4125C6.97917 15.8042 7.45 16 8 16ZM5 7H11V5C11 4.16667 10.7083 3.45833 10.125 2.875C9.54167 2.29167 8.83333 2 8 2C7.16667 2 6.45833 2.29167 5.875 2.875C5.29167 3.45833 5 4.16667 5 5V7Z" fill={c} />
@@ -201,6 +274,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               <PrimaryButton 
                 text="Continue" 
                 onPress={handleSignup} 
+                disabled={!isFormValid}
                 style={styles.signupButton}
                 icon={
                   <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -327,9 +401,14 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
   },
   eyeIconBox: {
-    width: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 12,
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
   },
   termsRow: {
     flexDirection: 'row',

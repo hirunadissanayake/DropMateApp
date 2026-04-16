@@ -15,26 +15,31 @@ interface PrimaryButtonProps {
   text: string;
   onPress: () => void;
   loading?: boolean;
+  disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
 }
 
+
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   text,
   onPress,
   loading = false,
+  disabled = false,
   style,
   textStyle,
   icon,
 }) => {
+
   return (
     <TouchableOpacity
-      style={[styles.button, style]}
+      style={[styles.button, (disabled || loading) && styles.disabledButton, style]}
       activeOpacity={0.8}
       onPress={onPress}
-      disabled={loading}
+      disabled={disabled || loading}
     >
+
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
@@ -77,6 +82,10 @@ const styles = StyleSheet.create({
   iconWrapper: {
     marginLeft: 2,
   },
+  disabledButton: {
+    opacity: 0.6,
+  },
 });
+
 
 export default PrimaryButton;

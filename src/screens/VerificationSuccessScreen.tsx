@@ -40,8 +40,12 @@ const VerificationSuccessScreen = ({ navigation }: any) => {
   }, []);
 
   const handleGoHome = () => {
-    console.log('Navigating to Home');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
+
 
   return (
     <View style={styles.mainContainer}>

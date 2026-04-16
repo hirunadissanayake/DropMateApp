@@ -25,7 +25,9 @@ interface CustomInputProps {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   containerStyle?: ViewStyle;
+  maxLength?: number;
 }
+
 
 const CustomInput: React.FC<CustomInputProps> = ({
   label,
@@ -40,7 +42,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
   autoCapitalize = 'none',
   keyboardType = 'default',
   containerStyle,
+  maxLength,
 }) => {
+
   const [internalSecure, setInternalSecure] = React.useState(true);
   const isActuallySecure = isPassword ? internalSecure : secureTextEntry;
 
@@ -85,7 +89,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
           secureTextEntry={isActuallySecure}
           autoCapitalize={autoCapitalize}
           keyboardType={keyboardType}
+          maxLength={maxLength}
         />
+
         {isPassword ? renderEyeIcon() : rightIcon && (
           <TouchableOpacity onPress={onPressRightIcon} style={styles.rightIconContainer}>
             {rightIcon}

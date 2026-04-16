@@ -1,0 +1,74 @@
+import axios from 'axios';
+import { ENDPOINTS } from '../utils/endPoints';
+
+export const requestOtp = async (data: any) => {
+  const formData = new FormData();
+
+  // Append text fields
+  formData.append('phone', data.phone);
+  formData.append('name', data.fullName);
+  formData.append('email', data.email);
+  formData.append('password', data.password);
+  formData.append('confirmPassword', data.confirmPassword);
+  formData.append('roleRequested', data.roleRequested);
+  formData.append('termsAccepted', String(data.termsAccepted));
+
+  if (data.roleRequested === 'TRAVELER') {
+    formData.append('weightCapacity', data.weightCapacity);
+    formData.append('vehicleType', data.vehicleType);
+  }
+
+  // Append files
+  if (data.selfie) {
+    formData.append('selfie', {
+      uri: data.selfie.uri,
+      type: data.selfie.type || 'image/jpeg',
+      name: 'selfie.jpg',
+    } as any);
+  }
+
+  if (data.nicFront) {
+    formData.append('nicFront', {
+      uri: data.nicFront.uri,
+      type: data.nicFront.type || 'image/jpeg',
+      name: 'nicFront.jpg',
+    } as any);
+  }
+
+  if (data.nicBack) {
+    formData.append('nicBack', {
+      uri: data.nicBack.uri,
+      type: data.nicBack.type || 'image/jpeg',
+      name: 'nicBack.jpg',
+    } as any);
+  }
+
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.REQUEST_OTP, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+
+export const verifyOtp = async (phone: string, otp: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.VERIFY_OTP, {
+      phone,
+      code: otp,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};

@@ -17,6 +17,11 @@ import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
 import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
+import * as authService from '../services/authService';
+import { ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
+
+
 
 const { width } = Dimensions.get('window');
 
@@ -28,10 +33,37 @@ const LoginScreen = ({ navigation }: any) => {
   // Zustand State Setup
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleLogin = () => {
-    // This is where React Query's useMutation will go to call /api/auth/login
-    console.log('Login triggered with:', emailOrPhone, password);
+  const handleLogin = async () => {
+    if (!emailOrPhone) {
+      Toast.show({
+        type: 'info',
+        text1: 'Phone/Email Required',
+        text2: 'Please enter your phone number or email to proceed.'
+      });
+      return;
+    }
+
+
+    setIsLoading(true);
+    try {
+      // The backend expects 'phone' in req.body for OTP request
+      // We'll assume emailOrPhone is the phone for now, or the backend handles both
+      const response = await authService.requestOtp({ phone: emailOrPhone });
+      console.log('Login OTP requested:', response);
+      navigation.navigate('VerifyOTP', { phoneNumber: emailOrPhone, flow: 'LOGIN' });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: error.message || 'Something went wrong. Please try again.'
+      });
+    } finally {
+
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <View style={styles.mainContainer}>
@@ -90,7 +122,8 @@ const LoginScreen = ({ navigation }: any) => {
                   label="EMAIL"
                   placeholder="Enter your email"
                   value={emailOrPhone}
-                  onChangeText={setEmailOrPhone}
+                  onChangeText={(t) => setEmailOrPhone(t.toLowerCase())}
+
                   icon={
                     <Svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <Path
@@ -128,8 +161,10 @@ const LoginScreen = ({ navigation }: any) => {
                 <PrimaryButton 
                   text="Login" 
                   onPress={handleLogin} 
+                  loading={isLoading}
                   style={styles.loginButton}
                 />
+
                 
               </View>
 
