@@ -1,0 +1,279 @@
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
+import { Colors } from '../constants/Colors';
+
+const { height } = Dimensions.get('window');
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+const SplashScreen = () => {
+  // Entrance Animation Values
+  const logoFade = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.85)).current;
+  const textFade = useRef(new Animated.Value(0)).current;
+  const textTranslateY = useRef(new Animated.Value(20)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const footerFade = useRef(new Animated.Value(0)).current;
+
+  // Ripple Animation Values
+  const ripple1Scale = useRef(new Animated.Value(1)).current;
+  const ripple1Opacity = useRef(new Animated.Value(0.3)).current;
+  const ripple2Scale = useRef(new Animated.Value(1)).current;
+  const ripple2Opacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    // 1. Sleek Entrance Array
+    Animated.parallel([
+      Animated.timing(logoFade, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Text slides up smoothly slightly later
+    Animated.parallel([
+      Animated.timing(textFade, {
+        toValue: 1,
+        duration: 700,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(textTranslateY, {
+        toValue: 0,
+        duration: 700,
+        delay: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.timing(footerFade, {
+      toValue: 1,
+      duration: 800,
+      delay: 500,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 2500,
+      delay: 400,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: false, 
+    }).start();
+
+    // 2. Continual Ripple Pulse loop (Starts immediately but runs infinitely)
+    const createRipple = (scaleAnim: Animated.Value, opacityAnim: Animated.Value, delay: number) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.parallel([
+            Animated.timing(scaleAnim, {
+              toValue: 2,
+              duration: 2500,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacityAnim, {
+              toValue: 0,
+              duration: 2500,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ]),
+          // Reset invisible
+          Animated.timing(scaleAnim, { toValue: 1, duration: 0, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 0.3, duration: 0, useNativeDriver: true }),
+        ])
+      ).start();
+    };
+
+    createRipple(ripple1Scale, ripple1Opacity, 0);
+    createRipple(ripple2Scale, ripple2Opacity, 1250); // Interleaved offset
+
+  }, []);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.container}>
+      {/* Impeccably Clean Flat/Soft Gradient Base */}
+      <LinearGradient 
+        colors={['#EBF8F2', '#FAFDFB']}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      <SafeAreaView style={styles.contentWrapper}>
+        <View style={styles.content}>
+          <View style={styles.logoAndTextContainer}>
+            {/* Animated Logo + Pulse Ripples */}
+            <Animated.View style={[styles.logoWrapper, { opacity: logoFade, transform: [{ scale: logoScale }] }]}>
+              
+              <Animated.View style={[styles.ripple, { transform: [{ scale: ripple1Scale }], opacity: ripple1Opacity }]} />
+              <Animated.View style={[styles.ripple, { transform: [{ scale: ripple2Scale }], opacity: ripple2Opacity }]} />
+              
+              <LinearGradient
+                colors={[Colors.primaryDark, Colors.primary]}
+                useAngle={true}
+                angle={135}
+                style={styles.logoBackground}
+              >
+                <Svg width={42} height={42} viewBox="0 0 36 40" fill="none">
+                  <Path
+                    d="M16 39.45V21.15L0 11.9V27.95C0 28.6833 0.175 29.35 0.525 29.95C0.875 30.55 1.36667 31.0333 2 31.4L16 39.45ZM20 39.45L34 31.4C34.6333 31.0333 35.125 30.55 35.475 29.95C35.825 29.35 36 28.6833 36 27.95V11.9L20 21.15V39.45ZM27.95 11.95L33.85 8.5L20 0.55C19.3667 0.183333 18.7 0 18 0C17.3 0 16.6333 0.183333 16 0.55L12.05 2.8L27.95 11.95ZM18 17.7L23.95 14.3L8.1 5.1L2.1 8.55L18 17.7Z"
+                    fill={Colors.white}
+                  />
+                </Svg>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Subtle Animated Text */}
+            <Animated.View style={[styles.textContainer, { opacity: textFade, transform: [{ translateY: textTranslateY }] }]}>
+              <Text style={styles.title}>DropMate</Text>
+              <Text style={styles.subtitle}>
+                Deliver with trust, travel with value
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Loading Indicator */}
+          <Animated.View style={[styles.loadingContainer, { opacity: textFade }]}>
+            <View style={styles.progressBarTrack}>
+              <AnimatedLinearGradient
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                colors={[Colors.primary, Colors.primaryLight]}
+                style={[styles.progressBarFill, { width: progressWidth }]}
+              />
+            </View>
+            <Text style={styles.initializingText}>INITIALIZING...</Text>
+          </Animated.View>
+        </View>
+
+        {/* Animated Footer */}
+        <Animated.View style={[styles.footerContainer, { opacity: footerFade }]}>
+          <Text style={styles.footerText}>VERIFIED LOGISTICS</Text>
+          <View style={styles.footerDot} />
+          <Text style={styles.footerText}>SRI LANKA</Text>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  contentWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 24,
+  },
+  logoAndTextContainer: {
+    alignItems: 'center',
+  },
+  logoWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  ripple: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 32,
+    backgroundColor: Colors.primaryLight,
+  },
+  logoBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primaryDark,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 15, 
+  },
+  textContainer: {
+    alignItems: 'center',
+    gap: 12, // slightly tighter gap for professional grouping
+  },
+  title: {
+    color: Colors.primary,
+    fontSize: 46,
+    fontWeight: '900',
+    lineHeight: 46,
+    letterSpacing: -2.3,
+  },
+  subtitle: {
+    color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+    marginTop: 8,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 70, // Good breathing room separation from logo
+  },
+  progressBarTrack: {
+    width: 200, 
+    height: 4, // More subtle elegant line height
+    backgroundColor: 'rgba(0, 108, 82, 0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  initializingText: {
+    color: Colors.text.secondary,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2.5,
+    marginTop: 20,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: height * 0.06, 
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerText: {
+    color: Colors.text.tertiary,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2.0,
+  },
+  footerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.text.tertiary,
+    marginHorizontal: 12,
+  },
+});
+
+export default SplashScreen;
