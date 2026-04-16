@@ -1,8 +1,16 @@
 import React from 'react';
-import SplashScreen from './src/screens/SplashScreen';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppNavigator } from './src/navigation/AppNavigator';
+
+// Centralised React Query client
+const queryClient = new QueryClient();
 
 const App = () => {
-  return <SplashScreen />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppNavigator />
+    </QueryClientProvider>
+  );
 };
 
 export default App;

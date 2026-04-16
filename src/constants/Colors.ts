@@ -1,24 +1,17 @@
 export const Colors = {
-  // Brand Colors
   primary: '#006C52',
+  primaryDark: '#004A38',
   primaryLight: '#7DF2C8',
-  primaryDark: '#047857',
-
-  // Background and Surfaces
   background: '#F7FCF9',
-  surfaceLight: '#EEF5F0',
-
-  // Text Colors
-  text: {
-    primary: '#404944', // Main dark text
-    secondary: 'rgba(64, 73, 68, 0.6)', // 60% opacity text
-    tertiary: 'rgba(64, 73, 68, 0.4)',  // 40% opacity text
-    brand: '#006C52', // Brand colored text
-    white: '#FFFFFF',
-  },
-
-  // Basic Colors
+  bgGradient: ['#E7FFF2', '#FFFFFF'],
+  surfaceLight: '#FFFFFF',
   white: '#FFFFFF',
-  black: '#000000',
-  transparent: 'transparent',
+  border: 'rgba(190, 201, 194, 0.2)',
+  text: {
+    brand: '#00513D',
+    primary: '#052017',
+    secondary: '#3F4944',
+    tertiary: '#6F7A74',
+    placeholder: 'rgba(111, 122, 116, 0.5)',
+  }
 };

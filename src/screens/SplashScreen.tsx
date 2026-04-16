@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing, StatusBar } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
@@ -7,7 +7,7 @@ import { Colors } from '../constants/Colors';
 const { height } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-const SplashScreen = () => {
+const SplashScreen = ({ navigation }: any) => {
   // Entrance Animation Values
   const logoFade = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.85)).current;
@@ -68,7 +68,9 @@ const SplashScreen = () => {
       delay: 400,
       easing: Easing.out(Easing.exp),
       useNativeDriver: false, 
-    }).start();
+    }).start(() => {
+      navigation.replace('Login');
+    });
 
     // 2. Continual Ripple Pulse loop (Starts immediately but runs infinitely)
     const createRipple = (scaleAnim: Animated.Value, opacityAnim: Animated.Value, delay: number) => {
@@ -108,6 +110,7 @@ const SplashScreen = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       {/* Impeccably Clean Flat/Soft Gradient Base */}
       <LinearGradient 
         colors={['#EBF8F2', '#FAFDFB']}
@@ -140,7 +143,7 @@ const SplashScreen = () => {
 
             {/* Subtle Animated Text */}
             <Animated.View style={[styles.textContainer, { opacity: textFade, transform: [{ translateY: textTranslateY }] }]}>
-              <Text style={styles.title}>DropMate</Text>
+              <Text style={styles.title}>Drop Mate</Text>
               <Text style={styles.subtitle}>
                 Deliver with trust, travel with value
               </Text>
