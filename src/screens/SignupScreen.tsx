@@ -113,10 +113,11 @@ const SignupScreen = ({ navigation, route }: any) => {
       newErrors.fullName = 'Name cannot be only numbers';
     }
 
+    const cleanEmail = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
+    if (!cleanEmail) {
       newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(cleanEmail)) {
       newErrors.email = 'Enter a valid email address';
     }
 
@@ -148,6 +149,7 @@ const SignupScreen = ({ navigation, route }: any) => {
     if (Object.keys(newErrors).length === 0 && agreed) {
       updateRegistrationData({
         ...formData,
+        email: cleanEmail,
         roleRequested: role as 'CUSTOMER' | 'TRAVELER',
         termsAccepted: agreed,
       });

@@ -12,6 +12,7 @@ import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOTPScreen from '../screens/VerifyOTPScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import CustomerHomeScreen from '../screens/CustomerHomeScreen';
+import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 
 
 export type RootStackParamList = {
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   VerifyOTP: { phoneNumber: string, flow?: string };
   ResetPassword: undefined;
   CustomerHome: undefined;
+  TravelerHome: undefined;
 };
 
 
@@ -79,6 +81,10 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="CustomerHome" 
           component={CustomerHomeScreen} 
+        />
+        <Stack.Screen 
+          name="TravelerHome" 
+          component={TravelerHomeScreen} 
         />
       </Stack.Navigator>
 

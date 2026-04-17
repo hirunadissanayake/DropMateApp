@@ -80,12 +80,16 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
         clearRegistrationData();
         navigation.navigate('VerificationSuccess');
       } else if (flow === 'LOGIN') {
+        let routeName = 'CustomerHome';
         if (response.token && response.user) {
           setAuth(response.token, response.user);
+          if (response.user.roleActive === 'TRAVELER') {
+            routeName = 'TravelerHome';
+          }
         }
         navigation.reset({
           index: 0,
-          routes: [{ name: 'CustomerHome' }],
+          routes: [{ name: routeName }],
         });
       } else {
         navigation.navigate('ResetPassword');

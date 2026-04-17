@@ -4,5 +4,6 @@ export const ENDPOINTS = {
   AUTH: {
     REQUEST_OTP: `${BASE_URL}/api/auth/request-otp`,
     VERIFY_OTP: `${BASE_URL}/api/auth/verify-otp`,
+    LOGIN: `${BASE_URL}/api/auth/login`,
   },
 };

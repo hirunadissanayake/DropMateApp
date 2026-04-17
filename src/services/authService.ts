@@ -72,3 +72,15 @@ export const verifyOtp = async (phone: string, otp: string) => {
     throw error;
   }
 };
+
+export const login = async (data: { email: string; password: string }) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.LOGIN, data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};

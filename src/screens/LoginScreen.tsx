@@ -34,32 +34,47 @@ const LoginScreen = ({ navigation }: any) => {
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleLogin = async () => {
-    if (!emailOrPhone) {
+    const cleanEmail = emailOrPhone.trim();
+    if (!cleanEmail || !password) {
       Toast.show({
         type: 'info',
-        text1: 'Phone/Email Required',
-        text2: 'Please enter your phone number or email to proceed.'
+        text1: 'Credentials Required',
+        text2: 'Please enter your email and password to proceed.'
       });
       return;
     }
 
-
     setIsLoading(true);
     try {
-      // The backend expects 'phone' in req.body for OTP request
-      // We'll assume emailOrPhone is the phone for now, or the backend handles both
-      const response = await authService.requestOtp({ phone: emailOrPhone });
-      console.log('Login OTP requested:', response);
-      navigation.navigate('VerifyOTP', { phoneNumber: emailOrPhone, flow: 'LOGIN' });
+      const response = await authService.login({ email: cleanEmail, password });
+      console.log('Login success:', response);
+      
+      if (response.token && response.user) {
+        setAuth(response.token, response.user);
+        
+        const routeName = response.user.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Login Successful',
+          text2: 'Welcome back to DropMate!'
+        });
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: routeName }],
+        });
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
-        text2: error.message || 'Something went wrong. Please try again.'
+        text2: error.message || 'Invalid email or password.'
       });
     } finally {
-
       setIsLoading(false);
     }
   };

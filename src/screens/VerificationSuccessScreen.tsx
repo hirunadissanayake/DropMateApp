@@ -13,6 +13,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
+import { useAuthStore } from '../store/authStore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,11 +40,13 @@ const VerificationSuccessScreen = ({ navigation }: any) => {
     }).start();
   }, []);
 
-  const handleGoHome = () => {
-    navigation.reset({
-      routes: [{ name: 'CustomerHome' }],
-    });
+  const { user } = useAuthStore();
 
+  const handleGoHome = () => {
+    const nextScreen = user?.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
+    navigation.reset({
+      routes: [{ name: nextScreen }],
+    });
   };
 
 
