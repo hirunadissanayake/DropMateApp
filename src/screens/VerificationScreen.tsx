@@ -190,10 +190,10 @@ const VerificationScreen = ({ navigation, route }: any) => {
       console.log('Registration success:', response);
       Toast.show({
         type: 'success',
-        text1: 'Registration Successful',
-        text2: 'Your information has been submitted. Please verify your OTP.'
+        text1: response?.message || 'Registration Successful',
+        text2: 'Please verify your OTP.'
       });
-      navigation.navigate('VerifyOTP', { phone: data.phone });
+      navigation.navigate('VerifyOTP', { phoneNumber: data.phone });
     } catch (error: any) {
       console.error('Registration error:', error);
       Toast.show({

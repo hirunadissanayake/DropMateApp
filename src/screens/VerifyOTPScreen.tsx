@@ -79,10 +79,19 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
         }
         clearRegistrationData();
         navigation.navigate('VerificationSuccess');
+      } else if (flow === 'LOGIN') {
+        if (response.token && response.user) {
+          setAuth(response.token, response.user);
+        }
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'CustomerHome' }],
+        });
       } else {
         navigation.navigate('ResetPassword');
       }
     } catch (error: any) {
+
       console.error('OTP Verification error:', error);
       Toast.show({
         type: 'error',

@@ -41,9 +41,9 @@ const VerificationSuccessScreen = ({ navigation }: any) => {
 
   const handleGoHome = () => {
     navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
+      routes: [{ name: 'CustomerHome' }],
     });
+
   };
 
 

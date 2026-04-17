@@ -11,6 +11,8 @@ import VerificationSuccessScreen from '../screens/VerificationSuccessScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOTPScreen from '../screens/VerifyOTPScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import CustomerHomeScreen from '../screens/CustomerHomeScreen';
+
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -20,9 +22,11 @@ export type RootStackParamList = {
   Verification: { role: 'CUSTOMER' | 'TRAVELER' };
   VerificationSuccess: undefined;
   ForgotPassword: undefined;
-  VerifyOTP: { phoneNumber: string };
+  VerifyOTP: { phoneNumber: string, flow?: string };
   ResetPassword: undefined;
+  CustomerHome: undefined;
 };
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -72,7 +76,12 @@ export const AppNavigator = () => {
           name="ResetPassword" 
           component={ResetPasswordScreen} 
         />
+        <Stack.Screen 
+          name="CustomerHome" 
+          component={CustomerHomeScreen} 
+        />
       </Stack.Navigator>
+
     </NavigationContainer>
   );
 };
