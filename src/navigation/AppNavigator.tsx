@@ -11,7 +11,7 @@ import VerificationSuccessScreen from '../screens/VerificationSuccessScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOTPScreen from '../screens/VerifyOTPScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
-import CustomerHomeScreen from '../screens/CustomerHomeScreen';
+import CustomerTabNavigator from '../navigation/CustomerTabNavigator';
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 
 
@@ -80,7 +80,7 @@ export const AppNavigator = () => {
         />
         <Stack.Screen 
           name="CustomerHome" 
-          component={CustomerHomeScreen} 
+          component={CustomerTabNavigator} 
         />
         <Stack.Screen 
           name="TravelerHome" 
