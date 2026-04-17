@@ -12,11 +12,32 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
+import Toast from 'react-native-toast-message';
 
 const BRAND_GREEN = '#00875A';
 const BRAND_LIGHT = '#E6F5EF';
 
 const TravelerProfileScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    Toast.show({
+      type: 'success',
+      text1: 'Signed Out',
+      text2: 'You have been successfully logged out.'
+    });
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -45,7 +66,7 @@ const TravelerProfileScreen = () => {
             
             <View style={styles.userMeta}>
               <Text style={styles.userName}>James Daniel</Text>
-              <View style={styles.badgeRow}>
+              <View style={badgeRowStyles.badgeRow}>
                 <View style={[styles.statusBadge, { backgroundColor: BRAND_LIGHT }]}>
                   <Text style={[styles.statusText, { color: BRAND_GREEN }]}>Verified Traveler</Text>
                 </View>
@@ -88,7 +109,10 @@ const TravelerProfileScreen = () => {
             <SettingsItem icon="help-circle" label="Help Center" />
           </View>
 
-          <TouchableOpacity style={styles.logoutBtn}>
+          <TouchableOpacity 
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+          >
             <Text style={styles.logoutText}>Sign Out Account</Text>
           </TouchableOpacity>
 
@@ -154,6 +178,13 @@ const renderIcon = (name: string) => {
   return null;
 };
 
+const badgeRowStyles = StyleSheet.create({
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -216,10 +247,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0F172A',
     marginBottom: 8,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: 8,
   },
   statusBadge: {
     paddingVertical: 4,

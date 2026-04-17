@@ -2,10 +2,31 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useAuthStore } from '../store/authStore';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
 const ProfileScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    Toast.show({
+      type: 'success',
+      text1: 'Signed Out',
+      text2: 'You have been successfully logged out.'
+    });
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -27,7 +48,10 @@ const ProfileScreen = () => {
           <SettingsItem icon="lock" label="Account Security" />
           <SettingsItem icon="help" label="Help Center" />
           
-          <TouchableOpacity style={styles.logoutBtn}>
+          <TouchableOpacity 
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+          >
             <Text style={styles.logoutText}>Sign Out Account</Text>
           </TouchableOpacity>
         </View>

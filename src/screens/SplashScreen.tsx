@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing, Sta
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
+import { useAuthStore } from '../store/authStore';
 
 const { height } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const SplashScreen = ({ navigation }: any) => {
+  const { token, user, _hasHydrated } = useAuthStore();
+  
   // Entrance Animation Values
   const logoFade = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.85)).current;
@@ -62,6 +65,30 @@ const SplashScreen = ({ navigation }: any) => {
       useNativeDriver: true,
     }).start();
 
+    const checkNavigation = () => {
+      const state = useAuthStore.getState();
+      console.log('Splash Check - Hydrated:', state._hasHydrated, 'Has Token:', !!state.token);
+      
+      if (!state._hasHydrated) {
+        setTimeout(checkNavigation, 50);
+        return;
+      }
+
+      if (state.token && state.user) {
+        console.log('Splash - Redirecting to Home. Role:', state.user.roleActive);
+        if (state.user.roleActive === 'CUSTOMER') {
+          navigation.replace('CustomerHome');
+        } else if (state.user.roleActive === 'TRAVELER') {
+          navigation.replace('TravelerHome');
+        } else {
+          navigation.replace('RoleSelection');
+        }
+      } else {
+        console.log('Splash - Redirecting to Login');
+        navigation.replace('Login');
+      }
+    };
+
     Animated.timing(progressAnim, {
       toValue: 1,
       duration: 2500,
@@ -69,7 +96,7 @@ const SplashScreen = ({ navigation }: any) => {
       easing: Easing.out(Easing.exp),
       useNativeDriver: false, 
     }).start(() => {
-      navigation.replace('Login');
+      checkNavigation();
     });
 
     // 2. Continual Ripple Pulse loop (Starts immediately but runs infinitely)
