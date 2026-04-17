@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -18,6 +19,8 @@ interface CustomAlertProps {
   onCancel: () => void;
   confirmText?: string;
   cancelText?: string;
+  loading?: boolean;
+  type?: 'success' | 'warning' | 'error' | 'info';
 }
 
 const { width } = Dimensions.get('window');
@@ -30,23 +33,52 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   onCancel,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  loading = false,
+  type = 'info',
 }) => {
+  const getIconColor = () => {
+    switch (type) {
+      case 'success': return '#059669';
+      case 'warning': return '#F59E0B';
+      case 'error': return '#DC2626';
+      default: return '#006C52';
+    }
+  };
+
+  const getIconBg = () => {
+    switch (type) {
+      case 'success': return '#ECFDF5';
+      case 'warning': return '#FFFBEB';
+      case 'error': return '#FEF2F2';
+      default: return '#F0FDF4';
+    }
+  };
+
   return (
     <Modal
       transparent
       visible={visible}
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={loading ? undefined : onCancel}
     >
       <View style={styles.overlay}>
         <View style={styles.alertContainer}>
           <View style={styles.iconContainer}>
-            <View style={styles.iconCircle}>
-              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <Circle cx="12" cy="12" r="10" />
-                <Path d="M12 16v-4" />
-                <Path d="M12 8h.01" />
-              </Svg>
+            <View style={[styles.iconCircle, { backgroundColor: getIconBg() }]}>
+              {type === 'warning' || type === 'error' ? (
+                <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={getIconColor()} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <Circle cx="12" cy="12" r="10" />
+                  <Path d="M12 8v4" />
+                  <Path d="M12 16h.01" />
+                </Svg>
+              ) : (
+                <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={getIconColor()} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <Circle cx="12" cy="12" r="10" />
+                  <Path d="M12 16v-4" />
+                  <Path d="M12 8h.01" />
+                </Svg>
+              )
+              }
             </View>
           </View>
 
@@ -54,20 +86,32 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           <Text style={styles.message}>{message}</Text>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={[styles.button, styles.cancelButton]} 
-              onPress={onCancel}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.cancelButtonText}>{cancelText}</Text>
-            </TouchableOpacity>
+            {!loading && (
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelButton]} 
+                onPress={onCancel}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelButtonText}>{cancelText}</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity 
-              style={[styles.button, styles.confirmButton]} 
+              style={[
+                styles.button, 
+                styles.confirmButton, 
+                type === 'warning' || type === 'error' ? { backgroundColor: '#DC2626' } : {},
+                loading ? { opacity: 0.8 } : {}
+              ]} 
               onPress={onConfirm}
+              disabled={loading}
               activeOpacity={0.8}
             >
-              <Text style={styles.confirmButtonText}>{confirmText}</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.confirmButtonText}>{confirmText}</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -79,7 +123,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 32, 23, 0.6)',
+    backgroundColor: 'rgba(5, 32, 23, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -88,41 +132,41 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: width - 48,
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
+    borderRadius: 32,
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.25,
+    shadowRadius: 25,
+    elevation: 12,
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#F0FDF4',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
   },
   message: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: 32,
     fontFamily: 'Manrope',
+    paddingHorizontal: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -131,8 +175,8 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    height: 54,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -144,13 +188,13 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#64748B',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Manrope',
   },
   confirmButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Manrope',
   },

@@ -76,3 +76,47 @@ export const getPreviewPrice = async (token: string, fromLocation: string, toLoc
     throw error.response?.data || error;
   }
 };
+
+export const getParcelDetails = async (token: string, id: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.PARCELS.GET_DETAILS(id), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getMyParcels = async (token: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.PARCELS.MY_PARCELS, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const cancelParcel = async (token: string, id: string) => {
+  try {
+    const response = await axios.put(ENDPOINTS.PARCELS.CANCEL(id), {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteParcel = async (token: string, id: string) => {
+  try {
+    const response = await axios.delete(ENDPOINTS.PARCELS.DELETE(id), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};

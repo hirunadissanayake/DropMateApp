@@ -465,17 +465,17 @@ const CreateParcelScreen = () => {
                 {priceData && (
                   <View style={styles.priceContent}>
                     <View style={styles.priceRow}>
-                      <Text style={styles.priceItemLabel}>Delivery Rate</Text>
-                      <Text style={styles.priceItemValue}>LKR {priceData.price.toLocaleString()}</Text>
+                      <Text style={styles.priceItemLabel}>Base Delivery Rate</Text>
+                      <Text style={styles.priceItemValue}>LKR {priceData.travelerPayout.toLocaleString()}</Text>
                     </View>
                     <View style={styles.priceRow}>
-                      <Text style={styles.priceItemLabel}>Platform Service Fee</Text>
+                      <Text style={styles.priceItemLabel}>Service Fee</Text>
                       <Text style={styles.priceItemValue}>LKR {priceData.platformFee.toLocaleString()}</Text>
                     </View>
                     <View style={styles.totalDivider} />
                     <View style={styles.totalContainer}>
                       <Text style={styles.totalLabel}>Total Payable</Text>
-                      <Text style={styles.totalValue}>LKR {(priceData.price + priceData.platformFee).toLocaleString()}</Text>
+                      <Text style={styles.totalValue}>LKR {priceData.price.toLocaleString()}</Text>
                     </View>
                   </View>
                 )}
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     lineHeight: 45,
   },
   priceCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#004D3A',
     borderRadius: 24,
     padding: 24,
     marginTop: 10,
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   priceItemLabel: {
-    color: '#94A3B8',
+    color: '#FFFFFF',
     fontSize: 14,
   },
   priceItemValue: {
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   totalValue: {
-    color: '#10B981',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: '800',
   },

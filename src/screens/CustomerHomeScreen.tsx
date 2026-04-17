@@ -11,17 +11,43 @@ import {
   SafeAreaView,
   StatusBar,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useFocusEffect } from '@react-navigation/native';
 import * as authService from '../services/authService';
+import * as parcelService from '../services/parcelService';
 import { useAuthStore } from '../store/authStore';
+import dayjs from 'dayjs';
 
 const { width } = Dimensions.get('window');
 
 const CustomerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [activeParcels, setActiveParcels] = useState<any[]>([]);
+  const [loadingParcels, setLoadingParcels] = useState(true);
+
+  const fetchActiveParcels = async () => {
+    if (!token) return;
+    try {
+      const data = await parcelService.getMyParcels(token);
+      // Filter for active ones (PENDING or IN_TRANSIT)
+      const active = data.filter((p: any) => p.status === 'PENDING' || p.status === 'IN_TRANSIT');
+      setActiveParcels(active);
+    } catch (error) {
+      console.error('Fetch active parcels error:', error);
+    } finally {
+      setLoadingParcels(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchActiveParcels();
+    }, [token])
+  );
 
   const onRefresh = useCallback(async () => {
     if (!token) return;
@@ -145,7 +171,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
           {user?.isCustomerApproved && (
             <>
               {/* Wallet Summary */}
-              <View style={styles.walletCardApproved}>
+              {/* <View style={styles.walletCardApproved}>
                 <LinearGradient
                   colors={['#006C52', '#004D3B']}
                   start={{x: 0, y: 0}}
@@ -160,36 +186,55 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                     <Text style={styles.topUpText}>Top Up</Text>
                   </TouchableOpacity>
                 </LinearGradient>
-              </View>
+              </View> */}
 
               {/* Active Orders Section */}
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>ACTIVE SHIPMENTS</Text>
-                  <TouchableOpacity><Text style={styles.viewAllText}>View All</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={() => navigation.navigate('Shipments')}>
+                    <Text style={styles.viewAllText}>View All</Text>
+                  </TouchableOpacity>
                 </View>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
-                  contentContainerStyle={styles.horizontalScroll}
-                >
-                  <ActiveOrderCard 
-                    id="#DM-9942" 
-                    status="In Transit" 
-                    location="Kandy to Colombo" 
-                    time="ETA: 2 hrs"
-                    icon="truck"
-                    color="#006C52"
-                  />
-                  <ActiveOrderCard 
-                    id="#DM-1024" 
-                    status="Out for Delivery" 
-                    location="Galle to Matara" 
-                    time="ETA: 45 mins"
-                    icon="package"
-                    color="#0EA5E9"
-                  />
-                </ScrollView>
+                {loadingParcels ? (
+                  <View style={styles.loadingBox}>
+                    <ActivityIndicator color="#006C52" />
+                  </View>
+                ) : activeParcels.length > 0 ? (
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    contentContainerStyle={styles.horizontalScroll}
+                  >
+                    {activeParcels.map((parcel) => (
+                      <ActiveOrderCard 
+                        key={parcel.id}
+                        id={`#${parcel.id.slice(-6).toUpperCase()}`} 
+                        status={parcel.status} 
+                        location={`${parcel.fromLocation} to ${parcel.toLocation}`} 
+                        time={dayjs(parcel.createdAt).format('MMM DD')}
+                        icon={parcel.status === 'PENDING' ? 'package' : 'truck'}
+                        color={parcel.status === 'PENDING' ? '#F59E0B' : '#006C52'}
+                        onPress={() => navigation.navigate('ParcelDetails', { parcelId: parcel.id })}
+                      />
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <View style={styles.centeredEmptyContainer}>
+                    <TouchableOpacity 
+                      style={styles.emptyActiveCard}
+                      onPress={() => navigation.navigate('CreateParcel')}
+                    >
+                      <View style={styles.emptyActiveIcon}>
+                        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                          <Path d="M12 5v14M5 12h14" />
+                        </Svg>
+                      </View>
+                      <Text style={styles.emptyActiveText}>No active shipments</Text>
+                      <Text style={styles.emptyActiveSubtext}>Tap to send a parcel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </>
           )}
@@ -217,18 +262,14 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 icon="package"
                 color="#E0F2FE"
                 iconColor="#0369A1"
-              />
-              <ServiceItem 
-                title="Track Order" 
-                icon="map"
-                color="#F0FDF4"
-                iconColor="#15803D"
+                onPress={() => navigation.navigate('CreateParcel')}
               />
               <ServiceItem 
                 title="My Wallet" 
                 icon="credit-card"
                 color="#FFF7ED"
                 iconColor="#C2410C"
+                onPress={() => navigation.navigate('Wallet')}
               />
             </View>
           </View>
@@ -259,20 +300,20 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   );
 };
 
-const ActiveOrderCard = ({ id, status, location, time, icon, color }: any) => (
-  <TouchableOpacity style={styles.activeOrderCard} activeOpacity={0.9}>
+const ActiveOrderCard = ({ id, status, location, time, icon, color, onPress }: any) => (
+  <TouchableOpacity style={styles.activeOrderCard} activeOpacity={0.9} onPress={onPress}>
     <View style={styles.orderCardHeader}>
       <View style={[styles.orderIconBox, { backgroundColor: color + '15' }]}>
         {renderServiceIcon(icon, color)}
       </View>
-      <View style={styles.statusChip}>
+      <View style={[styles.statusChip, { backgroundColor: color + '10' }]}>
         <View style={[styles.statusDot, { backgroundColor: color }]} />
         <Text style={[styles.statusChipText, { color: color }]}>{status}</Text>
       </View>
     </View>
     <View style={styles.orderCardBody}>
       <Text style={styles.orderId}>{id}</Text>
-      <Text style={styles.orderLocation}>{location}</Text>
+      <Text style={styles.orderLocation} numberOfLines={1}>{location}</Text>
     </View>
     <View style={styles.orderCardFooter}>
       <Text style={styles.orderTime}>{time}</Text>
@@ -283,8 +324,12 @@ const ActiveOrderCard = ({ id, status, location, time, icon, color }: any) => (
   </TouchableOpacity>
 );
 
-const ServiceItem = ({ title, icon, color, iconColor }: any) => (
-  <TouchableOpacity style={styles.serviceBtn} activeOpacity={0.8}>
+const ServiceItem = ({ title, icon, color, iconColor, onPress }: any) => (
+  <TouchableOpacity 
+    style={styles.serviceBtn} 
+    activeOpacity={0.8}
+    onPress={onPress}
+  >
     <View style={[styles.serviceIconBox, { backgroundColor: color }]}>
        {renderServiceIcon(icon, iconColor)}
     </View>
@@ -533,6 +578,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 1.5,
+    marginBottom: 10,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -735,6 +781,50 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingBox: {
+    width: '100%',
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centeredEmptyContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  emptyActiveCard: {
+    width: width * 0.7,
+    height: 160,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#c9c6c6ff',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    padding: 20,
+  },
+  emptyActiveIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptyActiveText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 4,
+  },
+  emptyActiveSubtext: {
+    fontSize: 12,
+    color: '#94A3B8',
   },
 });
 

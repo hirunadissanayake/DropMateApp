@@ -19,5 +19,9 @@ export const ENDPOINTS = {
     FROM_LOCATIONS: `${BASE_URL}/api/parcels/from-locations`,
     TO_LOCATIONS: `${BASE_URL}/api/parcels/to-locations`,
     PREVIEW_PRICE: `${BASE_URL}/api/parcels/preview-price`,
+    GET_DETAILS: (id: string) => `${BASE_URL}/api/parcels/${id}`,
+    MY_PARCELS: `${BASE_URL}/api/parcels/my`,
+    CANCEL: (id: string) => `${BASE_URL}/api/parcels/${id}/cancel`,
+    DELETE: (id: string) => `${BASE_URL}/api/parcels/${id}`,
   },
 };
