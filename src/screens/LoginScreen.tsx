@@ -306,9 +306,9 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: Colors.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
   loginButton: {
     marginTop: 16,

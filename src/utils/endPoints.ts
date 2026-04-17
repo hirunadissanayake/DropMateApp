@@ -14,4 +14,10 @@ export const ENDPOINTS = {
     REQUEST_NEW_ROLE: `${BASE_URL}/api/auth/request-new-role`,
     SWITCH_ROLE: `${BASE_URL}/api/auth/switch-role`,
   },
+  PARCELS: {
+    CREATE: `${BASE_URL}/api/parcels/create`,
+    FROM_LOCATIONS: `${BASE_URL}/api/parcels/from-locations`,
+    TO_LOCATIONS: `${BASE_URL}/api/parcels/to-locations`,
+    PREVIEW_PRICE: `${BASE_URL}/api/parcels/preview-price`,
+  },
 };

@@ -18,6 +18,7 @@ import PersonalDetailsScreen from '../screens/PersonalDetailsScreen';
 import VehicleDetailsScreen from '../screens/VehicleDetailsScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import RequestRoleScreen from '../screens/RequestRoleScreen';
+import CreateParcelScreen from '../screens/CreateParcelScreen';
 
 
 
@@ -37,6 +38,7 @@ export type RootStackParamList = {
   VehicleDetails: undefined;
   ChangePassword: undefined;
   RequestRole: undefined;
+  CreateParcel: undefined;
 };
 
 
@@ -111,6 +113,10 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="RequestRole" 
           component={RequestRoleScreen} 
+        />
+        <Stack.Screen 
+          name="CreateParcel" 
+          component={CreateParcelScreen} 
         />
       </Stack.Navigator>
 

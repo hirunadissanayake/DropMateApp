@@ -1,9 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Platform, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 const ShipmentsScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -21,7 +26,23 @@ const ShipmentsScreen = () => {
         </View>
         <Text style={styles.title}>No Shipments Yet</Text>
         <Text style={styles.subtitle}>Your delivery journey starts here. Once you send a parcel, you'll see it here.</Text>
+        
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => navigation.navigate('CreateParcel')}
+        >
+          <Text style={styles.addButtonText}>Create Parcel</Text>
+        </TouchableOpacity>
       </SafeAreaView>
+
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateParcel')}
+      >
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M12 5V19M5 12H19" />
+        </Svg>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -65,6 +86,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    marginBottom: 40,
+  },
+  addButton: {
+    backgroundColor: '#006C52',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#006C52',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
 });
 

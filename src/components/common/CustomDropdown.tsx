@@ -18,6 +18,7 @@ interface CustomDropdownProps {
   selectedOption: string;
   onSelect: (option: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -26,6 +27,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   selectedOption,
   onSelect,
   placeholder = 'Select an option',
+  disabled = false,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -78,7 +80,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           </Svg>
         );
       default:
-        return null;
+        return (
+          <Svg width={size - 2} height={size - 2} viewBox="0 0 24 24" fill="none">
+            <Path d="M21 10C21 10 12 21 12 21C12 21 3 10 3 10C3 10 7.02944 6 12 6C16.9706 6 21 10 21 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <Circle cx="12" cy="10" r="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+        );
     }
   };
 
@@ -87,9 +94,13 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       {label && <Text style={styles.label}>{label}</Text>}
       
       <TouchableOpacity
-        style={[styles.selectBox, isVisible && styles.selectedBoxActive]}
-        onPress={() => setIsVisible(true)}
-        activeOpacity={0.7}
+        style={[
+          styles.selectBox, 
+          isVisible && styles.selectedBoxActive,
+          disabled && styles.selectBoxDisabled
+        ]}
+        onPress={() => !disabled && setIsVisible(true)}
+        activeOpacity={disabled ? 1 : 0.7}
       >
         <View style={styles.selectedContent}>
           {renderOptionIcon(selectedOption, true)}
@@ -120,12 +131,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               <View style={styles.dragHandle} />
               
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{label || 'Select'}</Text>
+                <View>
+                  <Text style={styles.modalTitle}>{label || 'Select Option'}</Text>
+                  <Text style={styles.modalSubtitle}>Please choose one from the list below</Text>
+                </View>
                 <TouchableOpacity 
                   onPress={() => setIsVisible(false)}
                   style={styles.closeBtn}
                 >
-                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                     <Path d="M18 6L6 18M6 6L18 18" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </Svg>
                 </TouchableOpacity>
@@ -189,28 +203,33 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
   selectBox: {
-    height: 64,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    height: 60,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderWidth: 1.5,
-    borderColor: 'rgba(190, 201, 194, 0.15)',
-    shadowColor: '#000',
+    borderColor: '#F1F5F9',
+    shadowColor: '#006C52',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
     elevation: 2,
+  },
+  selectBoxDisabled: {
+    backgroundColor: '#F1F5F9',
+    opacity: 0.6,
+    borderColor: '#E2E8F0',
   },
   selectedBoxActive: {
     borderColor: Colors.primary,
     backgroundColor: '#FFFFFF',
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 4,
   },
   selectedContent: {
@@ -227,6 +246,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#94A3B8',
     fontWeight: '500',
+    fontSize: 15,
   },
   modalOverlay: {
     flex: 1,
@@ -262,11 +282,17 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#052017',
+    color: '#0F172A',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
     letterSpacing: -0.5,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: 'Manrope',
+    marginTop: 2,
   },
   closeBtn: {
     width: 36,
@@ -284,16 +310,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 8,
-    backgroundColor: '#FBFDFF',
+    padding: 18,
+    borderRadius: 18,
+    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   optionItemActive: {
-    backgroundColor: 'rgba(0, 108, 82, 0.03)',
-    borderColor: 'rgba(0, 108, 82, 0.1)',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
   },
   optionContentLeft: {
     flexDirection: 'row',
