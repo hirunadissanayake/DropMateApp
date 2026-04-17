@@ -25,6 +25,9 @@ const PersonalDetailsScreen = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const isVerified = user?.isTravelerApproved || user?.isCustomerApproved;
+  const isPending = user?.isTravelerRequested || user?.isCustomerRequested;
+  const isDualVerified = user?.isTravelerApproved && user?.isCustomerApproved;
+
 
   return (
     <View style={styles.container}>
@@ -71,11 +74,12 @@ const PersonalDetailsScreen = () => {
                 </View>
                 <View>
                     <Text style={styles.statusLabel}>Account Status</Text>
-                    <Text style={[styles.statusValue, { color: isVerified ? '#166534' : '#854D0E' }]}>
-                        {isVerified ? 'Fully Verified' : 'Pending Verification'}
+                    <Text style={[styles.statusValue, { color: isDualVerified ? '#166534' : isVerified ? '#006C52' : '#854D0E' }]}>
+                        {isDualVerified ? 'Fully Verified (Dual Role)' : isVerified ? 'Verified Account' : isPending ? 'Pending Verification' : 'Verification Required'}
                     </Text>
                 </View>
             </View>
+
 
             {/* Information Grid */}
             <View style={styles.cardSection}>

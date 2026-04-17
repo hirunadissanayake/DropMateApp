@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   StatusBar,
   Platform,
@@ -12,12 +13,14 @@ interface ScreenHeaderProps {
   onBack: () => void;
   currentStep?: number;
   totalSteps?: number;
+  title?: string;
 }
 
 const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   onBack,
   currentStep,
   totalSteps = 3,
+  title,
 }) => {
   return (
     <View style={styles.header}>
@@ -40,6 +43,13 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
           })}
         </View>
       )}
+
+      {title && (
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
+        </View>
+      )}
+
       
       {/* Spacer to keep step indicator centered */}
       <View style={styles.spacer} />
@@ -71,7 +81,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   spacer: {
-    width: 44, // Matches BackButton width for perfect centering
+    width: 44, 
+  },
+  titleContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
 });
 

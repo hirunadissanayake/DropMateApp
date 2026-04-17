@@ -155,3 +155,86 @@ export const updateProfile = async (token: string, data: any) => {
     throw error;
   }
 };
+export const changePassword = async (token: string, data: any) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+export const requestNewRole = async (token: string, data: any) => {
+  const formData = new FormData();
+
+  // Append text fields
+  formData.append('role', data.role);
+  if (data.weightCapacity) formData.append('weightCapacity', data.weightCapacity);
+  if (data.vehicleType) formData.append('vehicleType', data.vehicleType);
+
+  // Append files
+  if (data.selfie) {
+    formData.append('selfie', {
+      uri: data.selfie.uri,
+      type: data.selfie.type || 'image/jpeg',
+      name: 'selfie.jpg',
+    } as any);
+  }
+
+  if (data.nicFront) {
+    formData.append('nicFront', {
+      uri: data.nicFront.uri,
+      type: data.nicFront.type || 'image/jpeg',
+      name: 'nicFront.jpg',
+    } as any);
+  }
+
+  if (data.nicBack) {
+    formData.append('nicBack', {
+      uri: data.nicBack.uri,
+      type: data.nicBack.type || 'image/jpeg',
+      name: 'nicBack.jpg',
+    } as any);
+  }
+
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.REQUEST_NEW_ROLE, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+
+export const switchRole = async (token: string, role: 'CUSTOMER' | 'TRAVELER') => {
+  try {
+    const response = await axios.post(
+      ENDPOINTS.AUTH.SWITCH_ROLE,
+      { role },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};

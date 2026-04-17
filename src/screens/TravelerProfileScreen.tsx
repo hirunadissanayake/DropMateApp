@@ -29,10 +29,11 @@ const BRAND_LIGHT = '#E6F5EF';
 
 const TravelerProfileScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { user, token, logout, setUser } = useAuthStore();
+  const { user, token, logout, setUser, setAuth } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   const [editedName, setEditedName] = useState(user?.name || '');
 
@@ -93,6 +94,32 @@ const TravelerProfileScreen = () => {
       index: 0,
       routes: [{ name: 'Login' }],
     });
+  };
+
+  const handleSwitchRole = async () => {
+    if (!token) return;
+    setSwitching(true);
+    try {
+      const response = await authService.switchRole(token, 'CUSTOMER');
+      setAuth(response.token, response.user);
+      Toast.show({
+        type: 'success',
+        text1: 'Role Switched',
+        text2: 'You are now in Customer mode',
+      });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'CustomerHome' }],
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Switch Failed',
+        text2: error.message || 'Could not switch role',
+      });
+    } finally {
+      setSwitching(false);
+    }
   };
 
   const onRefresh = useCallback(async () => {
@@ -307,9 +334,82 @@ const TravelerProfileScreen = () => {
               </Svg>
             </TouchableOpacity>
 
+            {(!user?.isCustomerRequested && !user?.isCustomerApproved) ? (
+              <TouchableOpacity 
+                style={styles.itemRow}
+                onPress={() => navigation.navigate('RequestRole')}
+              >
+                <View style={styles.itemIconBox}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.5">
+                        <Path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <Circle cx="8.5" cy="7" r="4" />
+                        <Path d="M20 8v6M23 11h-6" />
+                    </Svg>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.itemLabel}>Become a Customer</Text>
+                    <Text style={styles.itemSubLabel}>Unlock parcel shipping features</Text>
+                </View>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+                    <Path d="M9 18l6-6-6-6" />
+                </Svg>
+              </TouchableOpacity>
+            ) : (user?.isCustomerRequested && !user?.isCustomerApproved) ? (
+              <View style={[styles.itemRow, { opacity: 0.7 }]}>
+                <View style={styles.itemIconBox}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5">
+                        <Path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </Svg>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.itemLabel}>Customer Request Pending</Text>
+                    <Text style={styles.itemSubLabel}>Verification in progress</Text>
+                </View>
+              </View>
+            ) : null}
+
+            {user?.isCustomerApproved && (
+              <TouchableOpacity
+                style={styles.switchRoleBtn}
+                onPress={handleSwitchRole}
+                disabled={switching}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#006C52', '#004A38']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.switchRoleContent}>
+                  <View style={styles.switchIconBox}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+                      <Path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+                    </Svg>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.switchRoleTitle}>Switch to Customer</Text>
+                    <Text style={styles.switchRoleSub}>Send parcels with verified travelers</Text>
+                  </View>
+                  {switching ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2">
+                      <Path d="M9 18l6-6-6-6" />
+                    </Svg>
+                  )}
+                </View>
+              </TouchableOpacity>
+            )}
+
+
             <Text style={[styles.sectionHeaderTitle, { marginTop: 32 }]}>General</Text>
             <SettingsItem icon="bell" label="Notifications" />
-            <SettingsItem icon="lock" label="Account Security" />
+            <SettingsItem 
+              icon="lock" 
+              label="Account Security" 
+              onPress={() => navigation.navigate('ChangePassword')}
+            />
             
             <TouchableOpacity 
               style={styles.logoutBtn}
@@ -326,8 +426,8 @@ const TravelerProfileScreen = () => {
   );
 };
 
-const SettingsItem = ({ icon, label }: any) => (
-    <TouchableOpacity style={styles.itemRow}>
+const SettingsItem = ({ icon, label, onPress }: any) => (
+    <TouchableOpacity style={styles.itemRow} onPress={onPress}>
       <View style={styles.itemIconBox}>
         {renderIcon(icon)}
       </View>
@@ -532,6 +632,43 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+  },
+  switchRoleBtn: {
+    marginTop: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  switchRoleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  switchIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  switchRoleTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+  },
+  switchRoleSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
   },
 });
 

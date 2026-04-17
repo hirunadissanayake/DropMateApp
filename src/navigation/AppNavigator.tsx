@@ -16,6 +16,9 @@ import TravelerTabNavigator from '../navigation/TravelerTabNavigator';
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 import PersonalDetailsScreen from '../screens/PersonalDetailsScreen';
 import VehicleDetailsScreen from '../screens/VehicleDetailsScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import RequestRoleScreen from '../screens/RequestRoleScreen';
+
 
 
 export type RootStackParamList = {
@@ -32,6 +35,8 @@ export type RootStackParamList = {
   TravelerHome: undefined;
   PersonalDetails: undefined;
   VehicleDetails: undefined;
+  ChangePassword: undefined;
+  RequestRole: undefined;
 };
 
 
@@ -98,6 +103,14 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="VehicleDetails" 
           component={VehicleDetailsScreen} 
+        />
+        <Stack.Screen 
+          name="ChangePassword" 
+          component={ChangePasswordScreen} 
+        />
+        <Stack.Screen 
+          name="RequestRole" 
+          component={RequestRoleScreen} 
         />
       </Stack.Navigator>
 

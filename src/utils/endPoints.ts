@@ -10,5 +10,8 @@ export const ENDPOINTS = {
     RESET_PASSWORD: `${BASE_URL}/api/auth/reset-password`,
     GET_ME: `${BASE_URL}/api/auth/me`,
     UPDATE_PROFILE: `${BASE_URL}/api/auth/update-profile`,
+    CHANGE_PASSWORD: `${BASE_URL}/api/auth/change-password`,
+    REQUEST_NEW_ROLE: `${BASE_URL}/api/auth/request-new-role`,
+    SWITCH_ROLE: `${BASE_URL}/api/auth/switch-role`,
   },
 };
