@@ -140,4 +140,18 @@ export const getMe = async (token: string) => {
     throw error;
   }
 };
-
+export const updateProfile = async (token: string, data: any) => {
+  try {
+    const response = await axios.put(ENDPOINTS.AUTH.UPDATE_PROFILE, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};

@@ -69,9 +69,16 @@ const TravelerHomeScreen = ({ navigation }: any) => {
             onPress={() => navigation.navigate('TravelerProfile')}
           >
             <View style={styles.avatarBorder}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
-              </View>
+              {user?.selfieUrl ? (
+                <Image 
+                  source={{ uri: user.selfieUrl }} 
+                  style={styles.avatarImage} 
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
             </View>
             <View>
               <Text style={styles.greetingText}>{getGreeting()}</Text>
@@ -285,6 +292,10 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    flex: 1,
+    borderRadius: 22,
   },
   avatarText: {
     color: '#FFFFFF',

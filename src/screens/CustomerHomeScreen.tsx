@@ -72,9 +72,16 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             onPress={() => navigation.navigate('Profile')}
           >
             <View style={styles.avatarBorder}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>{getInitial(user?.name || '')}</Text>
-              </View>
+              {user?.selfieUrl ? (
+                <Image 
+                  source={{ uri: user.selfieUrl }} 
+                  style={styles.avatarImage} 
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarText}>{getInitial(user?.name || '')}</Text>
+                </View>
+              )}
             </View>
             <View>
               <Text style={styles.greetingText}>{getGreeting()}</Text>
@@ -134,7 +141,60 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             </View>
           )}
 
-          {/* Profile Progress */}
+          {/* Approved Content sections */}
+          {user?.isCustomerApproved && (
+            <>
+              {/* Wallet Summary */}
+              <View style={styles.walletCardApproved}>
+                <LinearGradient
+                  colors={['#006C52', '#004D3B']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 1, y: 1}}
+                  style={styles.walletGradient}
+                >
+                  <View style={styles.walletInfo}>
+                    <Text style={styles.walletLabel}>Available Balance</Text>
+                    <Text style={styles.walletAmount}>LKR 12,450.00</Text>
+                  </View>
+                  <TouchableOpacity style={styles.topUpBtn}>
+                    <Text style={styles.topUpText}>Top Up</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+
+              {/* Active Orders Section */}
+              <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>ACTIVE SHIPMENTS</Text>
+                  <TouchableOpacity><Text style={styles.viewAllText}>View All</Text></TouchableOpacity>
+                </View>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false} 
+                  contentContainerStyle={styles.horizontalScroll}
+                >
+                  <ActiveOrderCard 
+                    id="#DM-9942" 
+                    status="In Transit" 
+                    location="Kandy to Colombo" 
+                    time="ETA: 2 hrs"
+                    icon="truck"
+                    color="#006C52"
+                  />
+                  <ActiveOrderCard 
+                    id="#DM-1024" 
+                    status="Out for Delivery" 
+                    location="Galle to Matara" 
+                    time="ETA: 45 mins"
+                    icon="package"
+                    color="#0EA5E9"
+                  />
+                </ScrollView>
+              </View>
+            </>
+          )}
+
+          {/* Profile Progress - Only show if NOT approved */}
           {!user?.isCustomerApproved && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
@@ -199,6 +259,30 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   );
 };
 
+const ActiveOrderCard = ({ id, status, location, time, icon, color }: any) => (
+  <TouchableOpacity style={styles.activeOrderCard} activeOpacity={0.9}>
+    <View style={styles.orderCardHeader}>
+      <View style={[styles.orderIconBox, { backgroundColor: color + '15' }]}>
+        {renderServiceIcon(icon, color)}
+      </View>
+      <View style={styles.statusChip}>
+        <View style={[styles.statusDot, { backgroundColor: color }]} />
+        <Text style={[styles.statusChipText, { color: color }]}>{status}</Text>
+      </View>
+    </View>
+    <View style={styles.orderCardBody}>
+      <Text style={styles.orderId}>{id}</Text>
+      <Text style={styles.orderLocation}>{location}</Text>
+    </View>
+    <View style={styles.orderCardFooter}>
+      <Text style={styles.orderTime}>{time}</Text>
+      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M5 12h14M12 5l7 7-7 7" />
+      </Svg>
+    </View>
+  </TouchableOpacity>
+);
+
 const ServiceItem = ({ title, icon, color, iconColor }: any) => (
   <TouchableOpacity style={styles.serviceBtn} activeOpacity={0.8}>
     <View style={[styles.serviceIconBox, { backgroundColor: color }]}>
@@ -225,6 +309,14 @@ const renderServiceIcon = (name: string, color: string) => {
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
       <Path d="M1 10h22" />
+    </Svg>
+  );
+  if(name === 'truck') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Rect x="1" y="3" width="15" height="13" />
+      <Path d="M16 8l4 0l3 3l0 5l-7 0" />
+      <Circle cx="5.5" cy="18.5" r="2.5" />
+      <Circle cx="18.5" cy="18.5" r="2.5" />
     </Svg>
   );
   return null;
@@ -294,6 +386,10 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    flex: 1,
+    borderRadius: 22,
   },
   avatarText: {
     color: '#FFFFFF',
@@ -437,7 +533,133 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 1.5,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  viewAllText: {
+    fontSize: 12,
+    color: '#006C52',
+    fontWeight: '700',
+  },
+  horizontalScroll: {
+    paddingRight: 20,
+    gap: 16,
+    marginBottom: 10,
+  },
+  walletCardApproved: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 24,
+  },
+  walletGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 24,
+  },
+  walletInfo: {
+    flex: 1,
+  },
+  walletLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  walletAmount: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '800',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+  },
+  topUpBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  topUpText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  activeOrderCard: {
+    width: width * 0.7,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  orderCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  orderIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 100,
+    gap: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusChipText: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  orderCardBody: {
+    marginBottom: 16,
+  },
+  orderId: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  orderLocation: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  orderCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F8FAFC',
+  },
+  orderTime: {
+    fontSize: 12,
+    color: '#006C52',
+    fontWeight: '700',
   },
   serviceRow: {
     flexDirection: 'row',
