@@ -120,7 +120,7 @@ const ProfileScreen = () => {
               <Path d="M15 18l-6-6 6-6" />
             </Svg>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Profile</Text>
+          <Text style={styles.headerTitle}>Profile</Text>
           <View style={{ width: 40 }} />
         </View>
       </SafeAreaView>
@@ -144,12 +144,6 @@ const ProfileScreen = () => {
              ) : (
                <Text style={styles.avatarInitial}>{getInitial(user?.name || '')}</Text>
              )}
-             {/* <TouchableOpacity style={styles.cameraBadge}>
-                <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                  <Circle cx="12" cy="13" r="4"/>
-                </Svg>
-             </TouchableOpacity> */}
           </View>
           
           {isEditing ? (
@@ -169,7 +163,7 @@ const ProfileScreen = () => {
                    disabled={loading}
                    style={[styles.actionBtn, styles.cancelBtn]}
                  >
-                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="3">
                       <Path d="M18 6L6 18M6 6l12 12"/>
                    </Svg>
                  </TouchableOpacity>
@@ -182,7 +176,7 @@ const ProfileScreen = () => {
                      {loading ? (
                        <ActivityIndicator size="small" color="#FFF" />
                      ) : (
-                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3">
                           <Path d="M20 6L9 17l-5-5"/>
                        </Svg>
                      )}
@@ -197,7 +191,7 @@ const ProfileScreen = () => {
             >
               <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
               <View style={styles.nameEditIcon}>
-                <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
                   <Path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                 </Svg>
               </View>
@@ -207,21 +201,25 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Account Information</Text>
-          <SettingsItem 
-            icon="user" 
-            label="NIC Number" 
-            subLabel={user?.nicNumber || 'N/A'}
-            isReadOnly
-          />
-          <SettingsItem 
-            icon="phone" 
-            label="Phone Number" 
-            subLabel={user?.phone}
-            isReadOnly
-          />
+          <Text style={styles.sectionTitle}>Account Overview</Text>
           
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Preferences</Text>
+          <TouchableOpacity 
+            style={styles.itemRow}
+            onPress={() => navigation.navigate('PersonalDetails')}
+          >
+            <View style={styles.itemIconBox}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Circle cx="12" cy="7" r="4"/><Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></Svg>
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={styles.itemLabel}>Personal Details</Text>
+                <Text style={styles.itemSubLabel}>Identify, Documents & Status</Text>
+            </View>
+            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+                <Path d="M9 18l6-6-6-6" />
+            </Svg>
+          </TouchableOpacity>
+
+          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>General</Text>
           <SettingsItem icon="bell" label="Notifications" />
           <SettingsItem icon="lock" label="Account Security" />
           <SettingsItem icon="help" label="Help Center" />
@@ -231,7 +229,7 @@ const ProfileScreen = () => {
             onPress={handleLogout}
           >
             <View style={styles.logoutIconBox}>
-               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="2">
                   <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                   <Path d="M16 17l5-5-5-5"/>
                   <Path d="M21 12H9"/>
@@ -246,34 +244,27 @@ const ProfileScreen = () => {
   );
 };
 
-const SettingsItem = ({ icon, label, subLabel, isReadOnly }: any) => (
-  <TouchableOpacity 
-    style={styles.itemRow} 
-    activeOpacity={isReadOnly ? 1 : 0.7}
-    disabled={isReadOnly}
-  >
-    <View style={styles.iconBox}>
+const SettingsItem = ({ icon, label, subLabel }: any) => (
+  <TouchableOpacity style={styles.itemRow} activeOpacity={0.7}>
+    <View style={styles.itemIconBox}>
       {renderSettIcon(icon)}
     </View>
     <View style={{ flex: 1 }}>
-      <Text style={styles.label}>{label}</Text>
-      {subLabel && <Text style={styles.subLabel}>{subLabel}</Text>}
+      <Text style={styles.itemLabel}>{label}</Text>
+      {subLabel && <Text style={styles.itemSubLabel}>{subLabel}</Text>}
     </View>
-    {!isReadOnly && (
-      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <Path d="M9 18l6-6-6-6" />
-      </Svg>
-    )}
+    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+      <Path d="M9 18l6-6-6-6" />
+    </Svg>
   </TouchableOpacity>
 );
 
 const renderSettIcon = (name: string) => {
   const size = 20;
-  if(name === 'user') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Circle cx="12" cy="7" r="4"/><Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></Svg>
-  if(name === 'phone') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></Svg>
-  if(name === 'bell') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><Path d="M13.73 21a2 2 0 0 1-3.46 0"/></Svg>
-  if(name === 'lock') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><Path d="M7 11V7a5 5 0 0 1 10 0v4" /></Svg>
-  if(name === 'help') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5"><Circle cx="12" cy="12" r="10"/><Path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><Path d="M12 17h.01"/></Svg>
+  const color = "#006C52";
+  if(name === 'bell') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><Path d="M13.73 21a2 2 0 0 1-3.46 0"/></Svg>
+  if(name === 'lock') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><Path d="M7 11V7a5 5 0 0 1 10 0v4" /></Svg>
+  if(name === 'help') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Circle cx="12" cy="12" r="10"/><Path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><Path d="M12 17h.01"/></Svg>
   return null;
 }
 
@@ -336,19 +327,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
   },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#006C52',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   avatarInitial: {
     color: '#FFFFFF',
     fontSize: 40,
@@ -359,7 +337,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 4,
-    paddingLeft: 22,
+    paddingLeft: 26,
   },
   userName: {
     fontSize: 22,
@@ -368,9 +346,9 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
   nameEditIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
@@ -432,26 +410,26 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F8FAFC',
   },
-  iconBox: {
+  itemIconBox: {
     width: 44,
     height: 44,
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
   },
-  label: {
+  itemLabel: {
     fontSize: 15,
     color: '#1E293B',
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
-  subLabel: {
+  itemSubLabel: {
     fontSize: 12,
     color: '#64748B',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',

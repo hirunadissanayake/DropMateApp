@@ -56,7 +56,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
 
 
-  const vehicleOptions = ['Bus', 'Car', 'Motor bike'];
+  const vehicleOptions = ['Bus', 'Car', 'Motor bike', 'Train'];
 
   const handlePickImage = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
     Alert.alert(

@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Colors } from '../../constants/Colors';
 
 interface CustomDropdownProps {
@@ -67,6 +67,14 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             <Circle cx="19" cy="18" r="3" stroke={color} strokeWidth="2"/>
             <Path d="M12 18V12L15 8H19" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <Path d="M8 18V13C8 13 8 10 11 10H14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+        );
+      case 'train':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+             <Path d="M7 15H17M7 11H17" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             <Rect x="5" y="5" width="14" height="12" rx="2" ry="2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+             <Path d="M8 21L10 17M16 21L14 17" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </Svg>
         );
       default:

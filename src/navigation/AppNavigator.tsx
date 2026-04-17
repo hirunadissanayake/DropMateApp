@@ -14,6 +14,8 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import CustomerTabNavigator from '../navigation/CustomerTabNavigator';
 import TravelerTabNavigator from '../navigation/TravelerTabNavigator';
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
+import PersonalDetailsScreen from '../screens/PersonalDetailsScreen';
+import VehicleDetailsScreen from '../screens/VehicleDetailsScreen';
 
 
 export type RootStackParamList = {
@@ -28,6 +30,8 @@ export type RootStackParamList = {
   ResetPassword: undefined;
   CustomerHome: undefined;
   TravelerHome: undefined;
+  PersonalDetails: undefined;
+  VehicleDetails: undefined;
 };
 
 
@@ -86,6 +90,14 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="TravelerHome" 
           component={TravelerTabNavigator} 
+        />
+        <Stack.Screen 
+          name="PersonalDetails" 
+          component={PersonalDetailsScreen} 
+        />
+        <Stack.Screen 
+          name="VehicleDetails" 
+          component={VehicleDetailsScreen} 
         />
       </Stack.Navigator>
 
