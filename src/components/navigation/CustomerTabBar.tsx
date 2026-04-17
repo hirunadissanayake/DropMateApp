@@ -25,9 +25,6 @@ const CustomerTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) =
   return (
     <View style={styles.container}>
       <View style={styles.tabBarWrapper}>
-        {/* Top accent line */}
-        <View style={styles.topAccent} />
-
         <View style={styles.tabBarContainer}>
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
@@ -214,7 +211,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
       </Svg>
     );
   }
-  if (routeName === 'Shipments') {
+  if (routeName === 'Shipments' || routeName === 'Services') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
         <Path
@@ -241,7 +238,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
       </Svg>
     );
   }
-  if (routeName === 'Wallet') {
+  if (routeName === 'Wallet' || routeName === 'Earnings') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
         <Rect
@@ -316,16 +313,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 135, 90, 0.14)',
     overflow: 'hidden',
-  },
-  // Thin green line across the very top of the bar
-  topAccent: {
-    height: 2.5,
-    width: '38%',
-    alignSelf: 'center',
-    backgroundColor: BRAND_GREEN,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-    opacity: 0.35,
   },
   tabBarContainer: {
     flexDirection: 'row',

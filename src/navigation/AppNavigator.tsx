@@ -12,6 +12,7 @@ import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOTPScreen from '../screens/VerifyOTPScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import CustomerTabNavigator from '../navigation/CustomerTabNavigator';
+import TravelerTabNavigator from '../navigation/TravelerTabNavigator';
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 
 
@@ -84,7 +85,7 @@ export const AppNavigator = () => {
         />
         <Stack.Screen 
           name="TravelerHome" 
-          component={TravelerHomeScreen} 
+          component={TravelerTabNavigator} 
         />
       </Stack.Navigator>
 

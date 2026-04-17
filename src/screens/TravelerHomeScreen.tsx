@@ -8,8 +8,9 @@ import {
   ScrollView,
   Platform,
   Dimensions,
-  SafeAreaView,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, G, Defs, ClipPath } from 'react-native-svg';
 import { useAuthStore } from '../store/authStore';
@@ -161,9 +162,8 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Top Floating Header */}
-      <View style={styles.absoluteHeader}>
-        <SafeAreaView>
-          <View style={styles.headerContent}>
+      <SafeAreaView edges={['top']} style={styles.absoluteHeader}>
+        <View style={styles.headerContent}>
             <View style={styles.userInfoRow}>
               <View style={styles.profilePicBorder}>
                 <View style={{width: '100%', height: '100%', backgroundColor: '#D1EFE0', borderRadius: 20}} />
@@ -176,42 +176,8 @@ const TravelerHomeScreen = ({ navigation }: any) => {
               </Svg>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
-      </View>
+      </SafeAreaView>
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNavContainer}>
-        <View style={styles.bottomNavInner}>
-          
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navItemActiveBg}>
-              <Svg width="16" height="22" viewBox="0 0 16 22" fill="none"><Path d="M2 16H5V10H11V16H14V7L8 2.5L2 7V16ZM0 18V6L8 0L16 6V18H9V12H7V18H0Z" fill="#022C22"/></Svg>
-              <Text style={styles.navItemActiveText}>HOME</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navItemInactiveBg}>
-               <Svg width="16" height="25" viewBox="0 0 16 25" fill="none"><Path d="M2 21C1.45 21 0.979167 20.8042 0.5875 20.4125C0.195833 20.0208 0 19.55 0 19V9C0 8.45 0.195833 7.97917 0.5875 7.5875C0.979167 7.19583 1.45 7 2 7H3V5C3 3.61667 3.4875 2.4375 4.4625 1.4625C5.4375 0.4875 6.61667 0 8 0C9.38333 0 10.5625 0.4875 11.5375 1.4625C12.5125 2.4375 13 3.61667 13 5V7H14C14.55 7 15.0208 7.19583 15.4125 7.5875C15.8042 7.97917 16 8.45 16 9V19C16 19.55 15.8042 20.0208 15.4125 20.4125C15.0208 20.8042 14.55 21 14 21H2ZM2 19H14V9H2V19ZM8 16C8.55 16 9.02083 15.8042 9.4125 15.4125C9.80417 15.0208 10 14.55 10 14C10 13.45 9.80417 12.9792 9.4125 12.5875C9.02083 12.1958 8.55 12 8 12C7.45 12 6.97917 12.1958 6.5875 12.5875C6.19583 12.9792 6 13.45 6 14C6 14.55 6.19583 15.0208 6.5875 15.4125C6.97917 15.8042 7.45 16 8 16ZM5 7H11V5C11 4.16667 10.7083 3.45833 10.125 2.875C9.54167 2.29167 8.83333 2 8 2C7.16667 2 6.45833 2.29167 5.875 2.875C5.29167 3.45833 5 4.16667 5 5V7ZM2 19V9V19Z" fill="#064E3B" fillOpacity="0.4"/></Svg>
-              <Text style={styles.navItemInactiveText}>SERVICES</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItem}>
-             <View style={styles.navItemInactiveBg}>
-               <Svg width="19" height="26" viewBox="0 0 19 26" fill="none"><Path d="M5 7H11V5C11 4.16667 10.7083 3.45833 10.125 2.875C9.54167 2.29167 8.83333 2 8 2C7.16667 2 6.45833 2.29167 5.875 2.875C5.29167 3.45833 5 4.16667 5 5V7ZM8.25 21H2C1.45 21 0.979167 20.8042 0.5875 20.4125C0.195833 20.0208 0 19.55 0 19V9C0 8.45 0.195833 7.97917 0.5875 7.5875C0.979167 7.19583 1.45 7 2 7H3V5C3 3.61667 3.4875 2.4375 4.4625 1.4625C5.4375 0.4875 6.61667 0 8 0C9.38333 0 10.5625 0.4875 11.5375 1.4625C12.5125 2.4375 13 3.61667 13 5V7H14C14.55 7 15.0208 7.19583 15.4125 7.5875C15.8042 7.97917 16 8.45 16 9V10.3C15.7 10.2 15.3875 10.125 15.0625 10.075C14.7375 10.025 14.3833 10 14 10V9H2V19H7.3C7.43333 19.4 7.56667 19.7458 7.7 20.0375C7.83333 20.3292 8.01667 20.65 8.25 21ZM14 22C12.6167 22 11.4375 21.5125 10.4625 20.5375C9.4875 19.5625 9 18.3833 9 17C9 15.6167 9.4875 14.4375 10.4625 13.4625C11.4375 12.4875 12.6167 12 14 12C15.3833 12 16.5625 12.4875 17.5375 13.4625C18.5125 14.4375 19 15.6167 19 17C19 18.3833 18.5125 19.5625 17.5375 20.5375C16.5625 21.5125 15.3833 22 14 22ZM15.65 19.35L16.35 18.65L14.5 16.8V14H13.5V17.2L15.65 19.35ZM2 9C2 9 2 9.49167 2 10.475C2 11.4583 2 12.5542 2 13.7625C2 14.9708 2 16.1083 2 17.175C2 18.2417 2 18.85 2 19V9Z" fill="#064E3B" fillOpacity="0.4"/></Svg>
-              <Text style={styles.navItemInactiveText}>EARNINGS</Text>
-             </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItem}>
-             <View style={styles.navItemInactiveBg}>
-               <Svg width="16" height="16" viewBox="0 0 16 16" fill="none"><Path d="M7.6 7.6C6.555 7.6 5.66042 7.22792 4.91625 6.48375C4.17208 5.73958 3.8 4.845 3.8 3.8C3.8 2.755 4.17208 1.86042 4.91625 1.11625C5.66042 0.372083 6.555 0 7.6 0C8.645 0 9.53958 0.372083 10.2837 1.11625C11.0279 1.86042 11.4 2.755 11.4 3.8C11.4 4.845 11.0279 5.73958 10.2837 6.48375C9.53958 7.22792 8.645 7.6 7.6 7.6V7.6M0 15.2V12.54C0 12.0017 0.138542 11.5069 0.415625 11.0556C0.692708 10.6044 1.06083 10.26 1.52 10.0225C2.50167 9.53167 3.49917 9.16354 4.5125 8.91812C5.52583 8.67271 6.555 8.55 7.6 8.55C8.645 8.55 9.67417 8.67271 10.6875 8.91812C11.7008 9.16354 12.6983 9.53167 13.68 10.0225C14.1392 10.26 14.5073 10.6044 14.7844 11.0556C15.0615 11.5069 15.2 12.0017 15.2 12.54V15.2H0V15.2M1.9 13.3H13.3V12.54C13.3 12.3658 13.2565 12.2075 13.1694 12.065C13.0823 11.9225 12.9675 11.8117 12.825 11.7325C11.97 11.305 11.1071 10.9844 10.2362 10.7706C9.36542 10.5569 8.48667 10.45 7.6 10.45C6.71333 10.45 5.83458 10.5569 4.96375 10.7706C4.09292 10.9844 3.23 11.305 2.375 11.7325C2.2325 11.8117 2.11771 11.9225 2.03063 12.065C1.94354 12.2075 1.9 12.3658 1.9 12.54V13.3V13.3M7.6 5.7C8.1225 5.7 8.56979 5.51396 8.94188 5.14187C9.31396 4.76979 9.5 4.3225 9.5 3.8C9.5 3.2775 9.31396 2.83021 8.94188 2.45813C8.56979 2.08604 8.1225 1.9 7.6 1.9C7.0775 1.9 6.63021 2.08604 6.25813 2.45813C5.88604 2.83021 5.7 3.2775 5.7 3.8C5.7 4.3225 5.88604 4.76979 6.25813 5.14187C6.63021 5.51396 7.0775 5.7 7.6 5.7V5.7M7.6 3.8V3.8V3.8V3.8V3.8V3.8V3.8V3.8V3.8V3.8M7.6 13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3V13.3" fill="#064E3B" fillOpacity="0.4"/></Svg>
-              <Text style={styles.navItemInactiveText}>PROFILE</Text>
-             </View>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
   );
 };
@@ -522,61 +488,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
-  /* BOTTOM NAV */
-  bottomNavContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderTopWidth: 1,
-    borderColor: 'rgba(6, 78, 59, 0.05)',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
-    paddingTop: 11,
-    shadowColor: 'rgba(5, 32, 23, 0.06)',
-    shadowOffset: { width: 0, height: -12 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
-    elevation: 10,
-  },
-  bottomNavInner: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 10,
-  },
-  navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 61,
-  },
-  navItemActiveBg: {
-    backgroundColor: '#D1FAE5',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  navItemInactiveBg: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  navItemActiveText: {
-    color: '#022C22',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 4,
-    letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
-  },
-  navItemInactiveText: {
-    color: 'rgba(6, 78, 59, 0.40)',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 4,
-    letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
-  },
+
 });
 
 export default TravelerHomeScreen;

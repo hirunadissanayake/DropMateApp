@@ -1,0 +1,32 @@
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { StatusBar } from 'react-native';
+
+import TravelerHomeScreen from '../screens/TravelerHomeScreen';
+import TravelerServicesScreen from '../screens/TravelerServicesScreen';
+import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
+import TravelerProfileScreen from '../screens/TravelerProfileScreen';
+import CustomerTabBar from '../components/navigation/CustomerTabBar';
+
+const Tab = createBottomTabNavigator();
+
+const TravelerTabNavigator = () => {
+  return (
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <Tab.Navigator
+        tabBar={(props) => <CustomerTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Tab.Screen name="Home" component={TravelerHomeScreen} />
+        <Tab.Screen name="Services" component={TravelerServicesScreen} />
+        <Tab.Screen name="Earnings" component={TravelerEarningsScreen} />
+        <Tab.Screen name="Profile" component={TravelerProfileScreen} />
+      </Tab.Navigator>
+    </>
+  );
+};
+
+export default TravelerTabNavigator;
