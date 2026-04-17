@@ -21,6 +21,16 @@ import Toast from 'react-native-toast-message';
 
 import { useRegistrationStore } from '../store/registrationStore';
 
+const getStrengthScore = (pass: string) => {
+  let score = 0;
+  if (!pass) return 0;
+  if (pass.length >= 6) score++;
+  if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+  if (/[0-9]/.test(pass)) score++;
+  if (/[^A-Za-z0-9]/.test(pass)) score++;
+  return score;
+};
+
 interface InputFieldProps {
   label: string;
   placeholder: string;
@@ -31,9 +41,10 @@ interface InputFieldProps {
   maxLength?: number;
   isPassword?: boolean;
   error?: string;
+  showStrength?: boolean;
 }
 
-const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword, maxLength, error }: Partial<InputFieldProps>) => {
+const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword, maxLength, error, showStrength }: Partial<InputFieldProps>) => {
   const [internalSecure, setInternalSecure] = useState(true);
   
   return (
@@ -76,6 +87,19 @@ const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword,
           </TouchableOpacity>
         )}
       </View>
+      {showStrength && value && value.length > 0 && (
+        <View style={styles.strengthGrid}>
+          {[1, 2, 3, 4].map((index) => (
+            <View 
+              key={index} 
+              style={[
+                styles.strengthBar, 
+                getStrengthScore(value) >= index && styles.strengthActive
+              ]} 
+            />
+          ))}
+        </View>
+      )}
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -128,10 +152,11 @@ const SignupScreen = ({ navigation, route }: any) => {
       newErrors.phone = 'Must be exactly 10 digits';
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Must be at least 6 characters';
+    } else if (!passwordRegex.test(password)) {
+      newErrors.password = 'Requires upper, lower, number, and symbol';
     }
 
     if (!confirmPassword) {
@@ -236,6 +261,7 @@ const SignupScreen = ({ navigation, route }: any) => {
                 label="PASSWORD"
                 placeholder="••••••••"
                 isPassword
+                showStrength
                 value={formData.password}
                 onChangeText={(t) => setFormData({ ...formData, password: t })}
                 error={errors.password}
@@ -442,6 +468,21 @@ const styles = StyleSheet.create({
   },
   termsBold: {
     fontWeight: '800',
+  },
+  strengthGrid: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  strengthBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBE9DA',
+  },
+  strengthActive: {
+    backgroundColor: '#00513D',
   },
   signupButton: {
     height: 64,

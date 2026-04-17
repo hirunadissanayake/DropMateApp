@@ -17,18 +17,62 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
+import * as authService from '../services/authService';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
-const ResetPasswordScreen = ({ navigation }: any) => {
+const getStrengthScore = (pass: string) => {
+  let score = 0;
+  if (!pass) return 0;
+  if (pass.length >= 6) score++;
+  if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+  if (/[0-9]/.test(pass)) score++;
+  if (/[^A-Za-z0-9]/.test(pass)) score++;
+  return score;
+};
+
+const ResetPasswordScreen = ({ navigation, route }: any) => {
+  const { resetToken } = route.params || {};
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleReset = () => {
-    // Navigate back to Login or Success screen
-    navigation.navigate('Login');
+  const handleReset = async () => {
+    if (!password || !confirmPassword) {
+      Toast.show({ type: 'info', text1: 'Fields Required', text2: 'Please enter both passwords.' });
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
+    if (!passwordRegex.test(password)) {
+      Toast.show({ type: 'error', text1: 'Weak Password', text2: 'Requires 6+ chars, upper, lower, number & symbol.' });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Toast.show({ type: 'error', text1: 'Passwords Mismatch', text2: 'Make sure your passwords match.' });
+      return;
+    }
+    if (!resetToken) {
+      Toast.show({ type: 'error', text1: 'Invalid Request', text2: 'Cannot reset password without an authorized token.' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await authService.resetPassword({ resetToken, password, confirmPassword });
+      Toast.show({ type: 'success', text1: 'Password Reset', text2: res.message || 'Password updated successfully!' });
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (error: any) {
+      console.error('Reset password error', error);
+      Toast.show({ type: 'error', text1: 'Reset Failed', text2: error.message || 'Failed to update password.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,7 +106,7 @@ const ResetPasswordScreen = ({ navigation }: any) => {
             <View style={styles.titleSection}>
               <Text style={styles.title}>Reset Password</Text>
               <Text style={styles.description}>
-                Enhance your security. Create a strong password that is at least 8 characters long with numbers and symbols.
+                Enhance your security. Create a strong password that is at least 6 characters long with upper/lower case letters, numbers, and symbols.
               </Text>
             </View>
 
@@ -101,6 +145,19 @@ const ResetPasswordScreen = ({ navigation }: any) => {
                     </Svg>
                   </TouchableOpacity>
                 </View>
+                {password.length > 0 && (
+                  <View style={styles.strengthGrid}>
+                    {[1, 2, 3, 4].map((index) => (
+                      <View 
+                        key={index} 
+                        style={[
+                          styles.strengthBar, 
+                          getStrengthScore(password) >= index && styles.strengthActive
+                        ]} 
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
 
               {/* Confirm Password */}
@@ -143,6 +200,7 @@ const ResetPasswordScreen = ({ navigation }: any) => {
             <PrimaryButton 
               text="Reset Password" 
               onPress={handleReset}
+              loading={isLoading}
               style={styles.actionButton}
             />
 

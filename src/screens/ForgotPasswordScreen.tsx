@@ -16,14 +16,55 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
+import * as authService from '../services/authService';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
 const ForgotPasswordScreen = ({ navigation }: any) => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendOTP = () => {
-    navigation.navigate('VerifyOTP', { phoneNumber });
+  const handleSendOTP = async () => {
+    const cleanPhone = phoneNumber.trim();
+    if (!cleanPhone) {
+      Toast.show({
+        type: 'info',
+        text1: 'Phone Required',
+        text2: 'Please enter your phone number.',
+      });
+      return;
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Phone Number',
+        text2: 'Please enter a valid 10-digit phone number.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await authService.forgotPassword(cleanPhone);
+      Toast.show({
+        type: 'success',
+        text1: 'OTP Sent',
+        text2: response.message || 'OTP sent successfully'
+      });
+      navigation.navigate('VerifyOTP', { phoneNumber: phoneNumber.trim(), flow: 'FORGOT_PASSWORD' });
+    } catch (error: any) {
+      console.error('Forgot Password error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: error.message || 'Could not send OTP. Please try again.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -81,7 +122,11 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
                   placeholderTextColor="#BEC9C2"
                   keyboardType="phone-pad"
                   value={phoneNumber}
-                  onChangeText={setPhoneNumber}
+                  maxLength={10}
+                  onChangeText={(text) => {
+                    const numericValue = text.replace(/[^0-9]/g, '');
+                    setPhoneNumber(numericValue);
+                  }}
                 />
               </View>
             </View>
@@ -90,6 +135,7 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
             <PrimaryButton 
               text="Send Reset OTP" 
               onPress={handleSendOTP}
+              loading={isLoading}
               style={styles.actionButton}
               icon={
                 <Svg width="18" height="18" viewBox="0 0 14 14" fill="none">

@@ -69,7 +69,12 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
 
     setLoading(true);
     try {
-      const response = await authService.verifyOtp(phoneNumber, otp);
+      let response;
+      if (flow === 'FORGOT_PASSWORD') {
+        response = await authService.verifyResetOtp(phoneNumber, otp);
+      } else {
+        response = await authService.verifyOtp(phoneNumber, otp);
+      }
       console.log('OTP Verification success:', response);
       
       if (flow === 'REGISTRATION') {
@@ -92,7 +97,7 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
           routes: [{ name: routeName }],
         });
       } else {
-        navigation.navigate('ResetPassword');
+        navigation.navigate('ResetPassword', { resetToken: response.resetToken, phoneNumber });
       }
     } catch (error: any) {
 

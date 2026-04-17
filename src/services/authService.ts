@@ -84,3 +84,42 @@ export const login = async (data: { email: string; password: string }) => {
     throw error;
   }
 };
+
+export const forgotPassword = async (phone: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { phone });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+
+export const verifyResetOtp = async (phone: string, otp: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.VERIFY_RESET_OTP, {
+      phone,
+      code: otp,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+
+export const resetPassword = async (data: { resetToken: string; password: string; confirmPassword: string }) => {
+  try {
+    const response = await axios.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
