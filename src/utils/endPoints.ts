@@ -8,5 +8,6 @@ export const ENDPOINTS = {
     FORGOT_PASSWORD: `${BASE_URL}/api/auth/forgot-password`,
     VERIFY_RESET_OTP: `${BASE_URL}/api/auth/verify-reset-otp`,
     RESET_PASSWORD: `${BASE_URL}/api/auth/reset-password`,
+    GET_ME: `${BASE_URL}/api/auth/me`,
   },
 };

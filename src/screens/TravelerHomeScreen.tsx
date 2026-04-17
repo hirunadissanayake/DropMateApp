@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,40 @@ import {
   Platform,
   Dimensions,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Rect, G, Defs, ClipPath } from 'react-native-svg';
+import Svg, { Path, Rect, G, Defs, ClipPath, Circle } from 'react-native-svg';
+import * as authService from '../services/authService';
 import { useAuthStore } from '../store/authStore';
 
 const { width } = Dimensions.get('window');
 
 const TravelerHomeScreen = ({ navigation }: any) => {
-  const { user } = useAuthStore();
+  const { user, token, setUser } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    if (!token) return;
+    setRefreshing(true);
+    try {
+      const userData = await authService.getMe(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [token]);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning 👋,';
+    if (hour < 17) return 'Good Afternoon 👋,';
+    return 'Good Evening 👋,';
+  };
+
   const userName = user?.name || 'Traveler';
 
   return (
@@ -30,23 +54,61 @@ const TravelerHomeScreen = ({ navigation }: any) => {
         style={StyleSheet.absoluteFillObject}
       />
 
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="transparent" 
+        translucent={true} 
+      />
+
+      {/* Sticky Header Card */}
+      <View style={styles.headerWrapper}>
+        <View style={styles.headerCard}>
+          <TouchableOpacity 
+            style={styles.userInfo} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('TravelerProfile')}
+          >
+            <View style={styles.avatarBorder}>
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
+              </View>
+            </View>
+            <View>
+              <Text style={styles.greetingText}>{getGreeting()}</Text>
+              <Text style={styles.userNameText}>{userName}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
+            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+            <View style={styles.notifDot} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* Main Scroll Content */}
       <View style={styles.scrollWrapper}>
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              colors={['#006C52']}
+              tintColor="#006C52"
+              progressViewOffset={Platform.OS === 'ios' ? 0 : 110}
+            />
+          }
         >
-          {/* Header area padding to prevent content from going under the absolute floating header */}
-          <View style={{ height: 110 }} />
+          {/* Header Padding */}
+          <View style={{ height: Platform.OS === 'ios' ? 140 : 120 }} />
 
-          {/* Greeting Area */}
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greetingSubtitle}>Good Morning,</Text>
-            <Text style={styles.greetingTitle}>{userName}</Text>
-          </View>
-
-          {/* Under Review Card */}
-          <View style={styles.reviewCard}>
+          {/* Under Review Card - Only show if not approved */}
+          {!user?.isTravelerApproved && (
+            <View style={styles.reviewCard}>
             <View style={styles.reviewCardBgCircle} />
             <View style={styles.reviewHeaderRow}>
               <View style={styles.reviewBadge}>
@@ -67,18 +129,21 @@ const TravelerHomeScreen = ({ navigation }: any) => {
               <View style={[styles.reviewProgressBarFill, { width: '70%' }]} />
             </View>
           </View>
+        )}
 
-          {/* Complete your profile */}
-          <View style={styles.profileCard}>
-            <View style={styles.profileHeaderRow}>
-              <Text style={styles.profileTitle}>Complete your profile</Text>
-              <Text style={styles.profilePercent}>85%</Text>
+          {/* Complete your profile - Only show if not approved */}
+          {!user?.isTravelerApproved && (
+            <View style={styles.profileCard}>
+              <View style={styles.profileHeaderRow}>
+                <Text style={styles.profileTitle}>Complete your profile</Text>
+                <Text style={styles.profilePercent}>85%</Text>
+              </View>
+              <View style={styles.progressBarTrack}>
+                <View style={[styles.progressBarFill, { width: '85%' }]} />
+              </View>
+              <Text style={styles.profileHintText}>Add your local bank details to reach 100%.</Text>
             </View>
-            <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: '85%' }]} />
-            </View>
-            <Text style={styles.profileHintText}>Add your local bank details to reach 100%.</Text>
-          </View>
+          )}
 
           {/* Locked Services */}
           <View style={styles.lockedServicesContainer}>
@@ -160,24 +225,6 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
         </ScrollView>
       </View>
-
-      {/* Top Floating Header */}
-      <SafeAreaView edges={['top']} style={styles.absoluteHeader}>
-        <View style={styles.headerContent}>
-            <View style={styles.userInfoRow}>
-              <View style={styles.profilePicBorder}>
-                <View style={{width: '100%', height: '100%', backgroundColor: '#D1EFE0', borderRadius: 20}} />
-              </View>
-              <Text style={styles.floatingHeaderName}>The Quiet Velocity</Text>
-            </View>
-            <TouchableOpacity style={styles.bellIconBox}>
-              <Svg width="16" height="20" viewBox="0 0 16 20" fill="none">
-                <Path d="M8 25V23H10V16C10 14.6167 10.4167 13.3875 11.25 12.3125C12.0833 11.2375 13.1667 10.5333 14.5 10.2V9.5C14.5 9.08333 14.6458 8.72917 14.9375 8.4375C15.2292 8.14583 15.5833 8 16 8C16.4167 8 16.7708 8.14583 17.0625 8.4375C17.3542 8.72917 17.5 9.08333 17.5 9.5V10.2C18.8333 10.5333 19.9167 11.2375 20.75 12.3125C21.5833 13.3875 22 14.6167 22 16V23H24V25H8ZM16 28C15.45 28 14.9792 27.8042 14.5875 27.4125C14.1958 27.0208 14 26.55 14 26H18C18 26.55 17.8042 27.0208 17.4125 27.4125C17.0208 27.8042 16.55 28 16 28ZM12 23H20V16C20 14.9 19.6083 13.9583 18.825 13.175C18.0417 12.3917 17.1 12 16 12C14.9 12 13.9583 12.3917 13.175 13.175C12.3917 13.9583 12 14.9 12 16V23Z" fill="#064E3B"/>
-              </Svg>
-            </TouchableOpacity>
-          </View>
-      </SafeAreaView>
-
     </View>
   );
 };
@@ -189,44 +236,93 @@ const styles = StyleSheet.create({
   },
   scrollWrapper: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
     padding: 24,
     gap: 32,
   },
-  /* HEADER */
-  absoluteHeader: {
+  /* HEADER STYLES */
+  headerWrapper: {
     position: 'absolute',
     top: 0,
-    width: '100%',
-    backgroundColor: 'rgba(236, 253, 245, 0.5)',
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 10 : (StatusBar.currentHeight || 0) + 12,
   },
-  headerContent: {
+  headerCard: {
+    marginTop: Platform.OS === 'ios' ? 44 : 0,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  userInfoRow: {
+  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
-  profilePicBorder: {
-    width: 38,
-    height: 40,
-    borderRadius: 20,
+  avatarBorder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#9DF4D2',
-    overflow: 'hidden',
+    borderColor: '#E7F5EF',
+    padding: 2,
   },
-  floatingHeaderName: {
-    color: '#022C22',
+  avatarPlaceholder: {
+    flex: 1,
+    backgroundColor: '#006C52',
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 18,
+  },
+  greetingText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+  },
+  userNameText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: '#0F172A',
     fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
     letterSpacing: -0.5,
+  },
+  notificationBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  notifDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   bellIconBox: {
     width: 45,

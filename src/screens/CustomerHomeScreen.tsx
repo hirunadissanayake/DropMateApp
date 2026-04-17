@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,43 @@ import {
   Dimensions,
   SafeAreaView,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import * as authService from '../services/authService';
+import { useAuthStore } from '../store/authStore';
 
 const { width } = Dimensions.get('window');
 
 const CustomerHomeScreen = ({ navigation }: any) => {
+  const { user, token, setUser } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    if (!token) return;
+    setRefreshing(true);
+    try {
+      const userData = await authService.getMe(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [token]);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning 👋';
+    if (hour < 17) return 'Good Afternoon 👋';
+    return 'Good Evening 👋';
+  };
+
+  const getInitial = (name: string) => {
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar 
@@ -33,38 +63,51 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         <View style={styles.bgBlob} />
       </View>
 
+      {/* Sticky Header */}
+      <View style={styles.headerWrapper}>
+        <View style={styles.headerCard}>
+          <TouchableOpacity 
+            style={styles.userInfo} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <View style={styles.avatarBorder}>
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>{getInitial(user?.name || '')}</Text>
+              </View>
+            </View>
+            <View>
+              <Text style={styles.greetingText}>{getGreeting()}</Text>
+              <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
+            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+            <View style={styles.notifDot} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* Main Scroll Content */}
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={['#006C52']} // Android
+            tintColor="#006C52" // iOS
+            progressViewOffset={Platform.OS === 'ios' ? 0 : 115}
+          />
+        }
       >
-        <View>
-          {/* Custom Floating Header */}
-          <View style={styles.headerWrapper}>
-            <View style={styles.headerCard}>
-              <View style={styles.userInfo}>
-                <View style={styles.avatarBorder}>
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarText}>E</Text>
-                  </View>
-                </View>
-                <View>
-                  <Text style={styles.greetingText}>Good Morning 👋</Text>
-                  <Text style={styles.userName}>Elena Gilbert</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
-                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </Svg>
-                <View style={styles.notifDot} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.contentBody}>
-            {/* Verification Status Banner */}
+        <View style={styles.contentBody}>
+          {/* Verification Status Banner - Only show if NOT approved */}
+          {!user?.isCustomerApproved && (
             <View style={styles.statusCard}>
               <LinearGradient
                 colors={['#006C52', '#004D3B']}
@@ -78,7 +121,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                       <Text style={styles.statusBadgeText}>STATUS: REVIEWING</Text>
                     </View>
                     <Text style={styles.statusTitle}>Verification in Progress</Text>
-                    <Text style={styles.statusDesc}>Enjoy 15% off your first delivery once verified.</Text>
+                    {/* <Text style={styles.statusDesc}>Enjoy 15% off your first delivery once verified.</Text> */}
                   </View>
                   <View style={styles.shieldIcon}>
                     <Svg width="40" height="40" viewBox="0 0 24 24" fill="none">
@@ -89,8 +132,10 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 </View>
               </LinearGradient>
             </View>
+          )}
 
-            {/* Profile Progress */}
+          {/* Profile Progress */}
+          {!user?.isCustomerApproved && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>Profile Completion</Text>
@@ -101,53 +146,53 @@ const CustomerHomeScreen = ({ navigation }: any) => {
               </View>
               <Text style={styles.hintText}>💡 Tip: Add a backup phone for 100% security.</Text>
             </View>
+          )}
 
-            {/* Core Services Grid */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>OUR SERVICES</Text>
-              <View style={styles.serviceRow}>
-                <ServiceItem 
-                  title="Send Parcel" 
-                  icon="package"
-                  color="#E0F2FE"
-                  iconColor="#0369A1"
-                />
-                <ServiceItem 
-                  title="Track Order" 
-                  icon="map"
-                  color="#F0FDF4"
-                  iconColor="#15803D"
-                />
-                <ServiceItem 
-                  title="My Wallet" 
-                  icon="credit-card"
-                  color="#FFF7ED"
-                  iconColor="#C2410C"
-                />
-              </View>
+          {/* Core Services Grid */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>OUR SERVICES</Text>
+            <View style={styles.serviceRow}>
+              <ServiceItem 
+                title="Send Parcel" 
+                icon="package"
+                color="#E0F2FE"
+                iconColor="#0369A1"
+              />
+              <ServiceItem 
+                title="Track Order" 
+                icon="map"
+                color="#F0FDF4"
+                iconColor="#15803D"
+              />
+              <ServiceItem 
+                title="My Wallet" 
+                icon="credit-card"
+                color="#FFF7ED"
+                iconColor="#C2410C"
+              />
             </View>
-
-            {/* Insights / Explore Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>EXPLORE DROPMATE</Text>
-              <TouchableOpacity activeOpacity={0.9} style={styles.exploreFeatureCard}>
-                <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>Instant Logistics</Text>
-                  <Text style={styles.featureSubtitle}>Learn how we deliver 3x faster than anyone else.</Text>
-                  <View style={styles.featureBtn}>
-                    <Text style={styles.featureBtnText}>Read Guide</Text>
-                  </View>
-                </View>
-                <View style={styles.featureIconBox}>
-                  <Svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                    <Path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#FBBF24" />
-                  </Svg>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ height: 120 }} />
           </View>
+
+          {/* Insights / Explore Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>EXPLORE DROPMATE</Text>
+            <TouchableOpacity activeOpacity={0.9} style={styles.exploreFeatureCard}>
+              <View style={styles.featureContent}>
+                <Text style={styles.featureTitle}>Instant Logistics</Text>
+                <Text style={styles.featureSubtitle}>Learn how we deliver 3x faster than anyone else.</Text>
+                <View style={styles.featureBtn}>
+                  <Text style={styles.featureBtnText}>Read Guide</Text>
+                </View>
+              </View>
+              <View style={styles.featureIconBox}>
+                <Svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                  <Path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#FBBF24" />
+                </Svg>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 120 }} />
         </View>
       </ScrollView>
     </View>
@@ -205,12 +250,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    zIndex: 1,
   },
   headerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 10 : (StatusBar.currentHeight || 0) + 12,
-    marginTop: Platform.OS === 'ios' ? 0 : 0, // Keep space for the card to breathe
-    marginBottom: 24,
   },
   headerCard: {
     marginTop: Platform.OS === 'ios' ? 44 : 0, // Offset for iOS status bar in translucent mode if not handled by SafeAreaView
@@ -283,6 +332,7 @@ const styles = StyleSheet.create({
   },
   contentBody: {
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 120,
   },
   statusCard: {
     borderRadius: 24,

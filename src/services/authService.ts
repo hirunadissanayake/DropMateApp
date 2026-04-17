@@ -124,3 +124,20 @@ export const resetPassword = async (data: { resetToken: string; password: string
     throw error;
   }
 };
+
+export const getMe = async (token: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.AUTH.GET_ME, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};
+

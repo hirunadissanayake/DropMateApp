@@ -5,10 +5,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface User {
   id: string;
   name: string;
+  phone: string;
   email: string;
-  roleActive: 'CUSTOMER' | 'TRAVELER' | null;
+  selfieUrl: string | null;
+  nicFrontUrl: string | null;
+  nicBackUrl: string | null;
+  nicNumber: string;
+  weightCapacity: string | null;
+  vehicleType: string | null;
+  termsAccepted: boolean;
+  isCustomerRequested: boolean;
+  isTravelerRequested: boolean;
   isCustomerApproved: boolean;
   isTravelerApproved: boolean;
+  roleActive: 'CUSTOMER' | 'TRAVELER' | null;
+  rating: number;
+  trustScore: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthState {
@@ -17,6 +31,7 @@ interface AuthState {
   isLoading: boolean;
   _hasHydrated: boolean;
   setAuth: (token: string, user: User) => void;
+  setUser: (user: User) => void;
   logout: () => void;
   setRoleActive: (role: 'CUSTOMER' | 'TRAVELER') => void;
   setHasHydrated: (state: boolean) => void;
@@ -30,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       _hasHydrated: false,
       setAuth: (token, user) => set({ token, user, isLoading: false }),
+      setUser: (user) => set({ user }),
       logout: () => set({ token: null, user: null, isLoading: false }),
       setRoleActive: (role) => 
         set((state) => ({

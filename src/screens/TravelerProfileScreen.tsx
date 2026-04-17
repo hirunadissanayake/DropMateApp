@@ -17,13 +17,28 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
+import * as authService from '../services/authService';
 
 const BRAND_GREEN = '#00875A';
 const BRAND_LIGHT = '#E6F5EF';
 
 const TravelerProfileScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const logout = useAuthStore((state) => state.logout);
+  const { user, token, logout, setUser } = useAuthStore();
+
+  const fetchProfile = async () => {
+    if (!token) return;
+    try {
+      const userData = await authService.getMe(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -38,6 +53,10 @@ const TravelerProfileScreen = () => {
     });
   };
 
+  const getInitial = (name: string) => {
+    return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -47,6 +66,20 @@ const TravelerProfileScreen = () => {
       />
       
       <SafeAreaView style={styles.safeArea}>
+        {/* Header Bar */}
+        <View style={styles.headerBar}>
+          <TouchableOpacity 
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M15 18l-6-6 6-6" />
+            </Svg>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={{ width: 44 }} />
+        </View>
+
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           
           {/* Profile Card */}
@@ -54,7 +87,11 @@ const TravelerProfileScreen = () => {
             <View style={styles.avatarSection}>
               <View style={styles.avatarBorder}>
                 <View style={styles.avatarContainer}>
-                  <Text style={styles.avatarText}>JD</Text>
+                   {user?.selfieUrl ? (
+                     <Image source={{ uri: user.selfieUrl }} style={styles.avatarRealImage} />
+                   ) : (
+                     <Text style={styles.avatarText}>{getInitial(user?.name || '')}</Text>
+                   )}
                 </View>
               </View>
               <TouchableOpacity style={styles.editIconBtn}>
@@ -65,41 +102,59 @@ const TravelerProfileScreen = () => {
             </View>
             
             <View style={styles.userMeta}>
-              <Text style={styles.userName}>James Daniel</Text>
+              <Text style={styles.userName}>{user?.name || 'Traveler'}</Text>
               <View style={badgeRowStyles.badgeRow}>
-                <View style={[styles.statusBadge, { backgroundColor: BRAND_LIGHT }]}>
-                  <Text style={[styles.statusText, { color: BRAND_GREEN }]}>Verified Traveler</Text>
+                <View style={[styles.statusBadge, { backgroundColor: user?.isTravelerApproved ? BRAND_LIGHT : '#FEE2E2' }]}>
+                  <Text style={[styles.statusText, { color: user?.isTravelerApproved ? BRAND_GREEN : '#EF4444' }]}>
+                    {user?.isTravelerApproved ? 'Verified Traveler' : 'Pending Verification'}
+                  </Text>
                 </View>
                 <View style={styles.ratingBadge}>
                   <Svg width="12" height="12" viewBox="0 0 24 24" fill="#FACC15">
                     <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </Svg>
-                  <Text style={styles.ratingText}>4.9 (124)</Text>
+                  <Text style={styles.ratingText}>{user?.rating || '0.0'} Trust: {user?.trustScore || '0'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Verification Status */}
-          <View style={styles.verificationCard}>
-            <View style={styles.verifiIconBox}>
-              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2">
-                <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <Path d="M22 4L12 14.01l-3-3" />
-              </Svg>
+          {user?.isTravelerApproved ? (
+            <View style={styles.verificationCard}>
+              <View style={styles.verifiIconBox}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2">
+                  <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <Path d="M22 4L12 14.01l-3-3" />
+                </Svg>
+              </View>
+              <View style={styles.verifiContent}>
+                <Text style={styles.verifiTitle}>Account Verified</Text>
+                <Text style={styles.verifiDesc}>You have full access to all delivery services and routes.</Text>
+              </View>
             </View>
-            <View style={styles.verifiContent}>
-              <Text style={styles.verifiTitle}>Account Verified</Text>
-              <Text style={styles.verifiDesc}>You have full access to all delivery services and routes.</Text>
+          ) : (
+            <View style={[styles.verificationCard, { borderColor: '#FEE2E2', shadowColor: '#EF4444' }]}>
+              <View style={[styles.verifiIconBox, { backgroundColor: '#FEF2F2' }]}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
+                  <Circle cx="12" cy="12" r="10" />
+                  <Path d="M12 8v4" />
+                  <Path d="M12 16h.01" />
+                </Svg>
+              </View>
+              <View style={styles.verifiContent}>
+                <Text style={styles.verifiTitle}>Under Review</Text>
+                <Text style={styles.verifiDesc}>Your documents are being processed. This usually takes 24-48 hours.</Text>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Settings Section */}
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Traveler Settings</Text>
-            <SettingsItem icon="file-text" label="Personal Documents" subLabel="Manage your KYC and ID" />
-            <SettingsItem icon="credit-card" label="Payout Methods" subLabel="Linked bank accounts" />
-            <SettingsItem icon="navigation" label="Preferred Routes" subLabel="Set your frequent journeys" />
+            <SettingsItem icon="file-text" label="Personal Documents" subLabel={`NIC: ${user?.nicNumber}`} />
+            <SettingsItem icon="truck" label="Vehicle Details" subLabel={user?.vehicleType ? `${user.vehicleType} - ${user.weightCapacity}kg` : 'Not set'} />
+            <SettingsItem icon="phone" label="Phone Number" subLabel={user?.phone} />
           </View>
 
           <View style={styles.section}>
@@ -122,6 +177,7 @@ const TravelerProfileScreen = () => {
     </View>
   );
 };
+
 
 const SettingsItem = ({ icon, label, subLabel }: any) => (
   <TouchableOpacity style={styles.itemRow}>
@@ -155,7 +211,17 @@ const renderIcon = (name: string) => {
       <Path d="M1 10h22"/>
     </>
   );
+  if (name === 'truck') return (
+    <>
+      <Rect x="1" y="3" width="15" height="13" />
+      <Path d="M16 8l4 0l3 3l0 5l-7 0" />
+      <Circle cx="5.5" cy="18.5" r="2.5" />
+      <Circle cx="18.5" cy="18.5" r="2.5" />
+    </>
+  );
+  if (name === 'phone') return <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>;
   if (name === 'navigation') return <Path d="M3 11l19-9-9 19-2-8-8-2z"/>;
+
   if (name === 'bell') return (
     <>
       <Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -193,9 +259,34 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    height: 56,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   profileHeader: {
     alignItems: 'center',
@@ -220,6 +311,11 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarRealImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     color: '#FFFFFF',
