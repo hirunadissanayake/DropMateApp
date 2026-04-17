@@ -158,25 +158,14 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
 
 
+  const isFormValid = 
+    !!data.selfie && 
+    !!data.nicFront && 
+    !!data.nicBack && 
+    (!isTraveler || (!!weightCapacity && !!vehicleType));
+
   const handleSubmit = async () => {
-    if (!data.selfie || !data.nicFront || !data.nicBack) {
-      Toast.show({
-        type: 'info',
-        text1: 'Incomplete Submission',
-        text2: 'Please upload all required documents to continue.'
-      });
-      return;
-    }
-
-    if (isTraveler && (!weightCapacity || !vehicleType)) {
-      Toast.show({
-        type: 'info',
-        text1: 'Missing Details',
-        text2: 'Please provide your logistics details.'
-      });
-      return;
-    }
-
+    if (!isFormValid) return;
 
     setLoading(true);
     try {
@@ -408,6 +397,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
               text="Submit & Verify" 
               onPress={handleSubmit} 
               loading={loading}
+              disabled={!isFormValid}
               style={styles.ctaButton}
               icon={
                 <Svg width="22" height="21" viewBox="0 0 22 21" fill="none">

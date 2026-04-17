@@ -42,9 +42,23 @@ interface InputFieldProps {
   isPassword?: boolean;
   error?: string;
   showStrength?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
 }
 
-const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword, maxLength, error, showStrength }: Partial<InputFieldProps>) => {
+const InputField = ({ 
+  label, 
+  placeholder, 
+  icon, 
+  value, 
+  onChangeText, 
+  isPassword, 
+  maxLength, 
+  error, 
+  showStrength,
+  autoCapitalize = 'none',
+  keyboardType = 'default'
+}: Partial<InputFieldProps>) => {
   const [internalSecure, setInternalSecure] = useState(true);
   
   return (
@@ -62,6 +76,8 @@ const InputField = ({ label, placeholder, icon, value, onChangeText, isPassword,
           onChangeText={onChangeText || (() => {})}
           secureTextEntry={isPassword ? internalSecure : false}
           maxLength={maxLength}
+          autoCapitalize={autoCapitalize}
+          keyboardType={keyboardType}
         />
 
         {isPassword && (
@@ -113,6 +129,7 @@ const SignupScreen = ({ navigation, route }: any) => {
     fullName: '',
     email: '',
     phone: '',
+    nicNumber: '',
     password: '',
     confirmPassword: '',
   });
@@ -123,12 +140,13 @@ const SignupScreen = ({ navigation, route }: any) => {
     formData.fullName.trim() !== '' &&
     formData.email.trim() !== '' &&
     formData.phone.trim() !== '' &&
+    formData.nicNumber.trim() !== '' &&
     formData.password.trim() !== '' &&
     formData.confirmPassword.trim() !== '' &&
     agreed;
 
   const handleSignup = () => {
-    const { fullName, email, phone, password, confirmPassword } = formData;
+    const { fullName, email, phone, nicNumber, password, confirmPassword } = formData;
     const newErrors: any = {};
 
     if (!fullName.trim()) {
@@ -150,6 +168,12 @@ const SignupScreen = ({ navigation, route }: any) => {
       newErrors.phone = 'Phone number is required';
     } else if (!phoneRegex.test(phone)) {
       newErrors.phone = 'Must be exactly 10 digits';
+    }
+
+    if (!nicNumber.trim()) {
+      newErrors.nicNumber = 'NIC number is required';
+    } else if (!/[0-9]/.test(nicNumber)) {
+      newErrors.nicNumber = 'NIC cannot be only letters';
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
@@ -214,11 +238,12 @@ const SignupScreen = ({ navigation, route }: any) => {
 
             <View style={styles.formCard}>
               <InputField
-                label="FULL NAME"
-                placeholder="Enter your full name"
+                label="NAME"
+                placeholder="Enter your name"
                 value={formData.fullName}
                 onChangeText={(t) => setFormData({ ...formData, fullName: t })}
                 error={errors.fullName}
+                autoCapitalize="words"
                 icon={(c) => (
                   <Svg width="18" height="18" viewBox="0 0 16 16" fill="none">
                     <Path d="M8 8C6.9 8 5.95833 7.60833 5.175 6.825C4.39167 6.04167 4 5.1 4 4C4 2.9 4.39167 1.95833 5.175 1.175C5.95833 0.391667 6.9 0 8 0C9.1 0 10.0417 0.391667 10.825 1.175C11.6083 1.95833 12 2.9 12 4C12 5.1 11.6083 6.04167 10.825 6.825C10.0417 7.60833 9.1 8 8 8Z" fill={c} />
@@ -233,6 +258,8 @@ const SignupScreen = ({ navigation, route }: any) => {
                 value={formData.email}
                 onChangeText={(t) => setFormData({ ...formData, email: t.toLowerCase() })}
                 error={errors.email}
+                autoCapitalize="none"
+                keyboardType="email-address"
                 icon={(c) => (
                   <Svg width="20" height="16" viewBox="0 0 20 16" fill="none">
                     <Path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14V2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0H18C18.55 0 19.0208 0.195833 19.4125 0.5875C19.8042 0.979167 20 1.45 20 2V14C20 14.55 19.8042 15.0208 19.4125 15.4125C19.0208 15.8042 18.55 16 18 16H2ZM10 9L2 4V14H18V4L10 9ZM10 7L18 2H2L10 7Z" fill={c} />
@@ -250,9 +277,25 @@ const SignupScreen = ({ navigation, route }: any) => {
                   setFormData({ ...formData, phone: numericValue });
                 }}
                 error={errors.phone}
+                keyboardType="phone-pad"
                 icon={(c) => (
                   <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <Path d="M16.95 18C14.8667 18 12.8083 17.5458 10.775 16.6375C8.74167 15.7292 6.89167 14.4417 5.225 12.775C3.55833 11.1083 2.27083 9.25833 1.3625 7.225C0.454167 5.19167 0 3.13333 0 1.05C0 0.75 0.1 0.5 0.3 0.3C0.5 0.1 0.75 0 1.05 0H5.1C5.33333 0 5.54167 0.0791667 5.725 0.2375C5.90833 0.395833 6.01667 0.583333 6.05 0.8H6.7 4.3C6.73333 4.56667 6.725 4.79167 6.675 4.975C6.625 5.15833 6.53333 5.31667 6.4 5.45L3.975 7.9C4.30833 8.51667 4.70417 9.1125 5.1625 9.6875C5.62083 10.2625 6.125 10.8167 6.675 11.35C7.19167 11.8667 7.73333 12.3458 8.3 12.7875C8.86667 13.2292 9.46667 13.6333 10.1 14L12.45 11.65C12.6 11.5 12.7958 11.3875 13.0375 11.3125C13.2792 11.2375 13.5167 11.2167 13.75 11.25L17.2 11.95C17.4333 12.0167 17.625 12.1375 17.775 12.3125C17.925 12.4875 18 12.6833 18 12.9V16.95C18 17.25 17.9 17.5 17.7 17.7C17.5 17.9 17.25 18 16.95 18Z" fill={c} />
+                  </Svg>
+                )}
+              />
+
+              <InputField
+                label="NIC NUMBER"
+                placeholder="Enter your NIC number"
+                value={formData.nicNumber}
+                onChangeText={(t) => setFormData({ ...formData, nicNumber: t })}
+                error={errors.nicNumber}
+                autoCapitalize="characters"
+                icon={(c) => (
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <Path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill={c} />
+                    <Path d="M6 14H11V16H6V14Z" fill={c} />
                   </Svg>
                 )}
               />

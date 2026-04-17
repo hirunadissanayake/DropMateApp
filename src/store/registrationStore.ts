@@ -4,6 +4,7 @@ interface RegistrationData {
   fullName?: string;
   email?: string;
   phone?: string;
+  nicNumber?: string;
   password?: string;
   confirmPassword?: string;
   roleRequested?: 'CUSTOMER' | 'TRAVELER';

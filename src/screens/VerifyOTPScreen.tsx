@@ -56,8 +56,10 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const handleVerify = async () => {
-    if (otp.length !== 6) {
+  const handleVerify = async (providedOtp?: string) => {
+    const codeToVerify = providedOtp || otp;
+    
+    if (codeToVerify.length !== 6) {
       Toast.show({
         type: 'info',
         text1: 'Invalid Code',
@@ -71,9 +73,9 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
     try {
       let response;
       if (flow === 'FORGOT_PASSWORD') {
-        response = await authService.verifyResetOtp(phoneNumber, otp);
+        response = await authService.verifyResetOtp(phoneNumber, codeToVerify);
       } else {
-        response = await authService.verifyOtp(phoneNumber, otp);
+        response = await authService.verifyOtp(phoneNumber, codeToVerify);
       }
       console.log('OTP Verification success:', response);
       
@@ -191,7 +193,13 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
               style={styles.hiddenInput}
               value={otp}
               onChangeText={(text) => {
-                if (text.length <= 6) setOtp(text);
+                const numericText = text.replace(/[^0-9]/g, '');
+                if (numericText.length <= 6) {
+                  setOtp(numericText);
+                  if (numericText.length === 6) {
+                    handleVerify(numericText);
+                  }
+                }
               }}
               keyboardType="number-pad"
               maxLength={6}
@@ -215,8 +223,9 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
 
             <PrimaryButton 
               text="Verify" 
-              onPress={handleVerify}
+              onPress={() => handleVerify()}
               loading={loading}
+              disabled={otp.length !== 6}
               style={styles.verifyButton}
               icon={
                 <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
