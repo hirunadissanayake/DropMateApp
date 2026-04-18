@@ -50,7 +50,7 @@ const TravelerProfileScreen = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [user?.vehicleType, user?.weightCapacity]); // Refresh icons if user data updates
+  }, [token]);
 
   const handleUpdateProfile = async () => {
     if (!token || !editedName.trim()) return;
@@ -132,61 +132,7 @@ const TravelerProfileScreen = () => {
     return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
   };
 
-  const renderVehicleIcon = (type: string | undefined | null) => {
-      const color = BRAND_GREEN;
-      const size = 22;
-      const vehicleType = type?.toLowerCase() || '';
 
-      if (vehicleType === 'bus') {
-        return (
-          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Path d="M19 5H5C3.34315 5 2 6.34315 2 8V17C2 18.6569 3.34315 20 5 20H19C20.6569 20 22 18.6569 22 17V8C22 6.34315 20.6569 5 19 5Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M16 9V13" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M8 9V13" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M2 15H22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M6 20V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M18 20V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </Svg>
-        );
-      }
-      if (vehicleType === 'car') {
-        return (
-          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Path d="M19 17H5C3.89543 17 3 16.1046 3 15V9.43147C3 8.71836 3.37617 8.05831 3.99222 7.69805L5.80735 6.62141C6.54924 6.18525 7.42065 5.97576 8.30397 6.01899L15.696 6.38075C16.5794 6.42399 17.4508 6.63348 18.1927 7.06964L20.0078 8.14628C20.6238 8.50654 21 9.1666 21 9.87971V15C21 16.1046 20.1046 17 19 17Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Circle cx="7" cy="17" r="2" stroke={color} strokeWidth="2"/>
-            <Circle cx="17" cy="17" r="2" stroke={color} strokeWidth="2"/>
-            <Path d="M14 9H10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </Svg>
-        );
-      }
-      if (vehicleType === 'motor bike' || vehicleType === 'motorbike') {
-        return (
-          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Circle cx="5" cy="18" r="3" stroke={color} strokeWidth="2"/>
-            <Circle cx="19" cy="18" r="3" stroke={color} strokeWidth="2"/>
-            <Path d="M12 18V12L15 8H19" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Path d="M8 18V13C8 13 8 10 11 10H14" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </Svg>
-        );
-      }
-      if (vehicleType === 'train') {
-        return (
-          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <Path d="M7 15h10M7 11h10"/>
-            <Rect x="5" y="5" width="14" height="12" rx="2" ry="2"/>
-            <Path d="M8 21l2-4M16 21l-2-4"/>
-          </Svg>
-        );
-      }
-      
-      // Default logistics icon
-      return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
-            <Rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-            <Path d="M8 21h8M12 17v4"/>
-        </Svg>
-      );
-  };
 
   return (
     <View style={styles.container}>
@@ -318,21 +264,7 @@ const TravelerProfileScreen = () => {
               </Svg>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.itemRow}
-              onPress={() => navigation.navigate('VehicleDetails')}
-            >
-              <View style={styles.itemIconBox}>
-                  {renderVehicleIcon(user?.vehicleType)}
-              </View>
-              <View style={{ flex: 1 }}>
-                  <Text style={styles.itemLabel}>Vehicle & Capacity</Text>
-                  <Text style={styles.itemSubLabel}>{user?.vehicleType || 'Not set'} • {user?.weightCapacity || '0'} kg</Text>
-              </View>
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
-                  <Path d="M9 18l6-6-6-6" />
-              </Svg>
-            </TouchableOpacity>
+
 
             {(!user?.isCustomerRequested && !user?.isCustomerApproved) ? (
               <TouchableOpacity 

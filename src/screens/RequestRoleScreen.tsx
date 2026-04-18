@@ -30,12 +30,10 @@ const RequestRoleScreen = ({ navigation }: any) => {
   const targetRole = user?.roleActive === 'CUSTOMER' ? 'TRAVELER' : 'CUSTOMER';
   
   const [loading, setLoading] = useState(false);
-  const [vehicleType, setVehicleType] = useState('Bus');
-  const [weightCapacity, setWeightCapacity] = useState('');
 
-  const vehicleOptions = ['Bus', 'Car', 'Motor bike', 'Train'];
 
-  const isFormValid = targetRole === 'CUSTOMER' || (!!weightCapacity && !!vehicleType);
+
+  const isFormValid = true; // Always valid to request a role if the button is enabled
 
   const handleSubmit = async () => {
     if (!token || !isFormValid) return;
@@ -46,10 +44,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
         role: targetRole,
       };
       
-      if (targetRole === 'TRAVELER') {
-        requestData.weightCapacity = weightCapacity;
-        requestData.vehicleType = vehicleType;
-      }
+
       
       const response = await authService.requestNewRole(token, requestData);
       
@@ -149,46 +144,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
               </View>
           </View>
 
-          {targetRole === 'TRAVELER' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionHeader}>LOGISTICS DETAILS</Text>
-                <View style={styles.headerLine} />
-              </View>
-              
-              <View style={styles.detailsCard}>
-                <CustomDropdown
-                  label="Vehicle Type"
-                  options={vehicleOptions}
-                  selectedOption={vehicleType}
-                  onSelect={setVehicleType}
-                />
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Weight Capacity</Text>
-                  <View style={styles.inputWithUnit}>
-                    <View style={styles.inputIcon}>
-                      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
-                        <Rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                        <Path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                      </Svg>
-                    </View>
-                    <TextInput
-                        style={styles.textInput}
-                        placeholder="e.g. 10"
-                        keyboardType="numeric"
-                        placeholderTextColor={Colors.text.placeholder}
-                        value={weightCapacity}
-                        onChangeText={setWeightCapacity}
-                    />
-                    <View style={styles.unitBadge}>
-                      <Text style={styles.unitText}>KG</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </View>
-          )}
 
           {targetRole === 'TRAVELER' && (
             <View style={styles.section}>

@@ -38,11 +38,14 @@ const CreateTripScreen = () => {
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
   const [exactLocation, setExactLocation] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
   const [travelDate, setTravelDate] = useState('');
   const [capacityKg, setCapacityKg] = useState('');
   const [travelTime, setTravelTime] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const vehicleOptions = ['Bus', 'Car', 'Motor bike', 'Train'];
   
   const [fromLocationList, setFromLocationList] = useState<string[]>([]);
   const [toLocationList, setToLocationList] = useState<string[]>([]);
@@ -106,6 +109,7 @@ const CreateTripScreen = () => {
     Boolean(fromLocation) &&
     Boolean(toLocation) &&
     Boolean(exactLocation) &&
+    Boolean(vehicleType) &&
     Boolean(travelDate) &&
     /^\d{4}-\d{2}-\d{2}$/.test(travelDate) &&
     Boolean(capacityKg) && !isNaN(Number(capacityKg)) && Number(capacityKg) > 0 &&
@@ -125,6 +129,7 @@ const CreateTripScreen = () => {
         fromLocation,
         toLocation,
         exactLocation,
+        vehicleType,
         travelDate,
         capacityKg: parseFloat(capacityKg),
         travelTime: travelTime || null,
@@ -225,6 +230,21 @@ const CreateTripScreen = () => {
             </View>
 
             <View style={styles.contentCard}>
+              <Text style={styles.fieldLabel}>VEHICLE TYPE</Text>
+              <CustomDropdown
+                label=""
+                options={vehicleOptions}
+                selectedOption={vehicleType}
+                onSelect={(val) => {
+                  setVehicleType(val);
+                  setErrors(prev => ({ ...prev, vehicleType: '' }));
+                }}
+                placeholder="Select vehicle type"
+              />
+              <ErrorMessage message={errors.vehicleType} />
+            </View>
+
+            <View style={styles.contentCard}>
               <Text style={styles.fieldLabel}>EXACT LOCATION</Text>
               <TextInput
                 style={[styles.minimalInput, errors.exactLocation ? { borderColor: '#DC2626' } : null]}
@@ -241,6 +261,8 @@ const CreateTripScreen = () => {
                 Tell the customer exactly where you will be (e.g., which bus stand, railway station, or landmark).
               </Text>
             </View>
+
+            
 
             <View style={styles.contentCard}>
               <View style={styles.dualFields}>

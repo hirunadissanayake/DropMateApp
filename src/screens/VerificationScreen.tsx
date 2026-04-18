@@ -44,8 +44,6 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
   const { data, updateData } = useRegistrationStore();
   const [loading, setLoading] = useState(false);
-  const [vehicleType, setVehicleType] = useState(data.vehicleType || 'Bus');
-  const [weightCapacity, setWeightCapacity] = useState(data.weightCapacity || '');
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
 
@@ -56,7 +54,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
 
 
-  const vehicleOptions = ['Bus', 'Car', 'Motor bike', 'Train'];
+
 
   const handlePickImage = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
     Alert.alert(
@@ -161,8 +159,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
   const isFormValid = 
     !!data.selfie && 
     !!data.nicFront && 
-    !!data.nicBack && 
-    (!isTraveler || (!!weightCapacity && !!vehicleType));
+    !!data.nicBack;
 
   const handleSubmit = async () => {
     if (!isFormValid) return;
@@ -171,8 +168,6 @@ const VerificationScreen = ({ navigation, route }: any) => {
     try {
       const registrationData = {
         ...data,
-        weightCapacity,
-        vehicleType,
       };
       
       const response = await authService.requestOtp(registrationData);
@@ -335,62 +330,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
           </View>
 
-          {isTraveler && (
-            <View style={styles.section}>
-              <View style={styles.travelerCard}>
-                <LinearGradient
-                  colors={['#FFFFFF', '#F9FAFB']}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <View style={styles.travelerHeader}>
-                  <View style={styles.travelerBadge}>
-                    <Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                      <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <Path d="M22 4L12 14.01L9 11.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </Svg>
-                    <Text style={styles.travelerBadgeText}>TRAVELER PROFILE</Text>
-                  </View>
-                  <View style={styles.travelerInfoText}>
-                    <Text style={styles.travelerTitle}>Logistics Details</Text>
-                    <Text style={styles.travelerDesc}>Provide transport capacity to match with shipments.</Text>
-                  </View>
-                </View>
 
-                <CustomDropdown
-                  label="VEHICLE TYPE"
-                  options={vehicleOptions}
-                  selectedOption={vehicleType}
-                  onSelect={setVehicleType}
-                />
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.fieldLabel}>WEIGHT CAPACITY</Text>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Enter weight capacity"
-                      placeholderTextColor="#94A3B8"
-                      keyboardType="numeric"
-                      value={weightCapacity}
-                      onChangeText={setWeightCapacity}
-                    />
-                    <View style={styles.unitBadge}>
-                      <Text style={styles.unitText}>kg</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.payoutAlert}>
-                  <View style={styles.alertIconCircle}>
-                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <Path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke={Colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                  </View>
-                  <Text style={styles.payoutAlertText}>Larger capacities often qualify for higher payouts.</Text>
-                </View>
-              </View>
-            </View>
-          )}
 
           <View style={styles.footerSection}>
             <PrimaryButton 

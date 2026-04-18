@@ -9,8 +9,6 @@ interface RegistrationData {
   confirmPassword?: string;
   roleRequested?: 'CUSTOMER' | 'TRAVELER';
   termsAccepted?: boolean;
-  weightCapacity?: string;
-  vehicleType?: string;
   selfie?: any;
   nicFront?: any;
   nicBack?: any;

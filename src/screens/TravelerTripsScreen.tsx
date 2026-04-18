@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
@@ -65,11 +65,13 @@ const TravelerTripsScreen = () => {
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchTrips();
-    }
-  }, [token]);
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        fetchTrips();
+      }
+    }, [token])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -525,7 +527,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 0.2,
   },
   infoRow: {
     flexDirection: 'row',
