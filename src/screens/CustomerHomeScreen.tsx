@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#94A3B8',
-    letterSpacing: 1.5,
+    letterSpacing: 0.5,
     marginBottom: 10,
   },
   sectionHeaderRow: {

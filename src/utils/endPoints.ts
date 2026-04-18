@@ -24,4 +24,13 @@ export const ENDPOINTS = {
     CANCEL: (id: string) => `${BASE_URL}/api/parcels/${id}/cancel`,
     DELETE: (id: string) => `${BASE_URL}/api/parcels/${id}`,
   },
+  TRIPS: {
+    CREATE: `${BASE_URL}/api/trips/create`,
+    MY_TRIPS: `${BASE_URL}/api/trips/my`,
+    FROM_LOCATIONS: `${BASE_URL}/api/trips/from-locations`,
+    TO_LOCATIONS: `${BASE_URL}/api/trips/to-locations`,
+    CANCEL: (id: string) => `${BASE_URL}/api/trips/cancel/${id}`,
+    DELETE: (id: string) => `${BASE_URL}/api/trips/delete/${id}`,
+    GET_DETAILS: (id: string) => `${BASE_URL}/api/trips/${id}`,
+  },
 };

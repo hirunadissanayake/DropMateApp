@@ -20,6 +20,7 @@ import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import RequestRoleScreen from '../screens/RequestRoleScreen';
 import CreateParcelScreen from '../screens/CreateParcelScreen';
 import ParcelDetailsScreen from '../screens/ParcelDetailsScreen';
+import CreateTripScreen from '../screens/CreateTripScreen';
 
 
 
@@ -41,6 +42,7 @@ export type RootStackParamList = {
   RequestRole: undefined;
   CreateParcel: undefined;
   ParcelDetails: { parcelId: string };
+  CreateTrip: undefined;
 };
 
 
@@ -123,6 +125,10 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="ParcelDetails" 
           component={ParcelDetailsScreen} 
+        />
+        <Stack.Screen 
+          name="CreateTrip" 
+          component={CreateTripScreen} 
         />
       </Stack.Navigator>
 

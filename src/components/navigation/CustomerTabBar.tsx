@@ -211,6 +211,22 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
       </Svg>
     );
   }
+  if (routeName === 'My Trips') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {isFocused && (
+          <Circle cx="15" cy="10" r="2" fill={BRAND_GREEN} />
+        )}
+      </Svg>
+    );
+  }
   if (routeName === 'Shipments' || routeName === 'Services') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>

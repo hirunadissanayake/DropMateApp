@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'react-native';
 
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
-import TravelerServicesScreen from '../screens/TravelerServicesScreen';
+import TravelerTripsScreen from '../screens/TravelerTripsScreen';
 import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
 import TravelerProfileScreen from '../screens/TravelerProfileScreen';
 import CustomerTabBar from '../components/navigation/CustomerTabBar';
@@ -21,7 +21,7 @@ const TravelerTabNavigator = () => {
         }}
       >
         <Tab.Screen name="Home" component={TravelerHomeScreen} />
-        <Tab.Screen name="Services" component={TravelerServicesScreen} />
+        <Tab.Screen name="My Trips" component={TravelerTripsScreen} />
         <Tab.Screen name="Earnings" component={TravelerEarningsScreen} />
         <Tab.Screen name="Profile" component={TravelerProfileScreen} />
       </Tab.Navigator>
