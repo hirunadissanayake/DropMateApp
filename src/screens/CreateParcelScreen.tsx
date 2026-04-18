@@ -345,9 +345,16 @@ const CreateParcelScreen = () => {
               </View>
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                   <View style={styles.routeTimeline}>
-                    <View style={styles.dotFilled} />
+                    <View style={styles.routeDotStart}>
+                      <View style={styles.routeDotInner} />
+                    </View>
                     <View style={styles.dashedLine} />
-                    <View style={styles.dotOutline} />
+                    <View style={styles.routePinEnd}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
+                      </Svg>
+                    </View>
                   </View>
                   <View style={styles.routeInputs}>
                     <CustomDropdown
@@ -675,28 +682,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 15,
   },
-  dotFilled: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#006C52',
+  routeDotStart: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#10B981',
     marginTop: 12,
+  },
+  routeDotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
   },
   dashedLine: {
     width: 1,
-    height: 55,
+    height: 45,
     borderWidth: 0.5,
     borderColor: '#CBD5E1',
     borderStyle: 'dashed',
     marginVertical: 4,
   },
-  dotOutline: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#006C52',
-    backgroundColor: '#FFF',
+  routePinEnd: {
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   routeInputs: {
     flex: 1,

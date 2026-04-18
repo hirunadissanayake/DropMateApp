@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -20,6 +21,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 import * as tripService from '../services/tripService';
 import Toast from 'react-native-toast-message';
+import CustomAlert from '../components/common/CustomAlert';
 
 const { width } = Dimensions.get('window');
 const BRAND_GREEN = '#006C52';
@@ -31,6 +33,14 @@ const TravelerTripsScreen = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{title: string, message: string, confirmText: string, type?: 'error', action: () => void}>({
+    title: '',
+    message: '',
+    confirmText: '',
+    action: () => {}
+  });
 
   const fetchTrips = async () => {
     try {
@@ -64,6 +74,50 @@ const TravelerTripsScreen = () => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchTrips();
+  };
+
+  const handleCancelTrip = (tripId: string) => {
+    setAlertConfig({
+      title: 'Cancel Trip',
+      message: 'Are you sure you want to cancel this trip?',
+      confirmText: 'Yes, Cancel',
+      type: 'error',
+      action: async () => {
+        setAlertVisible(false);
+        try {
+          setLoading(true);
+          await tripService.cancelTrip(token!, tripId);
+          Toast.show({ type: 'success', text1: 'Trip cancelled successfully' });
+          fetchTrips();
+        } catch (err: any) {
+          setLoading(false);
+          Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not cancel trip' });
+        }
+      }
+    });
+    setAlertVisible(true);
+  };
+
+  const handleDeleteTrip = (tripId: string) => {
+    setAlertConfig({
+      title: 'Delete Trip',
+      message: 'Are you sure you want to permanently delete this trip?',
+      confirmText: 'Yes, Delete',
+      type: 'error',
+      action: async () => {
+        setAlertVisible(false);
+        try {
+          setLoading(true);
+          await tripService.deleteTrip(token!, tripId);
+          Toast.show({ type: 'success', text1: 'Trip deleted successfully' });
+          fetchTrips();
+        } catch (err: any) {
+          setLoading(false);
+          Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not delete trip' });
+        }
+      }
+    });
+    setAlertVisible(true);
   };
 
   return (
@@ -102,8 +156,10 @@ const TravelerTripsScreen = () => {
           >
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconContainer}>
-                <Svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                <Svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                  <Path d="M3 6l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
+                  <Path d="M9 2v14" />
+                  <Path d="M15 6v14" />
                 </Svg>
                 <View style={styles.emptyCircle} />
               </View>
@@ -124,17 +180,34 @@ const TravelerTripsScreen = () => {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />}
           >
             {trips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+              <TripCard 
+                key={trip.id} 
+                trip={trip} 
+                onCancel={() => handleCancelTrip(trip.id)} 
+                onDelete={() => handleDeleteTrip(trip.id)} 
+              />
             ))}
             <View style={{ height: 100 }} />
           </ScrollView>
         )}
+
+        <CustomAlert
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          confirmText={alertConfig.confirmText}
+          cancelText="No, Keep It"
+          type={alertConfig.type}
+          onConfirm={alertConfig.action}
+          onCancel={() => setAlertVisible(false)}
+        />
       </SafeAreaView>
     </View>
   );
 };
 
-const TripCard = ({ trip }: any) => {
+const TripCard = ({ trip, onCancel, onDelete }: any) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const statusColor = trip.status === 'ACTIVE' ? '#059669' : trip.status === 'COMPLETED' ? '#2563EB' : '#DC2626';
   const date = new Date(trip.travelDate).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -142,22 +215,53 @@ const TripCard = ({ trip }: any) => {
     year: 'numeric',
   });
 
+  const canCancel = trip.status === 'ACTIVE' && (!trip.parcels || trip.parcels.length === 0) && (!trip.usedCapacity || trip.usedCapacity === 0);
+  const canDelete = trip.status === 'CANCELLED';
+
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9}>
+    <TouchableOpacity 
+      style={styles.card} 
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate('TripDetails', { tripId: trip.id })}
+    >
       <View style={styles.cardHeader}>
         <View style={styles.routeRow}>
           <View style={styles.dotColumn}>
-            <View style={styles.dot} />
+            <View style={styles.routeDotStart}>
+              <View style={styles.routeDotInner} />
+            </View>
             <View style={styles.dashedLine} />
-            <View style={[styles.dot, { backgroundColor: BRAND_GREEN }]} />
+            <View style={styles.routePinEnd}>
+              <Svg width="16" height="16" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
+              </Svg>
+            </View>
           </View>
           <View style={styles.locationColumn}>
             <Text style={styles.locationText}>{trip.fromLocation}</Text>
             <Text style={styles.locationText}>{trip.toLocation}</Text>
           </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
-          <Text style={[styles.statusText, { color: statusColor }]}>{trip.status}</Text>
+        <View style={styles.headerRightCol}>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>{trip.status}</Text>
+          </View>
+          {canCancel && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+          {canDelete && (
+            <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} activeOpacity={0.7}>
+              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <Path d="M3 6h18" />
+                <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <Path d="M10 11v6" />
+                <Path d="M14 11v6" />
+              </Svg>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       
@@ -176,7 +280,8 @@ const TripCard = ({ trip }: any) => {
           <Text style={styles.infoLabel}>CAPACITY</Text>
           <View style={styles.infoRow}>
             <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              <Rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+              <Path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </Svg>
             <Text style={styles.footerText}>{trip.capacityKg} kg</Text>
           </View>
@@ -185,8 +290,9 @@ const TripCard = ({ trip }: any) => {
           <Text style={styles.infoLabel}>PARCELS</Text>
           <View style={styles.infoRow}>
             <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <Circle cx="12" cy="12" r="10" />
-              <Path d="M12 8v4l3 3" />
+              <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
+              <Path d="M12 22.08V12" />
             </Svg>
             <Text style={styles.footerText}>{trip.parcels?.length || 0} Assigned</Text>
           </View>
@@ -255,7 +361,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    paddingTop: 60,
   },
   emptyIconContainer: {
     width: 120,
@@ -328,15 +433,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 4,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#CBD5E1',
+  routeDotStart: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  routeDotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
   },
   dashedLine: {
     width: 1,
-    height: 40,
+    height: 30,
     borderWidth: 0.5,
     borderColor: '#CBD5E1',
     borderStyle: 'dashed',
@@ -345,6 +460,12 @@ const styles = StyleSheet.create({
   locationColumn: {
     gap: 28,
     flex: 1,
+  },
+  routePinEnd: {
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   locationText: {
     fontSize: 16,
@@ -361,6 +482,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  headerRightCol: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  cancelBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+  },
+  cancelBtnText: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontWeight: '700',
+    fontFamily: 'Manrope-Bold',
+  },
+  deleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardFooter: {
     flexDirection: 'row',

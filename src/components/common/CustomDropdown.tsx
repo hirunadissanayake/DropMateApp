@@ -81,10 +81,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         );
       default:
         return (
-          <Svg width={size - 2} height={size - 2} viewBox="0 0 24 24" fill="none">
-            <Path d="M21 10C21 10 12 21 12 21C12 21 3 10 3 10C3 10 7.02944 6 12 6C16.9706 6 21 10 21 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <Circle cx="12" cy="10" r="3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </Svg>
+          <View style={[styles.routeDotStart, !active && { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}>
+            <View style={[styles.routeDotInner, !active && { backgroundColor: '#94A3B8' }]} />
+          </View>
         );
     }
   };
@@ -365,6 +364,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
+  },
+  routeDotStart: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#ECFDF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  routeDotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
   },
 });
 
