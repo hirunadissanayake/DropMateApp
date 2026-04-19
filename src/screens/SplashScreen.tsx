@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: Colors.text.primary,
     fontSize: 16,
-    fontFamily: Typography.bold,
+    fontFamily: Typography.regular,
     letterSpacing: -0.2,
     marginTop: 8,
   },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   progressBarTrack: {
     width: 200, 
-    height: 4, // More subtle elegant line height
+    height: 4, 
     backgroundColor: 'rgba(0, 108, 82, 0.08)',
     borderRadius: 2,
     overflow: 'hidden',
