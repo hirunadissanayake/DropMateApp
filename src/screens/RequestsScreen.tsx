@@ -88,13 +88,15 @@ const RequestsScreen = () => {
           <View style={styles.travelerSection}>
             <View style={styles.travelerAvatar}>
                <Text style={styles.avatarLetter}>
-                 {isIncoming ? item.parcel?.sender?.name?.charAt(0).toUpperCase() : item.traveler?.name?.charAt(0).toUpperCase()}
+                 {isIncoming 
+                   ? (item.sender?.name?.charAt(0) || 'C').toUpperCase() 
+                   : (item.trip?.traveler?.name?.charAt(0) || 'T').toUpperCase()}
                </Text>
             </View>
             <View style={styles.travelerDetails}>
               <Text style={styles.travelerLabel}>{isIncoming ? 'From Customer' : 'To Traveler'}</Text>
               <Text style={styles.travelerName}>
-                {isIncoming ? item.parcel?.sender?.name : item.traveler?.name}
+                {isIncoming ? (item.sender?.name || 'Customer') : (item.trip?.traveler?.name || 'Traveler')}
               </Text>
             </View>
             <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2.5">

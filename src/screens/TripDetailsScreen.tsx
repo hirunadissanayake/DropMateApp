@@ -64,15 +64,17 @@ const TripDetailsScreen = () => {
       setTrip(response);
       
       // Check if all user's parcels are already requested for this trip
-      try {
-        const parcels = await parcelService.getMyParcels(token!);
-        const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
-        const available = pendingParcels.filter(
-          (p: any) => !response.requestedParcelIds?.includes(p.id)
-        );
-        setAllRequested(pendingParcels.length > 0 && available.length === 0);
-      } catch (err) {
-        console.error("Error checking parcel status:", err);
+      if (user?.roleActive === 'CUSTOMER') {
+        try {
+          const parcels = await parcelService.getMyParcels(token!);
+          const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
+          const available = pendingParcels.filter(
+            (p: any) => !response.requestedParcelIds?.includes(p.id)
+          );
+          setAllRequested(pendingParcels.length > 0 && available.length === 0);
+        } catch (err) {
+          console.error("Error checking parcel status:", err);
+        }
       }
     } catch (error) {
       console.error('Fetch details error:', error);

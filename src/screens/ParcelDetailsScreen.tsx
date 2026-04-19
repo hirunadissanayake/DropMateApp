@@ -444,15 +444,15 @@ const ParcelDetailsScreen = () => {
           </View>
 
           {/* Incoming Match Requests */}
-          {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
+          {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user?.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user.id)).length})</Text>
+              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user?.id)).length})</Text>
               <Text style={styles.requestsSubtitle}>
                 {user?.id === parcel.senderId ? "Travelers who want to carry your parcel" : "Delivery requests sent to you"}
               </Text>
               
               {parcel.matches
-                .filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user.id))
+                .filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user?.id))
                 .map((match: any) => (
                 <View key={match.id} style={styles.matchRequestItem}>
                   <View style={styles.requestHeader}>
