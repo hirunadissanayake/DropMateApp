@@ -355,6 +355,16 @@ const TripDetailsScreen = () => {
             </LinearGradient>
           </TouchableOpacity>
         )}
+        <View style={styles.travelerProfileSection}>
+          <View style={styles.avatarLarge}>
+            <Text style={styles.avatarLetterLarge}>{(trip.traveler?.name || 'T').charAt(0).toUpperCase()}</Text>
+          </View>
+          <View>
+            <Text style={styles.travelerNameLabel}>TRAVELER</Text>
+            <Text style={styles.travelerNameValue}>{trip.traveler?.name || 'Anonymous Traveler'}</Text>
+          </View>
+        </View>
+
         <View style={styles.floatingRouteCard}>
           <Text style={styles.sectionLabel}>YOUR TRAVEL ROUTE</Text>
           <View style={styles.routeBox}>
@@ -1195,6 +1205,42 @@ const styles = StyleSheet.create({
   },
   disabledUpdateBtn: {
     opacity: 0.7,
+  },
+  travelerProfileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    gap: 16,
+    marginBottom: 1,
+  },
+  avatarLarge: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: '#DCFBEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  avatarLetterLarge: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#006C52',
+  },
+  travelerNameLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  travelerNameValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
 });
 

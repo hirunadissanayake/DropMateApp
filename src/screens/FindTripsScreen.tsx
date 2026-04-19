@@ -68,17 +68,11 @@ const FindTripsScreen = () => {
             <View style={styles.avatar}>
               <Text style={styles.avatarLetter}>{item.traveler?.name?.charAt(0).toUpperCase()}</Text>
             </View>
-            <View>
-              <Text style={styles.travelerName}>{item.traveler?.name}</Text>
-              {/* <View style={styles.ratingRow}>
-                <Svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B">
-                  <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </Svg>
-                <Text style={styles.ratingText}>New Traveler</Text>
-              </View> */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.travelerName} numberOfLines={1}>{item.traveler?.name}</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          <View style={styles.badgeContainer}>
             {item.isRequested && (
               <View style={styles.requestedBadge}>
                 <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="4">
@@ -235,9 +229,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   travelerInfo: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 8,
   },
   avatar: {
     width: 44,
@@ -281,6 +277,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748B',
     textTransform: 'uppercase',
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    maxWidth: '50%',
   },
   requestedBadge: {
     backgroundColor: '#006C52',
