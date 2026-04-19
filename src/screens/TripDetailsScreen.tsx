@@ -290,6 +290,7 @@ const TripDetailsScreen = () => {
               <TouchableOpacity
                 key={parcel.id}
                 activeOpacity={0.7}
+                onPress={() => navigation.navigate('ParcelDetails', { parcelId: parcel.id })}
                 style={[
                   styles.parcelRow,
                   idx !== trip.parcels.length - 1 && styles.borderBottom,

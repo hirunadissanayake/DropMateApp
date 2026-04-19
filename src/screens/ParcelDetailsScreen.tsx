@@ -371,15 +371,17 @@ const ParcelDetailsScreen = () => {
                 <Text style={styles.hiddenInfo}>Hidden until matched</Text>
               )}
             </View>
-            <View style={styles.infoCard}>
-              <Text style={styles.sectionLabel}>SENDER</Text>
-              <Text style={styles.personName}>{parcel.sender?.name}</Text>
-              {parcel.sender?.phone ? (
-                <Text style={styles.personPhone}>{parcel.sender?.phone}</Text>
-              ) : (
-                <Text style={styles.hiddenInfo}>Contact hidden until matched</Text>
-              )}
-            </View>
+            {user?.id !== parcel.senderId && (
+              <View style={styles.infoCard}>
+                <Text style={styles.sectionLabel}>SENDER</Text>
+                <Text style={styles.personName}>{parcel.sender?.name}</Text>
+                {parcel.sender?.phone ? (
+                  <Text style={styles.personPhone}>{parcel.sender?.phone}</Text>
+                ) : (
+                  <Text style={styles.hiddenInfo}>Contact hidden until matched</Text>
+                )}
+              </View>
+            )}
           </View>
 
           {/* Action Button for Travelers */}
@@ -510,8 +512,8 @@ const ParcelDetailsScreen = () => {
             </View>
           )}
 
-          {/* Matched Traveler Info */}
-          {parcel.status === 'MATCHED' && parcel.matchedTrip && (
+          {/* Matched Traveler Info for Customer */}
+          {user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.matchedTrip && (
             <View style={[styles.sectionCard, styles.matchedTravelerCard]}>
               <View style={styles.matchedHeader}>
                 <View style={styles.matchedLabelBadge}>
@@ -545,6 +547,44 @@ const ParcelDetailsScreen = () => {
                         <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z" />
                       </Svg>
                       <Text style={styles.contactBtnText}>Chat</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Matched Customer Info for Traveler */}
+          {user?.id === parcel.matchedTrip?.travelerId && parcel.status === 'MATCHED' && (
+            <View style={[styles.sectionCard, styles.matchedCustomerCard]}>
+              <View style={styles.matchedHeader}>
+                <View style={[styles.matchedLabelBadge, { backgroundColor: '#10B981' }]}>
+                  <Text style={styles.matchedLabelText}>PARCEL OWNER</Text>
+                </View>
+                <View style={[styles.statusBadgeMatched, { backgroundColor: '#DCFBEB' }]}>
+                  <Text style={[styles.statusTextMatched, { color: '#059669' }]}>Match Accepted</Text>
+                </View>
+              </View>
+              
+              <View style={styles.travelerProfileRow}>
+                <View style={[styles.largeAvatar, { borderColor: '#DCFBEB' }]}>
+                   <Text style={[styles.largeAvatarLetter, { color: '#006C52' }]}>{parcel.sender?.name?.charAt(0).toUpperCase()}</Text>
+                </View>
+                <View style={styles.travelerDetails}>
+                  <Text style={styles.travelerNameLarge}>{parcel.sender?.name}</Text>
+                  <Text style={styles.travelerContact}>{parcel.sender?.phone || 'Phone number available'}</Text>
+                  <View style={styles.contactActions}>
+                    <TouchableOpacity style={[styles.contactBtn, { borderColor: '#DCFBEB' }]}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                        <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </Svg>
+                      <Text style={[styles.contactBtnText, { color: '#006C52' }]}>Call</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.contactBtn, { borderColor: '#DCFBEB' }]}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                        <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z" />
+                      </Svg>
+                      <Text style={[styles.contactBtnText, { color: '#006C52' }]}>Chat</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1303,6 +1343,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#DCFBEB',
+  },
+  matchedCustomerCard: {
+    marginTop: 24,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    padding: 24,
   },
   contactBtnText: {
     fontSize: 13,
