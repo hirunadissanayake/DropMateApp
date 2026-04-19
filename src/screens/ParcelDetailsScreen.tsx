@@ -14,6 +14,7 @@ import {
   Modal,
   ActivityIndicator,
   Share,
+  FlatList,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,8 +24,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../components/common/BackButton';
 import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
+import * as tripService from '../services/tripService';
+import * as deliveryService from '../services/deliveryService';
 import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
+import CustomAlert from '../components/common/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +44,27 @@ const ParcelDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  
+  // Trip Selection State
+  const [myTrips, setMyTrips] = useState<any[]>([]);
+  const [isTripModalVisible, setIsTripModalVisible] = useState(false);
+  const [requestingMatch, setRequestingMatch] = useState(false);
+
+  // Custom Alert State
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'warning' | 'error' | 'info';
+    onConfirm: () => void;
+    confirmText?: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     fetchDetails();
@@ -73,6 +98,128 @@ const ParcelDetailsScreen = () => {
       });
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleRequestPress = async () => {
+    setRequestingMatch(true);
+    try {
+      const trips = await tripService.getMyTrips(token!);
+      const activeTrips = trips.filter((t: any) => t.status === 'ACTIVE');
+
+      if (activeTrips.length === 0) {
+        setAlertConfig({
+          visible: true,
+          title: "No Active Trips",
+          message: "You need to create a trip first before you can request to carry a parcel.",
+          type: 'info',
+          confirmText: "Create Trip",
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            navigation.navigate('CreateTrip');
+          }
+        });
+      } else {
+        setMyTrips(activeTrips);
+        setIsTripModalVisible(true);
+      }
+    } catch (error) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: "Could not fetch your trips. Please try again.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setRequestingMatch(false);
+    }
+  };
+
+  const submitMatchRequest = async (tripId: string) => {
+    setRequestingMatch(true);
+    try {
+      const response = await deliveryService.requestMatch(token!, { parcelId, tripId });
+      setIsTripModalVisible(false);
+      
+      // Update local parcel state to show request sent
+      setParcel((prev: any) => ({ ...prev, userMatch: response.match }));
+
+      // Delay slightly to allow the trip modal to close before showing success alert
+      setTimeout(() => {
+        setAlertConfig({
+          visible: true,
+          title: "Request Sent!",
+          message: "The customer has been notified. You will be matched once they accept your request.",
+          type: 'success',
+          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      }, 500);
+      
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Request Failed",
+        message: error.message || "Something went wrong.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setRequestingMatch(false);
+    }
+  };
+
+  const handleAcceptMatch = async (matchId: string) => {
+    setLoading(true);
+    try {
+      await deliveryService.acceptMatch(token!, matchId);
+      setAlertConfig({
+        visible: true,
+        title: "Match Accepted!",
+        message: "You have successfully matched with this traveler. You can now see their contact details.",
+        type: 'success',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          fetchDetails(); // Refresh to show matched status and contact info
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: error.message || "Failed to accept match.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectMatch = async (matchId: string) => {
+    setLoading(true);
+    try {
+      await deliveryService.rejectMatch(token!, matchId);
+      setAlertConfig({
+        visible: true,
+        title: "Match Rejected",
+        message: "The request has been declined.",
+        type: 'info',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          fetchDetails(); // Refresh to update the list
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: error.message || "Failed to reject match.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -238,17 +385,24 @@ const ParcelDetailsScreen = () => {
           {/* Action Button for Travelers */}
           {user?.roleActive === 'TRAVELER' && parcel.status === 'PENDING' && (
             <TouchableOpacity 
-              style={styles.matchButton}
-              onPress={() => {
-                // TODO: Show trip selection modal and request match
-                Alert.alert('Coming Soon', 'Matching logic will be implemented in the next step!');
-              }}
+              style={[
+                styles.matchButton,
+                parcel.userMatch && { opacity: 0.7 }
+              ]}
+              onPress={handleRequestPress}
+              disabled={requestingMatch || !!parcel.userMatch}
             >
               <LinearGradient
-                colors={['#006C52', '#004D3A']}
+                colors={parcel.userMatch ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']}
                 style={styles.matchGradient}
               >
-                <Text style={styles.matchButtonText}>Request to Carry Parcel</Text>
+                {requestingMatch ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.matchButtonText}>
+                    {parcel.userMatch ? 'Request Already Sent' : 'Request to Carry Parcel'}
+                  </Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -308,6 +462,95 @@ const ParcelDetailsScreen = () => {
               </View>
             </LinearGradient>
           </View>
+
+          {/* Incoming Match Requests for Customer */}
+          {user?.id === parcel.senderId && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
+            <View style={[styles.sectionCard, { marginTop: 24 }]}>
+              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING').length})</Text>
+              <Text style={styles.requestsSubtitle}>Travelers who want to carry your parcel</Text>
+              
+              {parcel.matches.filter((m: any) => m.status === 'PENDING').map((match: any) => (
+                <View key={match.id} style={styles.matchRequestItem}>
+                  <View style={styles.requestHeader}>
+                    <View style={styles.travelerInfo}>
+                      <View style={styles.travelerAvatar}>
+                        <Text style={styles.avatarLetter}>{match.traveler?.name?.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.travelerName}>{match.traveler?.name}</Text>
+                        <Text style={styles.travelerRating}>⭐ New Traveler</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.requestTripInfo}>
+                    <Text style={styles.tripDateLabel}>TRAVELING ON</Text>
+                    <Text style={styles.tripDateValue}>{dayjs(match.trip?.travelDate).format('dddd, MMM DD')} at {match.trip?.travelTime || 'Anytime'}</Text>
+                    <View style={styles.tripRouteRow}>
+                       <Text style={styles.tripRouteText}>{match.trip?.fromLocation} → {match.trip?.toLocation}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.requestActions}>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.rejectBtn]} 
+                      onPress={() => handleRejectMatch(match.id)}
+                    >
+                      <Text style={styles.rejectBtnText}>Decline</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.acceptBtn]}
+                      onPress={() => handleAcceptMatch(match.id)}
+                    >
+                      <Text style={styles.acceptBtnText}>Accept Request</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Matched Traveler Info */}
+          {parcel.status === 'MATCHED' && parcel.matchedTrip && (
+            <View style={[styles.sectionCard, styles.matchedTravelerCard]}>
+              <View style={styles.matchedHeader}>
+                <View style={styles.matchedLabelBadge}>
+                  <Text style={styles.matchedLabelText}>MATCHED TRAVELER</Text>
+                </View>
+                <View style={styles.statusBadgeMatched}>
+                  <Text style={styles.statusTextMatched}>Ready for Delivery</Text>
+                </View>
+              </View>
+              
+              <View style={styles.travelerProfileRow}>
+                <View style={styles.largeAvatar}>
+                   {parcel.matchedTrip.traveler?.selfieUrl ? (
+                     <Image source={{ uri: parcel.matchedTrip.traveler.selfieUrl }} style={styles.avatarImg} />
+                   ) : (
+                     <Text style={styles.largeAvatarLetter}>{parcel.matchedTrip.traveler?.name?.charAt(0).toUpperCase()}</Text>
+                   )}
+                </View>
+                <View style={styles.travelerDetails}>
+                  <Text style={styles.travelerNameLarge}>{parcel.matchedTrip.traveler?.name}</Text>
+                  <Text style={styles.travelerContact}>{parcel.matchedTrip.traveler?.phone}</Text>
+                  <View style={styles.contactActions}>
+                    <TouchableOpacity style={styles.contactBtn}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                        <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </Svg>
+                      <Text style={styles.contactBtnText}>Call</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.contactBtn}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                        <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z" />
+                      </Svg>
+                      <Text style={styles.contactBtnText}>Chat</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -356,6 +599,67 @@ const ParcelDetailsScreen = () => {
           </SafeAreaView>
         </View>
       </Modal>
+
+      {/* Trip Selection Modal */}
+      <Modal
+        visible={isTripModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsTripModalVisible(false)}
+      >
+        <View style={styles.tripModalOverlay}>
+          <View style={styles.tripModalContent}>
+            <View style={styles.tripModalHeader}>
+              <Text style={styles.tripModalTitle}>Select Your Trip</Text>
+              <TouchableOpacity onPress={() => setIsTripModalVisible(false)}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
+                  <Path d="M18 6L6 18M6 6l12 12" />
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.tripModalSubtitle}>Which trip will you use to carry this parcel?</Text>
+
+            <FlatList
+              data={myTrips}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.tripList}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.tripSelectItem}
+                  onPress={() => submitMatchRequest(item.id)}
+                  disabled={requestingMatch}
+                >
+                  <View style={styles.tripItemInfo}>
+                    <Text style={styles.tripItemRoute}>{item.fromLocation} → {item.toLocation}</Text>
+                    <Text style={styles.tripItemDate}>{dayjs(item.travelDate).format('dddd, MMM DD')}</Text>
+                  </View>
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                    <Path d="M9 18l6-6-6-6" />
+                  </Svg>
+                </TouchableOpacity>
+              )}
+            />
+
+            {requestingMatch && (
+              <View style={styles.tripModalLoading}>
+                <ActivityIndicator size="large" color="#006C52" />
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* App Theme Alert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        confirmText={alertConfig.confirmText}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 };
@@ -730,6 +1034,280 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: 'Manrope-Bold',
     letterSpacing: 0.5,
+  },
+  tripModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  tripModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    maxHeight: '80%',
+  },
+  tripModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  tripModalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    fontFamily: 'Manrope-Bold',
+  },
+  tripModalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 20,
+    fontFamily: 'Manrope',
+  },
+  tripList: {
+    paddingBottom: 20,
+  },
+  tripSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  tripItemInfo: {
+    flex: 1,
+  },
+  tripItemRoute: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  tripItemDate: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  tripModalLoading: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  requestsSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 20,
+    fontFamily: 'Manrope',
+  },
+  matchRequestItem: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  requestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  travelerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  travelerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DCFBEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarLetter: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#006C52',
+    fontFamily: 'Manrope-Bold',
+  },
+  travelerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  travelerRating: {
+    fontSize: 11,
+    color: '#F59E0B',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  requestTripInfo: {
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 16,
+  },
+  tripDateLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  tripDateValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  tripRouteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  tripRouteText: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectBtn: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  rejectBtnText: {
+    color: '#DC2626',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  acceptBtn: {
+    backgroundColor: '#006C52',
+  },
+  acceptBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  matchedTravelerCard: {
+    marginTop: 24,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    padding: 24,
+  },
+  matchedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  matchedLabelBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  matchedLabelText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  statusBadgeMatched: {
+    backgroundColor: '#DCFBEB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  statusTextMatched: {
+    color: '#059669',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  travelerProfileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  largeAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  largeAvatarLetter: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#006C52',
+  },
+  travelerDetails: {
+    flex: 1,
+  },
+  travelerNameLarge: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  travelerContact: {
+    fontSize: 15,
+    color: '#64748B',
+    marginBottom: 12,
+  },
+  contactActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#DCFBEB',
+  },
+  contactBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#006C52',
   },
 });
 

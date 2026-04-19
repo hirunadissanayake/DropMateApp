@@ -71,6 +71,14 @@ const FindParcelsScreen = () => {
         <View style={styles.payoutBadge}>
           <Text style={styles.payoutText}>Earn LKR {item.travelerPayout?.toLocaleString()}</Text>
         </View>
+        {item.isRequested && (
+          <View style={styles.requestedBadge}>
+             <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3">
+                <Path d="M20 6L9 17l-5-5" />
+             </Svg>
+             <Text style={styles.requestedText}>Requested</Text>
+          </View>
+        )}
       </View>
       
       <View style={styles.parcelInfo}>
@@ -260,6 +268,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Manrope-Bold',
+  },
+  requestedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#006C52',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  requestedText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: 'Manrope-Bold',
+    textTransform: 'uppercase',
   },
   parcelInfo: {
     padding: 16,

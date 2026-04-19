@@ -22,6 +22,7 @@ import CreateParcelScreen from '../screens/CreateParcelScreen';
 import ParcelDetailsScreen from '../screens/ParcelDetailsScreen';
 import CreateTripScreen from '../screens/CreateTripScreen';
 import TripDetailsScreen from '../screens/TripDetailsScreen';
+import RequestsScreen from '../screens/RequestsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -44,6 +45,7 @@ export type RootStackParamList = {
   TripDetails: { tripId: string };
   CreateTrip: undefined;
   FindParcels: undefined;
+  Requests: undefined;
 };
 
 
@@ -134,6 +136,10 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="TripDetails" 
           component={TripDetailsScreen} 
+        />
+        <Stack.Screen 
+          name="Requests" 
+          component={RequestsScreen} 
         />
       </Stack.Navigator>
 

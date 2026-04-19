@@ -267,37 +267,6 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
       </Svg>
     );
   }
-  if (routeName === 'Wallet' || routeName === 'Earnings') {
-    return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
-        <Rect
-          x="2"
-          y="5"
-          width="20"
-          height="14"
-          rx="2"
-          stroke={color}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <Path
-          d="M2 10H22"
-          stroke={color}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <Path
-          d="M16 14H18"
-          stroke={color}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </Svg>
-    );
-  }
   if (routeName === 'Profile') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
@@ -314,6 +283,26 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
           r="4"
           stroke={color}
           strokeWidth={sw}
+        />
+      </Svg>
+    );
+  }
+  if (routeName === 'Requests') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+        <Path
+          d="M18 8A6 6 0 0 0 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M13.73 21a2 2 0 0 1-3.46 0"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </Svg>
     );

@@ -34,4 +34,10 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `${BASE_URL}/api/trips/delete/${id}`,
     GET_DETAILS: (id: string) => `${BASE_URL}/api/trips/${id}`,
   },
+  DELIVERY: {
+    MATCH_REQUEST: `${BASE_URL}/api/delivery/match-request`,
+    PENDING_MATCHES: `${BASE_URL}/api/delivery/pending-matches`,
+    ACCEPT_MATCH: (id: string) => `${BASE_URL}/api/delivery/match/${id}/accept`,
+    REJECT_MATCH: (id: string) => `${BASE_URL}/api/delivery/match/${id}/reject`,
+  },
 };

@@ -6,6 +6,7 @@ import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 import TravelerTripsScreen from '../screens/TravelerTripsScreen';
 import FindParcelsScreen from '../screens/FindParcelsScreen';
 import TravelerProfileScreen from '../screens/TravelerProfileScreen';
+import RequestsScreen from '../screens/RequestsScreen';
 import CustomerTabBar from '../components/navigation/CustomerTabBar';
 
 const Tab = createBottomTabNavigator();
@@ -22,6 +23,7 @@ const TravelerTabNavigator = () => {
       >
         <Tab.Screen name="Home" component={TravelerHomeScreen} />
         <Tab.Screen name="My Trips" component={TravelerTripsScreen} />
+        <Tab.Screen name="Requests" component={RequestsScreen} />
         <Tab.Screen name="Find Parcels" component={FindParcelsScreen} />
         <Tab.Screen name="Profile" component={TravelerProfileScreen} />
       </Tab.Navigator>
