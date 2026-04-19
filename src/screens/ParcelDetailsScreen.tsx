@@ -177,7 +177,7 @@ const ParcelDetailsScreen = () => {
         visible: true,
         title: "Match Accepted!",
         message: "You have successfully matched with this traveler. You can now see their contact details.",
-        type: 'success',
+        type: 'info',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
           fetchDetails(); // Refresh to show matched status and contact info
@@ -384,30 +384,8 @@ const ParcelDetailsScreen = () => {
             )}
           </View>
 
-          {/* Action Button for Travelers */}
-          {user?.roleActive === 'TRAVELER' && parcel.status === 'PENDING' && (
-            <TouchableOpacity 
-              style={[
-                styles.matchButton,
-                parcel.userMatch && { opacity: 0.7 }
-              ]}
-              onPress={handleRequestPress}
-              disabled={requestingMatch || !!parcel.userMatch}
-            >
-              <LinearGradient
-                colors={parcel.userMatch ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']}
-                style={styles.matchGradient}
-              >
-                {requestingMatch ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.matchButtonText}>
-                    {parcel.userMatch ? 'Request Already Sent' : 'Request to Carry Parcel'}
-                  </Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
+          {/* Action Button for Travelers - REMOVED per user request (Only Customers can initiate) */}
+
 
           {/* Parcel Details */}
           <View style={styles.detailsGrid}>
@@ -465,22 +443,32 @@ const ParcelDetailsScreen = () => {
             </LinearGradient>
           </View>
 
-          {/* Incoming Match Requests for Customer */}
-          {user?.id === parcel.senderId && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
+          {/* Incoming Match Requests */}
+          {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING').length})</Text>
-              <Text style={styles.requestsSubtitle}>Travelers who want to carry your parcel</Text>
+              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user.id)).length})</Text>
+              <Text style={styles.requestsSubtitle}>
+                {user?.id === parcel.senderId ? "Travelers who want to carry your parcel" : "Delivery requests sent to you"}
+              </Text>
               
-              {parcel.matches.filter((m: any) => m.status === 'PENDING').map((match: any) => (
+              {parcel.matches
+                .filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user.id))
+                .map((match: any) => (
                 <View key={match.id} style={styles.matchRequestItem}>
                   <View style={styles.requestHeader}>
                     <View style={styles.travelerInfo}>
-                      <View style={styles.travelerAvatar}>
-                        <Text style={styles.avatarLetter}>{match.traveler?.name?.charAt(0).toUpperCase()}</Text>
+                      <View style={[styles.travelerAvatar, user?.id !== parcel.senderId && { backgroundColor: '#E0E7FF' }]}>
+                        <Text style={[styles.avatarLetter, user?.id !== parcel.senderId && { color: '#4338CA' }]}>
+                          {(user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name)?.charAt(0).toUpperCase()}
+                        </Text>
                       </View>
                       <View>
-                        <Text style={styles.travelerName}>{match.traveler?.name}</Text>
-                        <Text style={styles.travelerRating}>⭐ New Traveler</Text>
+                        <Text style={styles.travelerName}>
+                          {user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name}
+                        </Text>
+                        <Text style={styles.travelerRating}>
+                          {user?.id === parcel.senderId ? "⭐ Traveler" : "👤 Customer Request"}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -493,20 +481,22 @@ const ParcelDetailsScreen = () => {
                     </View>
                   </View>
 
-                  <View style={styles.requestActions}>
-                    <TouchableOpacity 
-                      style={[styles.actionButton, styles.rejectBtn]} 
-                      onPress={() => handleRejectMatch(match.id)}
-                    >
-                      <Text style={styles.rejectBtnText}>Decline</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.actionButton, styles.acceptBtn]}
-                      onPress={() => handleAcceptMatch(match.id)}
-                    >
-                      <Text style={styles.acceptBtnText}>Accept Request</Text>
-                    </TouchableOpacity>
-                  </View>
+                  {user?.id !== parcel.senderId && (
+                    <View style={styles.requestActions}>
+                      <TouchableOpacity 
+                        style={[styles.actionButton, styles.rejectBtn]} 
+                        onPress={() => handleRejectMatch(match.id)}
+                      >
+                        <Text style={styles.rejectBtnText}>Decline</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.actionButton, styles.acceptBtn]}
+                        onPress={() => handleAcceptMatch(match.id)}
+                      >
+                        <Text style={styles.acceptBtnText}>Accept Request</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               ))}
             </View>
@@ -562,7 +552,7 @@ const ParcelDetailsScreen = () => {
                   <Text style={styles.matchedLabelText}>PARCEL OWNER</Text>
                 </View>
                 <View style={[styles.statusBadgeMatched, { backgroundColor: '#DCFBEB' }]}>
-                  <Text style={[styles.statusTextMatched, { color: '#059669' }]}>Match Accepted</Text>
+                  <Text style={[styles.statusTextMatched, { color: '#059669' }]}>Accepted</Text>
                 </View>
               </View>
               

@@ -38,6 +38,7 @@ interface Parcel {
   weight: number;
   imageUrls: string[];
   createdAt: string;
+  isRequested?: boolean;
 }
 
 const ShipmentsScreen = () => {
@@ -165,9 +166,16 @@ const ShipmentsScreen = () => {
           <Text style={styles.parcelName} numberOfLines={1}>{item.name}</Text>
           <Text style={styles.dateText}>{dayjs(item.createdAt).format('DD MMM YYYY • HH:mm')}</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
+            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+          </View>
+          {item.isRequested && item.status === 'PENDING' && (
+            <View style={styles.requestedBadgeSmall}>
+              <Text style={styles.requestedBadgeText}>REQUESTED</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -490,6 +498,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  requestedBadgeSmall: {
+    backgroundColor: '#006C52',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  requestedBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   routeContainer: {

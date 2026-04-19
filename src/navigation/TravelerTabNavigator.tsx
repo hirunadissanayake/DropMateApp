@@ -24,7 +24,6 @@ const TravelerTabNavigator = () => {
         <Tab.Screen name="Home" component={TravelerHomeScreen} />
         <Tab.Screen name="My Trips" component={TravelerTripsScreen} />
         <Tab.Screen name="Requests" component={RequestsScreen} />
-        <Tab.Screen name="Find Parcels" component={FindParcelsScreen} />
         <Tab.Screen name="Profile" component={TravelerProfileScreen} />
       </Tab.Navigator>
     </>

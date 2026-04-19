@@ -80,3 +80,23 @@ export const getTripDetails = async (token: string, id: string) => {
     throw error.response?.data || error;
   }
 };
+export const getActiveTrips = async (token: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.TRIPS.ACTIVE, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+export const updateTripCapacity = async (token: string, id: string, capacityKg: number) => {
+  try {
+    const response = await axios.put(ENDPOINTS.TRIPS.UPDATE_CAPACITY(id), { capacityKg }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};

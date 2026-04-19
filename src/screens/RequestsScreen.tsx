@@ -51,7 +51,7 @@ const RequestsScreen = () => {
   };
 
   const renderRequestItem = ({ item }: { item: any }) => {
-    const isIncoming = user?.id === item.parcel?.senderId;
+    const isIncoming = user?.id === item.travelerId;
     
     return (
       <TouchableOpacity 
@@ -88,13 +88,13 @@ const RequestsScreen = () => {
           <View style={styles.travelerSection}>
             <View style={styles.travelerAvatar}>
                <Text style={styles.avatarLetter}>
-                 {isIncoming ? item.traveler?.name?.charAt(0).toUpperCase() : item.parcel?.sender?.name?.charAt(0).toUpperCase()}
+                 {isIncoming ? item.parcel?.sender?.name?.charAt(0).toUpperCase() : item.traveler?.name?.charAt(0).toUpperCase()}
                </Text>
             </View>
             <View style={styles.travelerDetails}>
-              <Text style={styles.travelerLabel}>{isIncoming ? 'Requested by' : 'Parcel Owner'}</Text>
+              <Text style={styles.travelerLabel}>{isIncoming ? 'From Customer' : 'To Traveler'}</Text>
               <Text style={styles.travelerName}>
-                {isIncoming ? item.traveler?.name : item.parcel?.sender?.name}
+                {isIncoming ? item.parcel?.sender?.name : item.traveler?.name}
               </Text>
             </View>
             <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2.5">

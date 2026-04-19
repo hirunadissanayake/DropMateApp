@@ -254,7 +254,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
       </Svg>
     );
   }
-  if (routeName === 'Find Parcels') {
+  if (routeName === 'Find Parcels' || routeName === 'Find Travelers') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
         <Path

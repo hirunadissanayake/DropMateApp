@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   StatusBar,
+  TextInput,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -18,6 +19,10 @@ import Svg, {Path, Circle, Rect, Line} from 'react-native-svg';
 import BackButton from '../components/common/BackButton';
 import {useAuthStore} from '../store/authStore';
 import * as tripService from '../services/tripService';
+import * as parcelService from '../services/parcelService';
+import * as deliveryService from '../services/deliveryService';
+import CustomAlert from '../components/common/CustomAlert';
+import { Modal, FlatList } from 'react-native';
 import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -28,10 +33,26 @@ const TripDetailsScreen = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'TripDetails'>>();
   const {tripId} = route.params;
-  const {token} = useAuthStore();
+  const {token, user} = useAuthStore();
 
   const [trip, setTrip] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isParcelModalVisible, setIsParcelModalVisible] = useState(false);
+  const [myParcels, setMyParcels] = useState<any[]>([]);
+  const [requestingMatch, setRequestingMatch] = useState(false);
+  const [isEditingCapacity, setIsEditingCapacity] = useState(false);
+  const [newCapacity, setNewCapacity] = useState('');
+  const [updatingCapacity, setUpdatingCapacity] = useState(false);
+  const [allRequested, setAllRequested] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'success' as 'success' | 'error' | 'info',
+    onConfirm: () => {},
+    onCancel: () => {},
+    confirmText: 'OK'
+  });
 
   useEffect(() => {
     fetchDetails();
@@ -39,12 +60,161 @@ const TripDetailsScreen = () => {
 
   const fetchDetails = async () => {
     try {
-      const data = await tripService.getTripDetails(token!, tripId);
-      setTrip(data);
+      const response = await tripService.getTripDetails(token!, tripId);
+      setTrip(response);
+      
+      // Check if all user's parcels are already requested for this trip
+      try {
+        const parcels = await parcelService.getMyParcels(token!);
+        const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
+        const available = pendingParcels.filter(
+          (p: any) => !response.requestedParcelIds?.includes(p.id)
+        );
+        setAllRequested(pendingParcels.length > 0 && available.length === 0);
+      } catch (err) {
+        console.error("Error checking parcel status:", err);
+      }
     } catch (error) {
       console.error('Fetch details error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestPress = async () => {
+    setRequestingMatch(true);
+    try {
+      const parcels = await parcelService.getMyParcels(token!);
+      const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
+      
+      // Filter out parcels that have already been requested for THIS specific trip
+      const availableParcels = pendingParcels.filter(
+        (p: any) => !trip.requestedParcelIds?.includes(p.id)
+      );
+
+      if (pendingParcels.length === 0) {
+        setAlertConfig({
+          visible: true,
+          title: "No Pending Parcels",
+          message: "You need to create a parcel first before you can request a traveler.",
+          type: 'info',
+          confirmText: "Create Parcel",
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            navigation.navigate('CreateParcel');
+          },
+          onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      } else if (availableParcels.length === 0) {
+        setAlertConfig({
+          visible: true,
+          title: "Already Requested",
+          message: "You have already sent requests for all your eligible parcels to this traveler.",
+          type: 'info',
+          confirmText: "OK",
+          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      } else {
+        setMyParcels(availableParcels);
+        setIsParcelModalVisible(true);
+      }
+    } catch (error) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: "Could not fetch your parcels. Please try again.",
+        type: 'error',
+        confirmText: "OK",
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+        onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setRequestingMatch(false);
+    }
+  };
+
+  const submitMatchRequest = async (parcelId: string) => {
+    setRequestingMatch(true);
+    try {
+      const response = await deliveryService.requestMatch(token!, { parcelId, tripId });
+      setIsParcelModalVisible(false);
+      
+      // Update local trip state to include the new requested parcel ID
+      setTrip((prev: any) => ({ 
+        ...prev, 
+        requestedParcelIds: [...(prev.requestedParcelIds || []), parcelId] 
+      }));
+
+      setTimeout(() => {
+        setAlertConfig({
+          visible: true,
+          title: "Request Sent!",
+          message: "The traveler has been notified. You will be matched once they accept your request.",
+          type: 'success',
+          confirmText: "OK",
+          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      }, 500);
+      
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Request Failed",
+        message: error.message || "Something went wrong.",
+        type: 'error',
+        confirmText: "OK",
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+        onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setRequestingMatch(false);
+    }
+  };
+
+  const handleUpdateCapacity = async () => {
+    if (!newCapacity || isNaN(Number(newCapacity))) {
+       setAlertConfig({
+         visible: true,
+         title: "Invalid Input",
+         message: "Please enter a valid number for capacity.",
+         type: 'error',
+         confirmText: "OK",
+         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+         onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+       });
+       return;
+    }
+
+    setUpdatingCapacity(true);
+    try {
+      await tripService.updateTripCapacity(token!, tripId, Number(newCapacity));
+      setIsEditingCapacity(false);
+      setAlertConfig({
+        visible: true,
+        title: "Success",
+        message: "Your trip capacity has been updated.",
+        type: 'success',
+        confirmText: "OK",
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          fetchDetails();
+        },
+        onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Update Failed",
+        message: error.message || "Could not update capacity.",
+        type: 'error',
+        confirmText: "OK",
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+        onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setUpdatingCapacity(false);
     }
   };
 
@@ -158,6 +328,31 @@ const TripDetailsScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
+        
+        {/* Action Button for Customers */}
+        {user?.roleActive === 'CUSTOMER' && trip.travelerId !== user.id && trip.status === 'ACTIVE' && (
+          <TouchableOpacity 
+            style={[
+              styles.requestButton,
+              (requestingMatch || allRequested) && { opacity: 0.7 }
+            ]}
+            onPress={handleRequestPress}
+            disabled={requestingMatch || allRequested}
+          >
+            <LinearGradient
+              colors={(requestingMatch || allRequested) ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']}
+              style={styles.requestGradient}
+            >
+              {requestingMatch ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.requestButtonText}>
+                  {allRequested ? 'Already Requested' : 'Request this Traveler'}
+                </Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
         <View style={styles.floatingRouteCard}>
           <Text style={styles.sectionLabel}>YOUR TRAVEL ROUTE</Text>
           <View style={styles.routeBox}>
@@ -260,7 +455,23 @@ const TripDetailsScreen = () => {
               </Svg>
             </View>
             <Text style={styles.statLabel}>LIMIT</Text>
-            <Text style={styles.statValue}>{trip.capacityKg} kg</Text>
+            <View style={styles.statValueRow}>
+              <Text style={styles.statValue}>{trip.capacityKg} kg</Text>
+              {user?.id === trip.travelerId && trip.status === 'ACTIVE' && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    setNewCapacity(trip.capacityKg.toString());
+                    setIsEditingCapacity(true);
+                  }}
+                  style={styles.statEditBtn}
+                >
+                  <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                    <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </Svg>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
@@ -364,6 +575,151 @@ const TripDetailsScreen = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Parcel Selection Modal */}
+      <Modal
+        visible={isParcelModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsParcelModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select a Parcel</Text>
+              <TouchableOpacity onPress={() => setIsParcelModalVisible(false)}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                  <Path d="M18 6L6 18M6 6l12 12" />
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Choose a parcel you want this traveler to carry</Text>
+            
+            <FlatList
+              data={myParcels}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.parcelList}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.parcelSelectItem}
+                  onPress={() => submitMatchRequest(item.id)}
+                >
+                  <View style={styles.parcelItemInfo}>
+                    <Text style={styles.parcelItemName}>{item.name}</Text>
+                    <Text style={styles.parcelItemRoute}>{item.fromLocation} → {item.toLocation}</Text>
+                    <Text style={styles.parcelItemWeight}>{item.weight}Kg</Text>
+                  </View>
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                    <Path d="M9 18l6-6-6-6" />
+                  </Svg>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View style={styles.modalEmpty}>
+                  <Text style={styles.modalEmptyText}>No pending parcels found.</Text>
+                </View>
+              }
+            />
+            
+            {requestingMatch && (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color="#006C52" />
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        confirmText={alertConfig.confirmText}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+      />
+
+      {/* Edit Capacity Modal */}
+      <Modal
+        visible={isEditingCapacity}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsEditingCapacity(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { paddingBottom: 30 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Capacity Limit</Text>
+              <TouchableOpacity onPress={() => setIsEditingCapacity(false)}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                  <Path d="M18 6L6 18M6 6l12 12" />
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>How much total weight can you carry in this trip?</Text>
+            
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>TOTAL CAPACITY (KG)</Text>
+              <View style={styles.capacityInputContainer}>
+                <TouchableOpacity 
+                  style={styles.stepBtn}
+                  onPress={() => setNewCapacity(prev => Math.max(0, (Number(prev) || 0) - 1).toString())}
+                >
+                  <Text style={styles.stepBtnText}>-</Text>
+                </TouchableOpacity>
+                
+                <View style={styles.capacityDisplay}>
+                  <TextInput
+                    style={styles.capacityInput}
+                    value={newCapacity}
+                    onChangeText={(text) => setNewCapacity(text.replace(/[^0-9]/g, ''))}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#94A3B8"
+                    maxLength={3}
+                  />
+                  <Text style={styles.kgLabel}>kg</Text>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.stepBtn}
+                  onPress={() => setNewCapacity(prev => ((Number(prev) || 0) + 1).toString())}
+                >
+                  <Text style={styles.stepBtnText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.inputHint}>Note: You cannot reduce this below already assigned parcels.</Text>
+            </View>
+
+            <TouchableOpacity 
+              style={[
+                styles.updateBtn,
+                (updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity) && styles.disabledUpdateBtn
+              ]}
+              onPress={handleUpdateCapacity}
+              disabled={updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity}
+            >
+              <LinearGradient 
+                colors={
+                  (updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity) 
+                    ? ['#94A3B8', '#64748B'] 
+                    : ['#006C52', '#004D3A']
+                } 
+                style={styles.updateGradient}
+              >
+                {updatingCapacity ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.updateBtnText}>
+                    {newCapacity === trip.capacityKg.toString() ? 'No Changes' : 'Update Capacity'}
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -645,6 +1001,198 @@ const styles = StyleSheet.create({
     color: '#065F46',
     lineHeight: 24,
     fontFamily: 'Manrope-Medium',
+  },
+  requestButton: {
+    marginTop: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 6,
+    marginBottom: 20,
+  },
+  requestGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  requestButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    fontFamily: 'Manrope-Bold',
+    letterSpacing: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    fontFamily: 'Manrope-Bold',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 20,
+    fontFamily: 'Manrope',
+  },
+  parcelList: {
+    paddingBottom: 20,
+  },
+  parcelSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  parcelItemInfo: {
+    flex: 1,
+  },
+  parcelItemName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  parcelItemRoute: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 2,
+  },
+  parcelItemWeight: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#006C52',
+  },
+  modalEmpty: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  modalEmptyText: {
+    color: '#64748B',
+    fontSize: 14,
+  },
+  modalLoading: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  statValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statEditBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#DCFBEB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inputWrapper: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94A3B8',
+    marginBottom: 12,
+  },
+  capacityInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  stepBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepBtnText: {
+    fontSize: 24,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  capacityDisplay: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+  },
+  capacityInput: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#006C52',
+    textAlign: 'center',
+    padding: 0,
+  },
+  kgLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#64748B',
+    marginLeft: 4,
+  },
+  inputHint: {
+    fontSize: 11,
+    color: '#94A3B8',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  updateBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  updateGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  updateBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  disabledUpdateBtn: {
+    opacity: 0.7,
   },
 });
 
