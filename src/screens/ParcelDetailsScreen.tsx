@@ -29,6 +29,7 @@ import * as deliveryService from '../services/deliveryService';
 import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomAlert from '../components/common/CustomAlert';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -466,9 +467,9 @@ const ParcelDetailsScreen = () => {
                         <Text style={styles.travelerName}>
                           {user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name}
                         </Text>
-                        <Text style={styles.travelerRating}>
+                        {/* <Text style={styles.travelerRating}>
                           {user?.id === parcel.senderId ? "⭐ Traveler" : "👤 Customer Request"}
-                        </Text>
+                        </Text> */}
                       </View>
                     </View>
                   </View>
@@ -728,7 +729,7 @@ const styles = StyleSheet.create({
   noImageText: {
     marginTop: 12,
     color: '#94A3B8',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   absHeader: {
     position: 'absolute',
@@ -787,15 +788,14 @@ const styles = StyleSheet.create({
   },
   parcelName: {
     fontSize: 24,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   parcelId: {
     fontSize: 14,
     color: '#94A3B8',
     marginTop: 2,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -804,8 +804,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '800',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   cardSeparator: {
     height: 1,
@@ -825,11 +825,11 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 10,
-    fontWeight: '800',
     color: '#94A3B8',
-    letterSpacing: 1.5,
+    letterSpacing: 0.3,
     marginBottom: 16,
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   routeBox: {
     flexDirection: 'row',
@@ -861,18 +861,18 @@ const styles = StyleSheet.create({
   routeTexts: {
     flex: 1,
     marginLeft: 12,
+
   },
   locLabel: {
     fontSize: 10,
     color: '#94A3B8',
     marginBottom: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   locValue: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.semiBold,
   },
   dualCards: {
     flexDirection: 'row',
@@ -887,15 +887,14 @@ const styles = StyleSheet.create({
   },
   personName: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   personPhone: {
     fontSize: 14,
     color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -910,20 +909,20 @@ const styles = StyleSheet.create({
   },
   gridLabel: {
     fontSize: 9,
-    fontWeight: '700',
     color: '#94A3B8',
     marginBottom: 4,
+    fontFamily: Typography.bold,
   },
   gridValue: {
     fontSize: 14,
-    fontWeight: '700',
     color: '#0F172A',
+    fontFamily: Typography.semiBold,
   },
   descText: {
     fontSize: 15,
     color: '#334155',
     lineHeight: 22,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   noteCard: {
     backgroundColor: '#F0FDF4',
@@ -935,6 +934,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#065F46',
     lineHeight: 22,
+    fontFamily: Typography.regular,
   },
   priceCard: {
     borderRadius: 28,
@@ -953,13 +953,12 @@ const styles = StyleSheet.create({
   priceLabel: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.7)',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   priceValue: {
     fontSize: 24,
-    fontWeight: '800',
     color: '#FFFFFF',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   priceDivider: {
     height: 1,
@@ -976,11 +975,12 @@ const styles = StyleSheet.create({
   pSubLabel: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.5)',
+    fontFamily: Typography.regular,
   },
   pSubValue: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '600',
+    fontFamily: Typography.semiBold,
   },
   modalBg: {
     flex: 1,
@@ -1000,8 +1000,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   closeModalBtn: {
     width: 40,
@@ -1041,7 +1040,7 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontStyle: 'italic',
     marginTop: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   matchButton: {
     marginBottom: 24,
@@ -1061,8 +1060,7 @@ const styles = StyleSheet.create({
   matchButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: 0.5,
   },
   tripModalOverlay: {
@@ -1087,15 +1085,14 @@ const styles = StyleSheet.create({
   },
   tripModalTitle: {
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   tripModalSubtitle: {
     fontSize: 14,
     color: '#64748B',
     marginBottom: 20,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   tripList: {
     paddingBottom: 20,
@@ -1115,13 +1112,14 @@ const styles = StyleSheet.create({
   },
   tripItemRoute: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     color: '#0F172A',
     marginBottom: 4,
   },
   tripItemDate: {
     fontSize: 13,
     color: '#64748B',
+    fontFamily: Typography.regular,
   },
   tripModalLoading: {
     ...StyleSheet.absoluteFillObject,
@@ -1135,7 +1133,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     marginBottom: 20,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   matchRequestItem: {
     backgroundColor: '#F8FAFC',
@@ -1166,21 +1164,20 @@ const styles = StyleSheet.create({
   },
   avatarLetter: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#006C52',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   travelerName: {
     fontSize: 15,
-    fontWeight: '700',
     color: '#0F172A',
+    fontFamily: Typography.bold,
   },
-  travelerRating: {
-    fontSize: 11,
-    color: '#F59E0B',
-    fontWeight: '600',
-    marginTop: 2,
-  },
+  // travelerRating: {
+  //   fontSize: 11,
+  //   color: '#F59E0B',
+  //   fontFamily: Typography.semiBold,
+  //   marginTop: 2,
+  // },
   requestTripInfo: {
     paddingVertical: 12,
     borderTopWidth: 1,
@@ -1190,15 +1187,15 @@ const styles = StyleSheet.create({
   },
   tripDateLabel: {
     fontSize: 9,
-    fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 0.5,
     marginBottom: 4,
+    fontFamily: Typography.bold,
   },
   tripDateValue: {
     fontSize: 14,
-    fontWeight: '700',
     color: '#0F172A',
+    fontFamily: Typography.bold,
     marginBottom: 4,
   },
   tripRouteRow: {
@@ -1209,6 +1206,7 @@ const styles = StyleSheet.create({
   tripRouteText: {
     fontSize: 13,
     color: '#64748B',
+    fontFamily: Typography.regular,
   },
   requestActions: {
     flexDirection: 'row',
@@ -1228,7 +1226,7 @@ const styles = StyleSheet.create({
   },
   rejectBtnText: {
     color: '#DC2626',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     fontSize: 14,
   },
   acceptBtn: {
@@ -1236,7 +1234,7 @@ const styles = StyleSheet.create({
   },
   acceptBtnText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     fontSize: 14,
   },
   matchedTravelerCard: {
@@ -1261,7 +1259,7 @@ const styles = StyleSheet.create({
   matchedLabelText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     letterSpacing: 0.5,
   },
   statusBadgeMatched: {
@@ -1273,7 +1271,7 @@ const styles = StyleSheet.create({
   statusTextMatched: {
     color: '#059669',
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   travelerProfileRow: {
     flexDirection: 'row',
@@ -1302,7 +1300,7 @@ const styles = StyleSheet.create({
   },
   largeAvatarLetter: {
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     color: '#006C52',
   },
   travelerDetails: {
@@ -1310,14 +1308,15 @@ const styles = StyleSheet.create({
   },
   travelerNameLarge: {
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
+    fontFamily: Typography.bold,
     marginBottom: 2,
   },
   travelerContact: {
     fontSize: 15,
     color: '#64748B',
     marginBottom: 12,
+    fontFamily: Typography.regular,
   },
   contactActions: {
     flexDirection: 'row',
@@ -1343,7 +1342,7 @@ const styles = StyleSheet.create({
   },
   contactBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     color: '#006C52',
   },
 });

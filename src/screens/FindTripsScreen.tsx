@@ -20,6 +20,7 @@ import * as tripService from '../services/tripService';
 import Svg, { Path, Circle } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -189,16 +190,15 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   centerContainer: {
     flex: 1,
@@ -245,13 +245,13 @@ const styles = StyleSheet.create({
   },
   avatarLetter: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#006C52',
+    fontFamily: Typography.bold,
   },
   travelerName: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#0F172A',
+    fontFamily: Typography.medium,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 12,
     color: '#F59E0B',
-    fontWeight: '600',
+    fontFamily: Typography.medium,
   },
   capacityBadge: {
     backgroundColor: '#F8FAFC',
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
   },
   capacityText: {
     fontSize: 11,
-    fontWeight: '700',
     color: '#64748B',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   badgeContainer: {
     flexDirection: 'row',
@@ -298,8 +298,7 @@ const styles = StyleSheet.create({
   requestedText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     textTransform: 'uppercase',
   },
   routeContainer: {
@@ -328,8 +327,8 @@ const styles = StyleSheet.create({
   locationText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
     color: '#1E293B',
+    fontFamily: Typography.bold,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -345,7 +344,7 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 13,
     color: '#64748B',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
   viewBtn: {
     backgroundColor: '#006C52',
@@ -356,7 +355,7 @@ const styles = StyleSheet.create({
   viewBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   emptyContainer: {
     flex: 1,
@@ -375,15 +374,16 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
+    fontFamily: Typography.bold,
   },
   emptySubtitle: {
     fontSize: 15,
     color: '#64748B',
     textAlign: 'center',
     paddingHorizontal: 40,
+    fontFamily: Typography.regular,
     lineHeight: 22,
   },
   disabledCard: {
@@ -400,8 +400,8 @@ const styles = StyleSheet.create({
   fullBadgeText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '800',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   disabledBtn: {
     backgroundColor: '#94A3B8',
@@ -412,6 +412,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontStyle: 'italic',
     textAlign: 'center',
+    fontFamily: Typography.regular,
   },
 });
 

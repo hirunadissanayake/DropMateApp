@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
+import { Typography } from '../../constants/Typography';
 
 const { height } = Dimensions.get('window');
 
@@ -100,23 +101,21 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
               // Month/year header
               monthTextColor: '#0F172A',
-              textMonthFontFamily: 'Manrope-Bold',
+              textMonthFontFamily: Typography.bold,
               textMonthFontSize: 17,
-              textMonthFontWeight: '700',
 
               // Arrow buttons
               arrowColor: GREEN,
 
               // Day-of-week labels
               textSectionTitleColor: '#94A3B8',
-              textDayHeaderFontFamily: 'Manrope-Bold',
+              textDayHeaderFontFamily: Typography.bold,
               textDayHeaderFontSize: 12,
 
               // Day numbers
               dayTextColor: '#0F172A',
-              textDayFontFamily: 'Manrope-Medium',
+              textDayFontFamily: Typography.medium,
               textDayFontSize: 15,
-              textDayFontWeight: '500',
 
               // Today
               todayTextColor: GREEN,
@@ -186,9 +185,8 @@ const s = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   closeBtn: {
     width: 32,
@@ -224,9 +222,8 @@ const s = StyleSheet.create({
   },
   cancelText: {
     fontSize: 15,
-    fontWeight: '600',
     color: '#64748B',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 });
 

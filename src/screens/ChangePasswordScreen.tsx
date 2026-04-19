@@ -18,6 +18,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 const getStrengthScore = (pass: string) => {
   let score = 0;
@@ -230,9 +231,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope-Bold' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope-Regular' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   formContainer: {
     width: '100%',
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#065F46',
     flex: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope-Medium' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
 });
 

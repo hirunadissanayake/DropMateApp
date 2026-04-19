@@ -34,6 +34,7 @@ import { useRegistrationStore } from '../store/registrationStore';
 import * as authService from '../services/authService';
 import { ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 
 
@@ -404,9 +405,8 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 34,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -1.5,
     marginBottom: 12,
     textAlign:'center'
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     lineHeight: 24,
     opacity: 0.7,
     textAlign:'center'
@@ -424,11 +424,10 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 14,
-    fontWeight: '800',
     color: Colors.primary,
     marginBottom: 20,
     textTransform: 'uppercase',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     paddingLeft: 4,
   },
   selfieCard: {
@@ -472,16 +471,15 @@ const styles = StyleSheet.create({
   },
   uploadTitle: {
     fontSize: 17,
-    fontWeight: '800',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -0.3,
   },
   uploadSubtitle: {
     fontSize: 13,
     color: Colors.text.secondary,
     lineHeight: 18,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     opacity: 0.6,
   },
   actionIconBox: {
@@ -530,9 +528,8 @@ const styles = StyleSheet.create({
   },
   idCardLabel: {
     fontSize: 10,
-    fontWeight: '800',
     color: '#94A3B8',
-    letterSpacing: 1.2,
+    fontFamily: Typography.bold,
   },
   idCardFooter: {
     flexDirection: 'row',
@@ -543,9 +540,8 @@ const styles = StyleSheet.create({
   },
   idCardFooterText: {
     fontSize: 13,
-    fontWeight: '700',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   miniUploadBtn: {
     width: 28,
@@ -589,18 +585,18 @@ const styles = StyleSheet.create({
   },
   travelerBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.8,
+    fontFamily: Typography.bold,
   },
   travelerInfoText: {
     gap: 6,
   },
   travelerTitle: {
     fontSize: 20,
-    fontWeight: '900',
     color: '#052017',
     letterSpacing: -0.5,
+    fontFamily: Typography.bold,
   },
   travelerDesc: {
     fontSize: 14,
@@ -613,9 +609,9 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 11,
-    fontWeight: '800',
     color: Colors.text.secondary,
     paddingLeft: 4,
+    fontFamily: Typography.bold,
   },
   selectBox: {
     height: 64,
@@ -631,8 +627,7 @@ const styles = StyleSheet.create({
   selectText: {
     fontSize: 16,
     color: '#052017',
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.bold,
   },
   inputContainer: {
     height: 64,
@@ -649,7 +644,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#052017',
     fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   unitBadge: {
     backgroundColor: '#F1F5F9',
@@ -659,8 +654,8 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 14,
-    fontWeight: '800',
     color: '#64748B',
+    fontFamily: Typography.bold,
   },
   payoutAlert: {
     flexDirection: 'row',
@@ -733,8 +728,8 @@ const styles = StyleSheet.create({
   },
   encryptionText: {
     fontSize: 12,
-    fontWeight: '700',
     color: Colors.text.secondary,
+    fontFamily: Typography.bold,
     opacity: 0.8,
   },
 });

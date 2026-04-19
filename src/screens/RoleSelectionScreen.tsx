@@ -18,6 +18,7 @@ import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import BackButton from '../components/common/BackButton';
 import ScreenHeader from '../components/common/ScreenHeader';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -217,9 +218,8 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 34,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -1.5,
     marginBottom: 12,
     textAlign: 'center',
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.8,
@@ -293,16 +293,15 @@ const styles = StyleSheet.create({
   },
   rolePrimary: {
     fontSize: 22,
-    fontWeight: '800',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -0.5,
     marginBottom: 2,
   },
   roleSecondary: {
     fontSize: 14,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     opacity: 0.7,
   },
   radioButton: {
@@ -339,11 +338,11 @@ const styles = StyleSheet.create({
   loginHintText: {
     fontSize: 15,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   loginHintBold: {
     color: Colors.primary,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
 });
 

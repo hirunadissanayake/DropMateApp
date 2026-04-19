@@ -22,6 +22,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -396,7 +397,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   scrollContent: {
     flexGrow: 1,
@@ -442,7 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#0F172A',
     fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   nameEditIcon: {
     width: 32,
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#006C52',
     paddingVertical: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   editActions: {
     flexDirection: 'row',
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 14,
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   settingsSection: {
     paddingHorizontal: 24,
@@ -526,12 +527,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1E293B',
     fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   itemSubLabel: {
     fontSize: 12,
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     marginTop: 2,
   },
   logoutBtn: {
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
     color: '#E11D48',
     fontWeight: '800',
     fontSize: 15,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   switchRoleBtn: {
     marginTop: 20,
@@ -587,13 +588,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   switchRoleSub: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
 });
 

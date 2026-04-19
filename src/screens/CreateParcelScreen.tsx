@@ -28,6 +28,7 @@ import Toast from 'react-native-toast-message';
 import CustomDropdown from '../components/common/CustomDropdown';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -554,16 +555,14 @@ const styles = StyleSheet.create({
   miniLabel: {
     fontSize: 10,
     color: '#006C52',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     letterSpacing: 1.5,
     marginBottom: 8,
   },
   heroTitle: {
     fontSize: 32,
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     letterSpacing: -1,
     marginBottom: 8,
     textAlign: 'center',
@@ -571,8 +570,7 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     fontSize: 15,
     color: '#64748B',
-    fontFamily: 'Manrope',
-    lineHeight: 22,
+    fontFamily: Typography.medium,
     textAlign: 'center',
   },
   contentCard: {
@@ -594,9 +592,8 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     color: '#000',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontFamily: Typography.bold,
+    letterSpacing: 0.3,
     marginBottom: 10,
   },
   minimalInput: {
@@ -606,7 +603,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
@@ -617,7 +614,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     textAlignVertical: 'top',
@@ -631,7 +628,7 @@ const styles = StyleSheet.create({
   photoCountText: {
     fontSize: 12,
     color: '#64748B',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   photoContainer: {
     gap: 12,
@@ -672,7 +669,7 @@ const styles = StyleSheet.create({
   deleteBtnText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: Typography.regular,
   },
   routeHeader: {
     marginBottom: 16,
@@ -730,7 +727,7 @@ const styles = StyleSheet.create({
   methodText: {
     fontSize: 14,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
     lineHeight: 45,
   },
   priceCard: {
@@ -748,15 +745,14 @@ const styles = StyleSheet.create({
   priceLabelCap: {
     fontSize: 10,
     color: '#94A3B8',
-    fontFamily: 'Manrope',
-    letterSpacing: 2,
+    fontFamily: Typography.regular,
+    letterSpacing: 0.3,
     marginBottom: 4,
   },
   priceSummaryTitle: {
     fontSize: 18,
     color: '#FFFFFF',
-    fontFamily: 'Manrope-Bold',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   priceContent: {
     gap: 12,
@@ -768,11 +764,12 @@ const styles = StyleSheet.create({
   priceItemLabel: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontFamily: Typography.regular,
   },
   priceItemValue: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: Typography.medium,
   },
   totalDivider: {
     height: 1,
@@ -787,12 +784,12 @@ const styles = StyleSheet.create({
   totalLabel: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Typography.medium,
   },
   totalValue: {
     color: '#FFFFFF',
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
   submitButton: {
     height: 60,
@@ -809,16 +806,14 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 18,
     color: '#FFFFFF',
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   errorText: {
     color: '#DC2626',
     fontSize: 12,
     marginTop: 6,
     marginLeft: 4,
-    fontFamily: 'Manrope',
-    fontWeight: '500',
+    fontFamily: Typography.medium,
   },
 });
 

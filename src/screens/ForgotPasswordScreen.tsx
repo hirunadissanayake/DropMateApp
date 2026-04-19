@@ -18,6 +18,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#052017',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginBottom: 12,
   },
   description: {
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     color: '#3F4944',
     textAlign: 'center',
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     paddingHorizontal: 20,
   },
   inputSection: {
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     color: '#3F4944',
     marginBottom: 10,
     paddingLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   phoneInputContainer: {
     flexDirection: 'row',
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#052017',
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.semiBold,
   },
   actionButton: {
     width: '100%',
@@ -274,12 +275,12 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#3F4944',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   loginText: {
     color: '#00513D',
     fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 });
 

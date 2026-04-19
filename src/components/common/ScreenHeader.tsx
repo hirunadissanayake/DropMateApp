@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import BackButton from './BackButton';
 import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 interface ScreenHeaderProps {
   onBack: () => void;
@@ -94,9 +95,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 });
 

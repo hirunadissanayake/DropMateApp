@@ -2,6 +2,7 @@ import React from 'react';
 import { Platform, View, Text, StyleSheet } from 'react-native';
 import { BaseToast, ErrorToast, InfoToast } from 'react-native-toast-message';
 import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 export const toastConfig = {
   success: (props: any) => (
@@ -69,13 +70,12 @@ const styles = StyleSheet.create({
   },
   text1: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   text2: {
     fontSize: 13,
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
 });

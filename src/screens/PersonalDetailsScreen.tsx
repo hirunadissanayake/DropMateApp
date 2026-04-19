@@ -16,6 +16,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useAuthStore } from '../store/authStore';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -202,10 +203,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   scrollContent: {
     flexGrow: 1,
@@ -234,13 +234,12 @@ const styles = StyleSheet.create({
   statusLabel: {
       fontSize: 12,
       color: '#64748B',
-      fontWeight: '600',
+      fontFamily: Typography.medium,
       marginBottom: 2,
   },
   statusValue: {
       fontSize: 16,
-      fontWeight: '800',
-      fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+      fontFamily: Typography.bold,
   },
   cardSection: {
     backgroundColor: '#FFFFFF',
@@ -255,11 +254,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 18,
     color: '#0F172A',
     marginBottom: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   infoList: {
       gap: 20,
@@ -278,17 +276,17 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
   },
   infoLabelText: {
-      fontSize: 11,
+      fontSize: 12,
       color: '#94A3B8',
-      fontWeight: '700',
+      fontFamily: Typography.medium,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.3,
       marginBottom: 2,
   },
   infoValueText: {
-      fontSize: 15,
+      fontSize: 14,
       color: '#1E293B',
-      fontWeight: '700',
+      fontFamily: Typography.bold,
   },
   docsGrid: {
       flexDirection: 'row',
@@ -321,7 +319,7 @@ const styles = StyleSheet.create({
   docLabelText: {
       fontSize: 10,
       color: '#64748B',
-      fontWeight: '700',
+      fontFamily: Typography.bold,
       textAlign: 'center',
   },
   modalOverlay: {

@@ -15,6 +15,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
+import { Typography } from '../constants/Typography';
 import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
 import * as authService from '../services/authService';
@@ -293,10 +294,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 30,
-    fontWeight: '800',
     color: '#052017',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -0.8,
     marginBottom: 12,
   },
@@ -305,11 +305,11 @@ const styles = StyleSheet.create({
     color: '#052017',
     textAlign: 'center',
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.regular,
   },
   phoneLabel: {
     color: '#052017',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   otpGrid: {
     flexDirection: 'row',
@@ -359,9 +359,8 @@ const styles = StyleSheet.create({
   },
   otpChar: {
     fontSize: 24,
-    fontWeight: '900',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.bold,
   },
   hiddenInput: {
     position: 'absolute',
@@ -407,10 +406,9 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 16,
-    fontWeight: '800',
     color: '#00513D',
     letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   resendContainer: {
     flexDirection: 'row',
@@ -419,13 +417,12 @@ const styles = StyleSheet.create({
   resendLabel: {
     fontSize: 14,
     color: '#3F4944',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   resendButton: {
     fontSize: 14,
-    fontWeight: '800',
     color: '#00513D',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   verifyButton: {
     width: '100%',
@@ -461,15 +458,14 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
     color: '#00513D',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   cardDesc: {
     fontSize: 14,
     color: '#3F4944',
     lineHeight: 22,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
 });
 

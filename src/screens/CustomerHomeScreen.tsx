@@ -20,6 +20,7 @@ import * as authService from '../services/authService';
 import * as parcelService from '../services/parcelService';
 import { useAuthStore } from '../store/authStore';
 import dayjs from 'dayjs';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -438,19 +439,18 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: '#FFFFFF',
-    fontWeight: '800',
     fontSize: 18,
+    fontFamily: Typography.bold,
   },
   greetingText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   userName: {
     fontSize: 18,
     color: '#0F172A',
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   notificationBtn: {
     width: 40,
@@ -507,19 +507,19 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '800',
     letterSpacing: 0.5,
+    fontFamily: Typography.bold,
   },
   statusTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     marginBottom: 4,
   },
   statusDesc: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    fontFamily: Typography.medium,
   },
   shieldIcon: {
     width: 60,
@@ -546,12 +546,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     color: '#475569',
-    fontWeight: '600',
+    fontFamily: Typography.medium,
   },
   progressValue: {
     fontSize: 15,
     color: '#006C52',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
+
   },
   progressBar: {
     height: 8,
@@ -569,16 +570,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
     fontStyle: 'italic',
+    fontFamily: Typography.regular,
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: '800',
     color: '#94A3B8',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     marginBottom: 10,
+    fontFamily: Typography.bold,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -589,7 +591,7 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: 12,
     color: '#006C52',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   horizontalScroll: {
     paddingRight: 20,
@@ -613,14 +615,13 @@ const styles = StyleSheet.create({
   walletLabel: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
-    fontWeight: '600',
     marginBottom: 4,
+    fontFamily: Typography.medium,
   },
   walletAmount: {
     color: '#FFFFFF',
     fontSize: 24,
-    fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   topUpBtn: {
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -632,8 +633,8 @@ const styles = StyleSheet.create({
   },
   topUpText: {
     color: '#FFFFFF',
-    fontWeight: '700',
     fontSize: 13,
+    fontFamily: Typography.bold,
   },
   activeOrderCard: {
     width: width * 0.7,
@@ -677,7 +678,7 @@ const styles = StyleSheet.create({
   },
   statusChipText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     textTransform: 'uppercase',
   },
   orderCardBody: {
@@ -685,14 +686,14 @@ const styles = StyleSheet.create({
   },
   orderId: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     color: '#0F172A',
     marginBottom: 4,
   },
   orderLocation: {
     fontSize: 13,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: Typography.medium,
   },
   orderCardFooter: {
     flexDirection: 'row',
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
   orderTime: {
     fontSize: 12,
     color: '#006C52',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   serviceRow: {
     flexDirection: 'row',
@@ -735,7 +736,7 @@ const styles = StyleSheet.create({
   },
   serviceLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     color: '#475569',
   },
   exploreFeatureCard: {
@@ -752,7 +753,7 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     color: '#1E293B',
     marginBottom: 4,
   },
@@ -761,6 +762,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginBottom: 16,
     lineHeight: 20,
+    fontFamily: Typography.medium,
   },
   featureBtn: {
     backgroundColor: '#0F172A',
@@ -772,7 +774,7 @@ const styles = StyleSheet.create({
   featureBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   featureIconBox: {
     width: 64,
@@ -818,13 +820,14 @@ const styles = StyleSheet.create({
   },
   emptyActiveText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     color: '#475569',
     marginBottom: 4,
   },
   emptyActiveSubtext: {
     fontSize: 12,
     color: '#94A3B8',
+    fontFamily: Typography.regular,
   },
 });
 

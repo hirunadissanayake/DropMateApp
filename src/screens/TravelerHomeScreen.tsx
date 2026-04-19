@@ -16,6 +16,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, G, Defs, ClipPath, Circle } from 'react-native-svg';
 import * as authService from '../services/authService';
 import { useAuthStore } from '../store/authStore';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -222,9 +223,6 @@ const TravelerHomeScreen = ({ navigation }: any) => {
                 <Text style={[styles.tipsTitle, {marginTop: 12}]}>Maintain 5-Stars</Text>
                 <Text style={styles.tipsDesc}>Top-rated travelers get priority access to long-haul, high-payout international routes.</Text>
               </View>
-              <TouchableOpacity style={styles.readGuideBtn}>
-                <Text style={styles.readGuideText}>Read Guide</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={{ height: 130 }} /> 
@@ -303,15 +301,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   greetingText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   userNameText: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 18,
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -0.5,
   },
   notificationBtn: {
@@ -347,14 +344,12 @@ const styles = StyleSheet.create({
   greetingSubtitle: {
     color: '#3F4944',
     fontSize: 16,
-    fontWeight: '500',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   greetingTitle: {
-    color: '#00513D',
     fontSize: 28,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    color: '#00513D',
+    fontFamily: Typography.bold,
     letterSpacing: -0.8,
   },
   /* REVIEW CARD */
@@ -396,23 +391,20 @@ const styles = StyleSheet.create({
   reviewBadgeText: {
     color: '#4A695C',
     fontSize: 10,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: 1,
   },
   reviewTitle: {
     color: '#94EAC9',
     fontSize: 20,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginTop: 6,
   },
   reviewBody: {
     color: '#FFFFFF',
     fontSize: 14,
     lineHeight: 22,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   reviewProgressBarTrack: {
     width: '100%',
@@ -447,14 +439,12 @@ const styles = StyleSheet.create({
   profileTitle: {
     color: '#052017',
     fontSize: 18,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   profilePercent: {
     color: '#00513D',
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   progressBarTrack: {
     width: '100%',
@@ -471,7 +461,7 @@ const styles = StyleSheet.create({
   profileHintText: {
     color: '#3F4944',
     fontSize: 14,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.medium,
   },
   /* LOCKED SERVICES */
   lockedServicesContainer: {
@@ -503,13 +493,12 @@ const styles = StyleSheet.create({
   lockedServiceTitle: {
     color: '#052017',
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   lockedServiceDesc: {
     color: '#3F4944',
     fontSize: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.medium,
     lineHeight: 18,
   },
   lockedBadgeContainer: {
@@ -520,8 +509,7 @@ const styles = StyleSheet.create({
   lockedText: {
     color: '#052017',
     fontSize: 9,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -0.5,
   },
   /* TIPS FOR TRAVELERS */
@@ -531,8 +519,7 @@ const styles = StyleSheet.create({
   tipsHeader: {
     color: '#00513D',
     fontSize: 20,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     paddingHorizontal: 4,
   },
   tipsCardImage: {
@@ -552,14 +539,13 @@ const styles = StyleSheet.create({
   tipsTitle: {
     color: '#052017',
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   tipsDesc: {
     color: '#3F4944',
     fontSize: 14,
     lineHeight: 22,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.medium,
   },
   tipsCardStandard: {
     backgroundColor: '#CBE9DA',
@@ -588,12 +574,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     marginLeft: 16,
-  },
-  readGuideText: {
-    color: '#00513D',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
 
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect } from 'react-native-svg';
+import { Typography } from '../constants/Typography';
 
 const WalletScreen = () => {
   return (
@@ -53,17 +54,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     color: '#0F172A',
-    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   subtitle: {
     fontSize: 16,
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
 });
 

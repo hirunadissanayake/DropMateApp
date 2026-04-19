@@ -20,6 +20,7 @@ import ScreenHeader from '../components/common/ScreenHeader';
 import { useAuthStore } from '../store/authStore';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 const RequestRoleScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
@@ -255,9 +256,8 @@ const styles = StyleSheet.create({
   titleSection: { marginBottom: 32 },
   mainTitle: {
     fontSize: 32,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginBottom: 12,
     letterSpacing: -1,
     textAlign: 'center',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text.secondary,
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     textAlign: 'center',
   },
   roleCard: {
@@ -303,15 +303,14 @@ const styles = StyleSheet.create({
   roleLabel: {
     fontSize: 12,
     color: Colors.text.tertiary,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   roleValue: {
     fontSize: 20,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginTop: 2,
   },
   statusIndicator: {
@@ -332,7 +331,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     color: Colors.text.secondary,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   infoBadge: {
     flexDirection: 'row',
@@ -350,7 +349,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 13,
     color: Colors.primary,
-    fontWeight: '600',
+    fontFamily: Typography.medium,
     flex: 1,
   },
   section: { marginBottom: 32 },
@@ -362,10 +361,9 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 13,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
-    letterSpacing: 1,
+    fontFamily: Typography.bold,
+    letterSpacing: 0.3,
   },
   headerLine: {
     flex: 1,
@@ -388,7 +386,7 @@ const styles = StyleSheet.create({
   inputGroup: { gap: 8 },
   inputLabel: { 
     fontSize: 13, 
-    fontWeight: '700', 
+    fontFamily: Typography.bold, 
     color: Colors.text.secondary,
     marginLeft: 4,
   },
@@ -409,8 +407,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     color: Colors.text.primary,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   unitBadge: {
     backgroundColor: '#FFFFFF',
@@ -422,7 +419,7 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: Typography.bold,
     color: Colors.text.tertiary,
   },
   confirmationCard: {
@@ -450,17 +447,17 @@ const styles = StyleSheet.create({
   },
   confirmTitle: {
     fontSize: 18,
-    fontWeight: '900',
     color: Colors.text.primary,
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: Typography.bold,
   },
   confirmText: {
     fontSize: 15,
     color: Colors.text.secondary,
     lineHeight: 22,
     textAlign: 'center',
-    fontWeight: '500',
+    fontFamily: Typography.medium,
   },
   footer: { 
     marginTop: 10,
@@ -475,8 +472,7 @@ const styles = StyleSheet.create({
   disclaimer: {
     fontSize: 13,
     color: Colors.text.tertiary,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   stepsRow: {
     flexDirection: 'row',
@@ -498,12 +494,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepText: {
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 11,
+    fontFamily: Typography.bold,
     color: Colors.text.secondary,
     textAlign: 'center',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   stepLine: {
     width: 20,

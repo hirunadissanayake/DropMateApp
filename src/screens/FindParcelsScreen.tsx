@@ -20,6 +20,7 @@ import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -198,15 +199,14 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 12,
     color: '#64748B',
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.regular,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: 'Manrope-ExtraBold',
+    fontFamily: Typography.bold,
     marginTop: 4,
   },
   filterBtn: {
@@ -266,8 +266,7 @@ const styles = StyleSheet.create({
   payoutText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   requestedBadge: {
     position: 'absolute',
@@ -289,8 +288,7 @@ const styles = StyleSheet.create({
   requestedText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     textTransform: 'uppercase',
   },
   parcelInfo: {
@@ -304,9 +302,8 @@ const styles = StyleSheet.create({
   },
   parcelName: {
     fontSize: 18,
-    fontWeight: '700',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     flex: 1,
     marginRight: 10,
   },
@@ -349,8 +346,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     color: '#334155',
-    fontWeight: '600',
-    fontFamily: 'Manrope-SemiBold',
+    fontFamily: Typography.bold,
   },
   cardFooter: {
     flexDirection: 'row',

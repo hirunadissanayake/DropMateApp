@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import { Typography } from '../constants/Typography';
 
 const BRAND_GREEN = '#00875A';
 const BRAND_LIGHT = '#E6F5EF';
@@ -136,15 +137,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.regular,
   },
   mainBalanceContainer: {
     alignItems: 'center',
@@ -159,10 +159,9 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontSize: 48,
-    fontWeight: '800',
     color: '#FFFFFF',
     marginVertical: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.bold,
   },
   withdrawBtn: {
     backgroundColor: '#FFFFFF',

@@ -22,6 +22,7 @@ import { useAuthStore } from '../store/authStore';
 import * as tripService from '../services/tripService';
 import Toast from 'react-native-toast-message';
 import CustomAlert from '../components/common/CustomAlert';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 const BRAND_GREEN = '#006C52';
@@ -322,16 +323,15 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#64748B',
     marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   addButton: {
     width: 52,
@@ -384,10 +384,9 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 22,
-    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 12,
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   emptySubtitle: {
     fontSize: 15,
@@ -395,7 +394,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
   createNowButton: {
     paddingVertical: 14,
@@ -406,7 +405,7 @@ const styles = StyleSheet.create({
   createNowText: {
     fontSize: 16,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -471,9 +470,8 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#1E293B',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   statusBadge: {
     paddingVertical: 6,
@@ -481,9 +479,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontFamily: Typography.extraBold,
   },
   headerRightCol: {
     alignItems: 'flex-end',
@@ -500,8 +497,7 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 12,
     color: '#DC2626',
-    fontWeight: '700',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   deleteBtn: {
     width: 30,
@@ -526,8 +522,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 10,
     color: '#94A3B8',
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontFamily: Typography.extraBold,
   },
   infoRow: {
     flexDirection: 'row',
@@ -537,8 +532,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     color: '#475569',
-    fontWeight: '600',
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.bold,
   },
 });
 

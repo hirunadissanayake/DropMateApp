@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 import Svg, { Path } from 'react-native-svg';
 
@@ -109,11 +110,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: '400',
     color: Colors.text.secondary,
     marginBottom: 8,
     marginLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.medium,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     height: '100%',
     fontSize: 16,
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   rightIconContainer: {
     padding: 8,

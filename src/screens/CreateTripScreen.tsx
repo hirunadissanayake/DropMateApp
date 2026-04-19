@@ -27,6 +27,7 @@ import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
 import CustomCalendar from '../components/common/CustomCalendar';
 import CustomTimePicker from '../components/common/CustomTimePicker';
+import { Typography } from '../constants/Typography';
 
 
 const { width } = Dimensions.get('window');
@@ -260,7 +261,7 @@ const CreateTripScreen = () => {
                 }}
               />
               <ErrorMessage message={errors.exactLocation} />
-              <Text style={{ fontSize: 13, color: '#64748B', fontFamily: 'Manrope', marginTop: 8, lineHeight: 18 }}>
+              <Text style={{ fontSize: 13, color: '#64748B', fontFamily: Typography.regular, marginTop: 8, lineHeight: 18 }}>
                 Tell the customer exactly where you will be (e.g., which bus stand, railway station, or landmark).
               </Text>
             </View>
@@ -416,15 +417,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
-    fontWeight: '700',
+    fontFamily: Typography.extraBold,
     letterSpacing: -1,
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 15,
     color: '#64748B',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -444,8 +444,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     color: '#000',
-    fontFamily: 'Manrope-Bold',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     marginBottom: 10,
   },
   minimalInput: {
@@ -455,7 +454,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     justifyContent: 'center',
@@ -463,7 +462,7 @@ const styles = StyleSheet.create({
   inputValue: {
     fontSize: 15,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
 
   minimalTextArea: {
@@ -473,7 +472,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: '#0F172A',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     textAlignVertical: 'top',
@@ -535,14 +534,13 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 18,
     color: '#FFFFFF',
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   errorText: {
     color: '#DC2626',
     fontSize: 12,
     marginTop: 6,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
 });
 

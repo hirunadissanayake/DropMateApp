@@ -10,6 +10,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 interface PrimaryButtonProps {
   text: string;
@@ -69,9 +70,8 @@ const styles = StyleSheet.create({
   text: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
     backgroundColor: 'transparent',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.semiBold,
   },
   contentContainer: {
     flexDirection: 'row',

@@ -22,6 +22,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 const BRAND_GREEN = '#00875A';
@@ -406,10 +407,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 24,
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.extraBold,
   },
   scrollContent: {
     paddingTop: 20,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontSize: 36,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
   userMeta: {
     alignItems: 'center',
@@ -461,9 +461,8 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 22,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   editBadgeSmall: {
     width: 28,
@@ -483,12 +482,12 @@ const styles = StyleSheet.create({
   nameInput: {
     flex: 1,
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
     textAlign: 'center',
     borderBottomWidth: 1.5,
     borderBottomColor: BRAND_GREEN,
     paddingVertical: 8,
+    fontFamily: Typography.bold,
   },
   editActionsInline: {
     flexDirection: 'row',
@@ -512,18 +511,18 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '800',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   settingsSection: {
     paddingHorizontal: 20,
   },
   sectionHeaderTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     color: '#94A3B8',
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    letterSpacing: 0.4,
     marginBottom: 8,
   },
   itemRow: {
@@ -544,13 +543,14 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     color: '#1E293B',
   },
   itemSubLabel: {
     fontSize: 12,
     color: '#94A3B8',
     marginTop: 2,
+
   },
   logoutBtn: {
     backgroundColor: '#FFF1F2',
@@ -561,9 +561,8 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#E11D48',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
   },
   switchRoleBtn: {
     marginTop: 20,
@@ -592,15 +591,14 @@ const styles = StyleSheet.create({
   },
   switchRoleTitle: {
     fontSize: 16,
-    fontWeight: '800',
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   switchRoleSub: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
 });
 

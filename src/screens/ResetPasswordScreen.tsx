@@ -19,6 +19,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginBottom: 12,
     textAlign: 'center',
     
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#3F4944',
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     textAlign: 'center',
   },
   iconContainer: {
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#3F4944',
     marginBottom: 10,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   passwordInputContainer: {
     flexDirection: 'row',
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#052017',
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.semiBold,
   },
   eyeIcon: {
     padding: 8,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#3F4944',
     letterSpacing: 1.1,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 });
 

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 
 interface CustomDropdownProps {
   label?: string;
@@ -194,12 +195,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: '800',
     color: Colors.text.secondary,
     marginBottom: 10,
     textTransform: 'uppercase',
     paddingLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   selectBox: {
     height: 60,
@@ -239,12 +239,11 @@ const styles = StyleSheet.create({
   selectText: {
     fontSize: 16,
     color: '#052017',
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.semiBold,
   },
   placeholderText: {
     color: '#94A3B8',
-    fontWeight: '500',
+    fontFamily: Typography.medium,
     fontSize: 15,
   },
   modalOverlay: {
@@ -282,15 +281,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '900',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -0.5,
   },
   modalSubtitle: {
     fontSize: 13,
     color: '#64748B',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
     marginTop: 2,
   },
   closeBtn: {
@@ -344,13 +342,11 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: '#475569',
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.semiBold,
   },
   optionTextActive: {
     color: '#052017',
-    fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   checkCircle: {
     width: 24,

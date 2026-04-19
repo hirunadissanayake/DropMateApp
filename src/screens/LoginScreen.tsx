@@ -14,6 +14,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
+import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
@@ -268,9 +269,8 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 30,
-    fontWeight: '700',
     color: Colors.text.brand,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -0.8,
   },
   headerTextContainer: {
@@ -279,15 +279,14 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 16,
-    fontWeight: '600',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-SemiBold',
+    fontFamily: Typography.bold,
     marginBottom: 4,
   },
   welcomeSubtitle: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     textAlign: 'center',
   },
   formContainer: {
@@ -306,9 +305,8 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    fontWeight: 'bold',
     color: Colors.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   loginButton: {
     marginTop: 16,
@@ -322,13 +320,12 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   createAccountText: {
     fontSize: 16,
-    fontWeight: '700',
     color: Colors.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 });
 

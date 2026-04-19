@@ -14,6 +14,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import { useAuthStore } from '../store/authStore';
+import { Typography } from '../constants/Typography';
 
 const { width, height } = Dimensions.get('window');
 
@@ -233,10 +234,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 34,
-    fontWeight: '900',
     color: '#052017',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -0.5,
     marginBottom: 12,
   },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
     lineHeight: 30,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
     opacity: 0.8,
   },
   timeCardContainer: {
@@ -280,16 +280,14 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 10,
-    fontWeight: '800',
     color: 'rgba(0, 81, 61, 0.6)',
     letterSpacing: 0.5,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   timeValue: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#052017',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   footer: {
     paddingHorizontal: 28,

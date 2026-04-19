@@ -25,6 +25,7 @@ import * as parcelService from '../services/parcelService';
 import dayjs from 'dayjs';
 import CustomAlert from '../components/common/CustomAlert';
 import Toast from 'react-native-toast-message';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -416,14 +417,13 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     color: '#0F172A',
-    fontWeight: '800',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.extraBold,
   },
   screenSubtitle: {
     fontSize: 14,
     color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -472,14 +472,13 @@ const styles = StyleSheet.create({
   parcelName: {
     fontSize: 16,
     color: '#0F172A',
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   dateText: {
     fontSize: 12,
     color: '#94A3B8',
     marginTop: 2,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -496,7 +495,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -508,9 +507,9 @@ const styles = StyleSheet.create({
   },
   requestedBadgeText: {
     fontSize: 9,
-    fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+    fontFamily: Typography.bold,
   },
   routeContainer: {
     flexDirection: 'row',
@@ -527,14 +526,13 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     color: '#0F172A',
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   routeLabel: {
     fontSize: 9,
     color: '#94A3B8',
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontFamily: Typography.bold,
+    letterSpacing: 0.3,
     marginBottom: 2,
   },
   cardFooter: {
@@ -548,15 +546,14 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 8,
     color: '#94A3B8',
-    letterSpacing: 1,
-    fontWeight: '800',
+    letterSpacing: 0.3,
+    fontFamily: Typography.medium,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 13,
     color: '#0F172A',
-    fontWeight: '800',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   footerDivider: {
     width: 1,
@@ -581,7 +578,7 @@ const styles = StyleSheet.create({
   cancelBtnTextSmall: {
     fontSize: 12,
     color: '#DC2626',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
   deleteBtnSmall: {
     backgroundColor: '#FEF2F2',
@@ -596,7 +593,7 @@ const styles = StyleSheet.create({
   deleteBtnTextSmall: {
     fontSize: 12,
     color: '#DC2626',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
   emptyContainer: {
     flex: 1,
@@ -621,16 +618,15 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     color: '#0F172A',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     marginBottom: 8,
-    fontFamily: 'Manrope',
   },
   emptySubtitle: {
     fontSize: 14,
     color: '#64748B',
     textAlign: 'center',
     paddingHorizontal: 40,
-    lineHeight: 20,
+    fontFamily: Typography.medium,
   },
   fab: {
     position: 'absolute',
@@ -666,8 +662,7 @@ const styles = StyleSheet.create({
   modalCounter: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.bold,
   },
   modalCloseBtn: {
     width: 40,

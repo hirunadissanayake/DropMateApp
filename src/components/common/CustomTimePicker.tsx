@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { Typography } from '../../constants/Typography';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BRAND_GREEN = '#006C52';
@@ -167,20 +168,17 @@ const drum = StyleSheet.create({
   label: {
     fontSize: 20,
     color: '#CBD5E1',
-    fontWeight: '500',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   labelEdge: {
     fontSize: 21,
     color: '#94A3B8',
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.semiBold,
   },
   labelCenter: {
     fontSize: 26,
     color: BRAND_GREEN,
-    fontWeight: '800',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   fadeTop: {
     position: 'absolute',
@@ -415,14 +413,13 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   subtitle: {
     fontSize: 12,
     color: '#94A3B8',
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.medium,
     marginTop: 2,
   },
   previewBadge: {
@@ -432,8 +429,7 @@ const s = StyleSheet.create({
   },
   previewText: {
     color: '#fff',
-    fontFamily: 'Manrope-Bold',
-    fontWeight: '800',
+    fontFamily: Typography.bold,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -454,9 +450,9 @@ const s = StyleSheet.create({
   },
   drumCol: { flex: 1, alignItems: 'center', height: '100%'},
   drumLabel: {
-    fontSize: 10, fontWeight: '800',
+    fontSize: 10, 
     color: '#94A3B8', letterSpacing: 1.5,
-    marginBottom: 12, fontFamily: 'Manrope-Bold',
+    marginBottom: 12, fontFamily: Typography.bold,
   },
   colonCol: {
     paddingTop: 32,
@@ -508,10 +504,11 @@ const s = StyleSheet.create({
   },
   periodText: {
     fontSize: 14, color: '#94A3B8',
-    fontWeight: '700', fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   periodActiveText: {
-    color: BRAND_GREEN, fontSize: 15, fontWeight: '800',
+    color: BRAND_GREEN, fontSize: 15, 
+    fontFamily: Typography.bold,
   },
 
   // Footer
@@ -529,8 +526,8 @@ const s = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   btnCancelText: {
-    fontSize: 15, fontWeight: '700',
-    color: '#64748B', fontFamily: 'Manrope-Bold',
+    fontSize: 15, 
+    color: '#64748B', fontFamily: Typography.bold,
   },
   btnConfirm: { flex: 1, height: 56, borderRadius: 18, overflow: 'hidden' },
   btnGradient: { 
@@ -538,8 +535,8 @@ const s = StyleSheet.create({
     flexDirection: 'row', gap: 8 
   },
   btnConfirmText: {
-    fontSize: 16, fontWeight: '800',
-    color: '#fff', fontFamily: 'Manrope-Bold',
+    fontSize: 16, 
+    color: '#fff', fontFamily: Typography.bold,
   },
 });
 

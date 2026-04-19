@@ -20,6 +20,7 @@ import ScreenHeader from '../components/common/ScreenHeader';
 import Toast from 'react-native-toast-message';
 
 import { useRegistrationStore } from '../store/registrationStore';
+import { Typography } from '../constants/Typography';
 
 const getStrengthScore = (pass: string) => {
   let score = 0;
@@ -414,9 +415,8 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 32,
-    fontWeight: '900',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.extraBold,
     letterSpacing: -1,
     marginBottom: 10,
     textAlign: 'center',
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
     lineHeight: 24,
     opacity: 0.8,
     textAlign: 'center',
@@ -445,11 +445,10 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 11,
-    fontWeight: '700',
     color: Colors.text.secondary,
     letterSpacing: 0.5,
     marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -467,9 +466,9 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   eyeIconBox: {
     padding: 12,
@@ -479,7 +478,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   termsRow: {
     flexDirection: 'row',
@@ -506,11 +505,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: Colors.text.brand,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
     lineHeight: 20,
   },
   termsBold: {
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
   strengthGrid: {
     flexDirection: 'row',
@@ -552,15 +551,14 @@ const styles = StyleSheet.create({
   },
   trustTitle: {
     fontSize: 14,
-    fontWeight: '700',
     color: Colors.text.primary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   trustDesc: {
     fontSize: 11,
     color: Colors.text.secondary,
     lineHeight: 15,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Regular',
+    fontFamily: Typography.regular,
   },
   loginHint: {
     alignItems: 'center',
@@ -569,11 +567,11 @@ const styles = StyleSheet.create({
   loginHintText: {
     fontSize: 15,
     color: Colors.text.secondary,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   loginHintBold: {
     color: Colors.primary,
-    fontWeight: '800',
+    fontFamily: Typography.bold,
   },
 });
 

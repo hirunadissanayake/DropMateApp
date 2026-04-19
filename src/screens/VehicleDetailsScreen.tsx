@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomDropdown from '../components/common/CustomDropdown';
 import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
+import { Typography } from '../constants/Typography';
 
 const BRAND_GREEN = '#00875A';
 
@@ -227,9 +228,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   headerAction: {
       width: 40,

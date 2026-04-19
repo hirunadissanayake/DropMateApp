@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { Typography } from '../../constants/Typography';
 
 interface CustomAlertProps {
   visible: boolean;
@@ -153,11 +154,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '800',
     color: '#0F172A',
     marginBottom: 12,
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.bold,
   },
   message: {
     fontSize: 16,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
     paddingHorizontal: 10,
   },
   buttonContainer: {
@@ -189,14 +189,12 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#64748B',
     fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
   confirmButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.medium,
   },
 });
 

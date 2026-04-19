@@ -19,6 +19,7 @@ import * as deliveryService from '../services/deliveryService';
 import Svg, { Path, Circle } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
+import { Typography } from '../constants/Typography';
 
 const RequestsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -173,16 +174,15 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   centerContainer: {
     flex: 1,
@@ -223,8 +223,8 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 11,
-    fontWeight: '700',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -233,13 +233,13 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '700',
     textTransform: 'uppercase',
+    fontFamily: Typography.bold,
   },
   dateText: {
     fontSize: 12,
     color: '#94A3B8',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   cardBody: {
     gap: 16,
@@ -249,9 +249,9 @@ const styles = StyleSheet.create({
   },
   parcelName: {
     fontSize: 18,
-    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 4,
+    fontFamily: Typography.bold,
   },
   routeRow: {
     flexDirection: 'row',
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   routeText: {
     fontSize: 14,
     color: '#64748B',
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   divider: {
     height: 1,
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
   },
   avatarLetter: {
     fontSize: 16,
-    fontWeight: '800',
     color: '#006C52',
+    fontFamily: Typography.bold,
   },
   travelerDetails: {
     flex: 1,
@@ -290,13 +290,13 @@ const styles = StyleSheet.create({
   travelerLabel: {
     fontSize: 11,
     color: '#94A3B8',
-    fontWeight: '600',
+    fontFamily: Typography.medium,
     marginBottom: 2,
   },
   travelerName: {
     fontSize: 15,
-    fontWeight: '700',
     color: '#1E293B',
+    fontFamily: Typography.bold,
   },
   emptyContainer: {
     flex: 1,
@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '700',
     color: '#0F172A',
+    fontFamily: Typography.bold,
     marginBottom: 8,
   },
   emptySubtitle: {
@@ -325,6 +325,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 22,
+    fontFamily: Typography.regular,
   },
 });
 

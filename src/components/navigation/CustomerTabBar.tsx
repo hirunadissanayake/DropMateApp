@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Typography } from '../../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
@@ -375,8 +376,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 9,
-    fontFamily: Platform.OS === 'ios' ? 'Manrope-Bold' : 'Manrope-Bold',
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     letterSpacing: 0,
     textTransform: 'uppercase',
     textAlign: 'center',

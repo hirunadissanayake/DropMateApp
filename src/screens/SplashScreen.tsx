@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
+import { Typography } from '../constants/Typography';
 
 const { height } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -252,14 +253,14 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.primary,
     fontSize: 46,
-    fontWeight: '900',
+    fontFamily: Typography.bold,
     lineHeight: 46,
     letterSpacing: -2.3,
   },
   subtitle: {
     color: Colors.text.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: Typography.bold,
     letterSpacing: -0.2,
     marginTop: 8,
   },
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
   initializingText: {
     color: Colors.text.secondary,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     letterSpacing: 2.5,
     marginTop: 20,
   },
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
   footerText: {
     color: Colors.text.tertiary,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
     letterSpacing: 2.0,
   },
   footerDot: {

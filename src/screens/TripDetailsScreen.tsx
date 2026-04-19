@@ -25,6 +25,7 @@ import CustomAlert from '../components/common/CustomAlert';
 import { Modal, FlatList } from 'react-native';
 import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
+import { Typography } from '../constants/Typography';
 
 const {width} = Dimensions.get('window');
 
@@ -767,10 +768,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 24,
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   tripMetaRow: {
     flexDirection: 'row',
@@ -782,22 +782,20 @@ const styles = StyleSheet.create({
   tripIdLabel: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
+    letterSpacing: 0.3,
     marginBottom: 4,
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.regular,
   },
   tripIdValue: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 18,
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-ExtraBold',
+    fontFamily: Typography.bold,
   },
   statusPill: {paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20},
   statusText: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12,
     textTransform: 'uppercase',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 
   scrollContent: {paddingBottom: 40, paddingHorizontal: 20},
@@ -816,12 +814,11 @@ const styles = StyleSheet.create({
 
   sectionLabel: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#94A3B8',
-    letterSpacing: 0.2,
+    color: '#64748B',
+    letterSpacing: 0.4,
     marginBottom: 16,
     textTransform: 'uppercase',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   routeBox: {flexDirection: 'row'},
   routeVisualCol: {width: 20, alignItems: 'center', paddingVertical: 6},
@@ -862,13 +859,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
     marginBottom: 4,
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   locTitle: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#1E293B',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 
   statsRow: {
@@ -900,17 +896,15 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 9,
-    fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 1,
     marginBottom: 4,
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   statValue: {
     fontSize: 13,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     textAlign: 'center',
   },
 
@@ -932,9 +926,8 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 13,
-    fontWeight: '800',
     color: '#006C52',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   progressBarBg: {
     height: 8,
@@ -948,7 +941,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#006C52',
     borderRadius: 4,
   },
-  availText: {fontSize: 12, color: '#64748B', fontFamily: 'Manrope-Medium'},
+  availText: {fontSize: 12, color: '#64748B', fontFamily: Typography.regular},
 
   emptyState: {paddingVertical: 20, alignItems: 'center'},
   emptyParcelsText: {
@@ -957,7 +950,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     lineHeight: 20,
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
 
   parcelRow: {flexDirection: 'row', alignItems: 'center', paddingVertical: 16},
@@ -974,12 +967,11 @@ const styles = StyleSheet.create({
   parcelInfo: {flex: 1},
   parcelName: {
     fontSize: 16,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: Platform.OS === 'ios' ? 'Manrope' : 'Manrope-Bold',
+    fontFamily: Typography.bold,
     marginBottom: 4,
   },
-  parcelMeta: {fontSize: 13, color: '#64748B', fontFamily: 'Manrope-Medium'},
+  parcelMeta: {fontSize: 13, color: '#64748B', fontFamily: Typography.regular},
   parcelArrow: {
     width: 32,
     height: 32,
@@ -998,7 +990,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0F172A',
     lineHeight: 24,
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
 
   noteCard: {
@@ -1012,7 +1004,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#065F46',
     lineHeight: 24,
-    fontFamily: 'Manrope-Medium',
+    fontFamily: Typography.medium,
   },
   requestButton: {
     marginTop: 20,
@@ -1034,7 +1026,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
     letterSpacing: 0.5,
   },
   modalOverlay: {
@@ -1059,15 +1051,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
-    fontFamily: 'Manrope-Bold',
+    fontFamily: Typography.bold,
   },
   modalSubtitle: {
     fontSize: 14,
     color: '#64748B',
     marginBottom: 20,
-    fontFamily: 'Manrope',
+    fontFamily: Typography.regular,
   },
   parcelList: {
     paddingBottom: 20,
@@ -1087,19 +1078,20 @@ const styles = StyleSheet.create({
   },
   parcelItemName: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 4,
+    fontFamily: Typography.bold,
   },
   parcelItemRoute: {
     fontSize: 13,
     color: '#64748B',
     marginBottom: 2,
+    fontFamily: Typography.regular,
   },
   parcelItemWeight: {
     fontSize: 12,
-    fontWeight: '600',
     color: '#006C52',
+    fontFamily: Typography.bold,
   },
   modalEmpty: {
     padding: 40,
@@ -1108,6 +1100,7 @@ const styles = StyleSheet.create({
   modalEmptyText: {
     color: '#64748B',
     fontSize: 14,
+    fontFamily: Typography.regular,
   },
   modalLoading: {
     ...StyleSheet.absoluteFillObject,
@@ -1135,9 +1128,9 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 10,
-    fontWeight: '800',
     color: '#94A3B8',
     marginBottom: 12,
+    fontFamily: Typography.bold,
   },
   capacityInputContainer: {
     flexDirection: 'row',
@@ -1153,11 +1146,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
+    fontFamily: Typography.bold,
   },
   stepBtnText: {
     fontSize: 24,
     color: '#0F172A',
-    fontWeight: '600',
+    fontFamily: Typography.bold,
   },
   capacityDisplay: {
     flex: 1,
@@ -1173,22 +1167,23 @@ const styles = StyleSheet.create({
   capacityInput: {
     flex: 1,
     fontSize: 20,
-    fontWeight: '800',
     color: '#006C52',
     textAlign: 'center',
     padding: 0,
+    fontFamily: Typography.bold,
   },
   kgLabel: {
     fontSize: 16,
-    fontWeight: '700',
     color: '#64748B',
     marginLeft: 4,
+    fontFamily: Typography.bold,
   },
   inputHint: {
     fontSize: 11,
     color: '#94A3B8',
     textAlign: 'center',
     fontStyle: 'italic',
+    fontFamily: Typography.regular,
   },
   updateBtn: {
     borderRadius: 16,
@@ -1201,7 +1196,7 @@ const styles = StyleSheet.create({
   updateBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: Typography.bold,
   },
   disabledUpdateBtn: {
     opacity: 0.7,
@@ -1226,21 +1221,21 @@ const styles = StyleSheet.create({
   },
   avatarLetterLarge: {
     fontSize: 24,
-    fontWeight: '800',
     color: '#006C52',
+    fontFamily: Typography.bold,
   },
   travelerNameLabel: {
     fontSize: 10,
-    fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 1,
     marginBottom: 2,
+    fontFamily: Typography.bold,
   },
   travelerNameValue: {
     fontSize: 20,
-    fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.5,
+    fontFamily: Typography.bold,
   },
 });
 
