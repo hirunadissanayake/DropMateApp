@@ -43,6 +43,7 @@ export type RootStackParamList = {
   ParcelDetails: { parcelId: string };
   TripDetails: { tripId: string };
   CreateTrip: undefined;
+  FindParcels: undefined;
 };
 
 

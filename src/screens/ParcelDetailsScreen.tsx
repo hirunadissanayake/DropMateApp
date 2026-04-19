@@ -9,14 +9,17 @@ import {
   Image,
   Dimensions,
   Platform,
+  Alert,
+  StatusBar,
+  Modal,
   ActivityIndicator,
   Share,
-  Modal,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../components/common/BackButton';
 import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
@@ -30,7 +33,8 @@ const ParcelDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ParcelDetails'>>();
   const { parcelId } = route.params;
-  const { token } = useAuthStore();
+  const insets = useSafeAreaInsets();
+  const { token, user } = useAuthStore();
 
   const [parcel, setParcel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +88,7 @@ const ParcelDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <LinearGradient
         colors={['#F0FFF8', '#FFFFFF']}
         style={StyleSheet.absoluteFillObject}
@@ -126,7 +131,7 @@ const ParcelDetailsScreen = () => {
           </ScrollView>
           
           {/* Back Action */}
-          <View style={styles.absHeader}>
+          <View style={[styles.absHeader, { top: insets.top + 10 }]}>
             <BackButton onPress={() => navigation.goBack()} />
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
@@ -210,15 +215,43 @@ const ParcelDetailsScreen = () => {
           <View style={styles.dualCards}>
             <View style={styles.infoCard}>
               <Text style={styles.sectionLabel}>RECEIVER</Text>
-              <Text style={styles.personName}>{parcel.receiverName}</Text>
-              <Text style={styles.personPhone}>{parcel.receiverPhone}</Text>
+              {parcel.receiverName ? (
+                <>
+                  <Text style={styles.personName}>{parcel.receiverName}</Text>
+                  <Text style={styles.personPhone}>{parcel.receiverPhone}</Text>
+                </>
+              ) : (
+                <Text style={styles.hiddenInfo}>Hidden until matched</Text>
+              )}
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.sectionLabel}>SENDER</Text>
               <Text style={styles.personName}>{parcel.sender?.name}</Text>
-              <Text style={styles.personPhone}>{parcel.sender?.phone}</Text>
+              {parcel.sender?.phone ? (
+                <Text style={styles.personPhone}>{parcel.sender?.phone}</Text>
+              ) : (
+                <Text style={styles.hiddenInfo}>Contact hidden until matched</Text>
+              )}
             </View>
           </View>
+
+          {/* Action Button for Travelers */}
+          {user?.roleActive === 'TRAVELER' && parcel.status === 'PENDING' && (
+            <TouchableOpacity 
+              style={styles.matchButton}
+              onPress={() => {
+                // TODO: Show trip selection modal and request match
+                Alert.alert('Coming Soon', 'Matching logic will be implemented in the next step!');
+              }}
+            >
+              <LinearGradient
+                colors={['#006C52', '#004D3A']}
+                style={styles.matchGradient}
+              >
+                <Text style={styles.matchButtonText}>Request to Carry Parcel</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
           {/* Parcel Details */}
           <View style={styles.detailsGrid}>
@@ -365,12 +398,12 @@ const styles = StyleSheet.create({
   },
   absHeader: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
     left: 20,
     right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    zIndex: 10,
   },
   shareBtn: {
     width: 44,
@@ -668,6 +701,35 @@ const styles = StyleSheet.create({
   },
   rightSliderBtn: {
     right: 15,
+  },
+  hiddenInfo: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontStyle: 'italic',
+    marginTop: 4,
+    fontFamily: 'Manrope',
+  },
+  matchButton: {
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 6,
+  },
+  matchGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  matchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    fontFamily: 'Manrope-Bold',
+    letterSpacing: 0.5,
   },
 });
 

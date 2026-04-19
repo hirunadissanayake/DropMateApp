@@ -3,19 +3,20 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   Platform, 
   TouchableOpacity, 
   FlatList, 
   ActivityIndicator, 
   RefreshControl,
   Image,
-  Dimensions,
   Modal,
-  ScrollView
+  ScrollView,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -41,6 +42,7 @@ interface Parcel {
 
 const ShipmentsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { token } = useAuthStore();
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,12 +233,13 @@ const ShipmentsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <LinearGradient
         colors={['#F0FFF8', '#FFFFFF']}
         style={StyleSheet.absoluteFillObject}
       />
       
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 20 : 50,
+    paddingTop: 10,
     paddingBottom: 16,
   },
   headerTop: {

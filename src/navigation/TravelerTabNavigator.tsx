@@ -4,7 +4,7 @@ import { StatusBar } from 'react-native';
 
 import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 import TravelerTripsScreen from '../screens/TravelerTripsScreen';
-import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
+import FindParcelsScreen from '../screens/FindParcelsScreen';
 import TravelerProfileScreen from '../screens/TravelerProfileScreen';
 import CustomerTabBar from '../components/navigation/CustomerTabBar';
 
@@ -22,7 +22,7 @@ const TravelerTabNavigator = () => {
       >
         <Tab.Screen name="Home" component={TravelerHomeScreen} />
         <Tab.Screen name="My Trips" component={TravelerTripsScreen} />
-        <Tab.Screen name="Earnings" component={TravelerEarningsScreen} />
+        <Tab.Screen name="Find Parcels" component={FindParcelsScreen} />
         <Tab.Screen name="Profile" component={TravelerProfileScreen} />
       </Tab.Navigator>
     </>

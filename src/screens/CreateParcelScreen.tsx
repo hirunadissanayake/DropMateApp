@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -14,9 +13,11 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -32,6 +33,7 @@ const { width } = Dimensions.get('window');
 
 const CreateParcelScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { token } = useAuthStore();
   
   const [parcelName, setParcelName] = useState('');
@@ -265,7 +267,8 @@ const CreateParcelScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -536,7 +539,7 @@ const styles = StyleSheet.create({
     height: 380,
   },
   stickyHeader: {
-    paddingTop: Platform.OS === 'ios' ? 20 : 45,
+    paddingTop: 10,
     paddingHorizontal: 24,
     backgroundColor: 'transparent',
     zIndex: 100,

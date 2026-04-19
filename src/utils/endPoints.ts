@@ -21,6 +21,7 @@ export const ENDPOINTS = {
     PREVIEW_PRICE: `${BASE_URL}/api/parcels/preview-price`,
     GET_DETAILS: (id: string) => `${BASE_URL}/api/parcels/${id}`,
     MY_PARCELS: `${BASE_URL}/api/parcels/my`,
+    ACTIVE: `${BASE_URL}/api/parcels/active`,
     CANCEL: (id: string) => `${BASE_URL}/api/parcels/${id}/cancel`,
     DELETE: (id: string) => `${BASE_URL}/api/parcels/${id}`,
   },

@@ -120,3 +120,14 @@ export const deleteParcel = async (token: string, id: string) => {
     throw error.response?.data || error;
   }
 };
+
+export const getAllActiveParcels = async (token: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.PARCELS.ACTIVE, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
