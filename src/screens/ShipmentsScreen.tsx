@@ -86,6 +86,8 @@ const ShipmentsScreen = () => {
       case 'DELIVERED': return '#059669';
       case 'CANCELLED': return '#DC2626';
       case 'IN_TRANSIT': return '#3B82F6';
+      case 'ACCEPTED':
+      case 'MATCHED': return '#059669';
       default: return '#64748B';
     }
   };
@@ -169,8 +171,16 @@ const ShipmentsScreen = () => {
         </View>
         <View style={{ alignItems: 'flex-end', gap: 6 }}>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+            {item.status.toUpperCase() === 'MATCHED' || item.status.toUpperCase() === 'ACCEPTED' ? (
+              <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={getStatusColor(item.status)} strokeWidth="3" style={{ marginRight: 4 }}>
+                <Path d="M20 6L9 17l-5-5" />
+              </Svg>
+            ) : (
+              <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+            )}
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {item.status.toUpperCase() === 'MATCHED' ? 'ACCEPTED' : item.status}
+            </Text>
           </View>
           {item.isRequested && item.status === 'PENDING' && (
             <View style={styles.requestedBadgeSmall}>

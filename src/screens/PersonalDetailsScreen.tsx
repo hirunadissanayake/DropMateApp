@@ -25,8 +25,9 @@ const PersonalDetailsScreen = () => {
   const { user } = useAuthStore();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const isVerified = user?.isTravelerApproved || user?.isCustomerApproved;
-  const isPending = user?.isTravelerRequested || user?.isCustomerRequested;
+  const role = user?.roleActive;
+  const isVerified = role === 'TRAVELER' ? user?.isTravelerApproved : user?.isCustomerApproved;
+  const isPending = role === 'TRAVELER' ? (user?.isTravelerRequested && !user?.isTravelerApproved) : (user?.isCustomerRequested && !user?.isCustomerApproved);
   const isDualVerified = user?.isTravelerApproved && user?.isCustomerApproved;
 
 

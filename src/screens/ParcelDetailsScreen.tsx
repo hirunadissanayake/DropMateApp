@@ -508,7 +508,7 @@ const ParcelDetailsScreen = () => {
             <View style={[styles.sectionCard, styles.matchedTravelerCard]}>
               <View style={styles.matchedHeader}>
                 <View style={styles.matchedLabelBadge}>
-                  <Text style={styles.matchedLabelText}>MATCHED TRAVELER</Text>
+                  <Text style={styles.matchedLabelText}>ACCEPTED TRAVELER</Text>
                 </View>
                 <View style={styles.statusBadgeMatched}>
                   <Text style={styles.statusTextMatched}>Ready for Delivery</Text>

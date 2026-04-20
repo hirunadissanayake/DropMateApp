@@ -36,7 +36,8 @@ const BRAND_GREEN = '#006C52';
 const CreateTripScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isApproved = user?.isTravelerApproved === true;
   
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
@@ -54,7 +55,21 @@ const CreateTripScreen = () => {
   const [toLocationList, setToLocationList] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showAlert, setShowAlert] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string, 
+    message: string, 
+    confirmText: string, 
+    cancelText?: string,
+    type?: 'success' | 'warning' | 'error' | 'info', 
+    showCancel?: boolean,
+    action: () => void
+  }>({
+    title: '',
+    message: '',
+    confirmText: '',
+    action: () => {}
+  });
 
   // Picker States
   const [showCalendar, setShowCalendar] = useState(false);
@@ -62,10 +77,23 @@ const CreateTripScreen = () => {
 
 
   useEffect(() => {
-    if (token) {
+    if (!isApproved) {
+      setAlertConfig({
+        title: 'Access Restricted',
+        message: 'You cannot create a trip until your account has been approved by our admin team.',
+        confirmText: 'OK',
+        type: 'info',
+        showCancel: false,
+        action: () => {
+          setAlertVisible(false);
+          navigation.goBack();
+        }
+      });
+      setAlertVisible(true);
+    } else if (token) {
       fetchFromLocations();
     }
-  }, [token]);
+  }, [token, isApproved, navigation]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -121,11 +149,19 @@ const CreateTripScreen = () => {
   const handleSubmit = () => {
     if (!isFormValid) return;
     setErrors({});
-    setShowAlert(true);
+    setAlertConfig({
+      title: 'Create Trip',
+      message: 'Are you sure you want to post this trip? Please verify the locations and date.',
+      confirmText: 'Yes, Post',
+      cancelText: 'Review',
+      showCancel: true,
+      action: handleFinalSubmit
+    });
+    setAlertVisible(true);
   };
 
   const handleFinalSubmit = async () => {
-    setShowAlert(false);
+    setAlertVisible(false);
     setLoading(true);
     try {
       const data = {
@@ -372,13 +408,15 @@ const CreateTripScreen = () => {
 
 
         <CustomAlert
-          visible={showAlert}
-          title="Create Trip"
-          message="Are you sure you want to post this trip? Please verify the locations and date."
-          confirmText="Yes, Post"
-          cancelText="Review"
-          onConfirm={handleFinalSubmit}
-          onCancel={() => setShowAlert(false)}
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          confirmText={alertConfig.confirmText}
+          cancelText={alertConfig.cancelText || "Cancel"}
+          type={alertConfig.type}
+          showCancel={alertConfig.showCancel}
+          onConfirm={alertConfig.action}
+          onCancel={() => setAlertVisible(false)}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

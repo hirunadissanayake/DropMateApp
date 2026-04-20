@@ -9,9 +9,14 @@ import CustomerTabBar from '../components/navigation/CustomerTabBar';
 
 import { StatusBar } from 'react-native';
 
+import { useAuthStore } from '../store/authStore';
+
 const Tab = createBottomTabNavigator();
 
 const CustomerTabNavigator = () => {
+  const { user } = useAuthStore();
+  const isApproved = user?.isCustomerApproved === true;
+
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
@@ -22,8 +27,12 @@ const CustomerTabNavigator = () => {
         }}
       >
         <Tab.Screen name="Home" component={CustomerHomeScreen} />
-        <Tab.Screen name="Find Travelers" component={FindTripsScreen} />
-        <Tab.Screen name="Shipments" component={ShipmentsScreen} />
+        {isApproved && (
+          <>
+            <Tab.Screen name="Find Travelers" component={FindTripsScreen} />
+            <Tab.Screen name="Shipments" component={ShipmentsScreen} />
+          </>
+        )}
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </>

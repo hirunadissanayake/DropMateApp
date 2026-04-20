@@ -22,6 +22,7 @@ interface CustomAlertProps {
   cancelText?: string;
   loading?: boolean;
   type?: 'success' | 'warning' | 'error' | 'info';
+  showCancel?: boolean;
 }
 
 const { width } = Dimensions.get('window');
@@ -36,6 +37,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   cancelText = 'Cancel',
   loading = false,
   type = 'info',
+  showCancel = true,
 }) => {
   const getIconColor = () => {
     switch (type) {
@@ -87,7 +89,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           <Text style={styles.message}>{message}</Text>
 
           <View style={styles.buttonContainer}>
-            {!loading && (
+            {showCancel && !loading && (
               <TouchableOpacity 
                 style={[styles.button, styles.cancelButton]} 
                 onPress={onCancel}

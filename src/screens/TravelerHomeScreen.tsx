@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Dimensions,
   StatusBar,
   RefreshControl,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -20,9 +21,58 @@ import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
+const banners = [
+  {
+    id: '1',
+    title: 'Maximize Earnings!',
+    desc: 'Complete 5 trips this week for a bonus.',
+    bgColors: ['#006C52', '#004A38'],
+  },
+  {
+    id: '2',
+    title: 'Top Rated Traveler',
+    desc: 'Maintain 5 stars for priority access.',
+    bgColors: ['#006C52', '#004A38'],
+  },
+  {
+    id: '3',
+    title: 'New Routes Open',
+    desc: 'Check out the new high-demand corridors.',
+    bgColors: ['#006C52', '#004A38'],
+  }
+];
+
+const extendedBanners = [...banners, { ...banners[0], id: 'clone-1' }];
+
+
 const TravelerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<any>(null);
+  const currentIndexRef = useRef(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let nextIndex = currentIndexRef.current + 1;
+      
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ x: nextIndex * width, animated: true });
+      }
+      currentIndexRef.current = nextIndex;
+
+      if (nextIndex === banners.length) {
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({ x: 0, animated: false });
+          }
+          currentIndexRef.current = 0;
+        }, 500);
+      }
+    }, 4000); // 4 seconds auto-scroll interval
+
+    return () => clearInterval(interval);
+  }, []);
 
   const onRefresh = useCallback(async () => {
     if (!token) return;
@@ -39,239 +89,304 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning 👋,';
-    if (hour < 17) return 'Good Afternoon 👋,';
-    return 'Good Evening 👋,';
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 17) return 'Good Afternoon!';
+    return 'Good Evening!';
   };
 
   const userName = user?.name || 'Traveler';
 
+
+
   return (
-    <View style={styles.container}>
-      {/* Background Gradient */}
-      <LinearGradient
-        colors={['#E7FFF2', '#FFFFFF']}
-        locations={[0, 0.4]}
-        style={StyleSheet.absoluteFillObject}
-      />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent={true} 
-      />
-
-      {/* Sticky Header Card */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.headerCard}>
-          <TouchableOpacity 
-            style={styles.userInfo} 
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('TravelerProfile')}
-          >
-            <View style={styles.avatarBorder}>
-              {user?.selfieUrl ? (
-                <Image 
-                  source={{ uri: user.selfieUrl }} 
-                  style={styles.avatarImage} 
-                />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
-                </View>
-              )}
-            </View>
-            <View>
-              <Text style={styles.greetingText}>{getGreeting()}</Text>
-              <Text style={styles.userNameText}>{userName}</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
-            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </Svg>
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-        </View>
+      {/* Clean Header - Different from Customer */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.userInfoRow} 
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('TravelerProfile')}
+        >
+          <View style={styles.avatarBorder}>
+            {user?.selfieUrl ? (
+              <Image 
+                source={{ uri: user.selfieUrl }} 
+                style={styles.avatarImage} 
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.greetingTextContainer}>
+            <Text style={styles.userNameText}>Hi, {userName}</Text>
+            <Text style={styles.greetingText}>{getGreeting()}</Text>
+          </View>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
+          <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifBadgeText}>2</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Main Scroll Content */}
-      <View style={styles.scrollWrapper}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              colors={['#006C52']}
-              tintColor="#006C52"
-              progressViewOffset={Platform.OS === 'ios' ? 0 : 110}
-            />
-          }
-        >
-          {/* Header Padding */}
-          <View style={{ height: Platform.OS === 'ios' ? 140 : 120 }} />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={['#006C52']}
+            tintColor="#006C52"
+          />
+        }
+      >
+        {/* Banner Slider */}
+        <View style={styles.bannerSection}>
+          <Animated.ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: false }
+            )}
+            onMomentumScrollEnd={(event: any) => {
+              const x = event.nativeEvent.contentOffset.x;
+              let index = Math.round(x / width);
+              if (index === banners.length) {
+                if (scrollViewRef.current) {
+                  scrollViewRef.current.scrollTo({ x: 0, animated: false });
+                }
+                index = 0;
+              }
+              currentIndexRef.current = index;
+            }}
+            scrollEventThrottle={16}
+          >
+            {extendedBanners.map((banner, index) => (
+              <View key={banner.id} style={styles.bannerWrapper}>
+                <LinearGradient
+                  colors={banner.bgColors}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.bannerContainer}
+                >
+                  <View style={styles.bannerContent}>
+                    <Text style={styles.bannerTitle}>{banner.title}</Text>
+                    <Text style={styles.bannerDesc}>{banner.desc}</Text>
+                  </View>
+                  <View style={styles.bannerIconOverlay}>
+                    <Svg width="120" height="120" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.1, transform: [{ rotate: '-15deg' }, { scale: 1.5 }] }}>
+                      <Path d="M5 12h14M12 5l7 7-7 7" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  </View>
+                </LinearGradient>
+              </View>
+            ))}
+          </Animated.ScrollView>
+          
+          {/* Dot Indicators */}
+          <View style={styles.dotsContainer}>
+            {banners.map((_, i) => {
+              const inputRange = i === 0 
+                ? [-width, 0, width, (banners.length - 1) * width, banners.length * width, (banners.length + 1) * width]
+                : [(i - 1) * width, i * width, (i + 1) * width];
+                
+              const outputWidth = i === 0
+                ? [8, 24, 8, 8, 24, 8]
+                : [8, 24, 8];
+                
+              const outputOpacity = i === 0
+                ? [0.3, 1, 0.3, 0.3, 1, 0.3]
+                : [0.3, 1, 0.3];
+                
+              const outputBg = i === 0
+                ? ['#D1D5DB', '#006C52', '#D1D5DB', '#D1D5DB', '#006C52', '#D1D5DB']
+                : ['#D1D5DB', '#006C52', '#D1D5DB'];
 
+              const dotWidth = scrollX.interpolate({
+                inputRange,
+                outputRange: outputWidth,
+                extrapolate: 'clamp',
+              });
+              const opacity = scrollX.interpolate({
+                inputRange,
+                outputRange: outputOpacity,
+                extrapolate: 'clamp',
+              });
+              
+              return (
+                <Animated.View
+                  key={i.toString()}
+                  style={[
+                    styles.dot,
+                    {
+                      width: dotWidth,
+                      opacity,
+                      backgroundColor: scrollX.interpolate({
+                        inputRange,
+                        outputRange: outputBg,
+                        extrapolate: 'clamp',
+                      }),
+                    },
+                  ]}
+                />
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Action / Review Cards */}
+        <View style={styles.cardsSection}>
+          <Text style={styles.sectionHeader}>Action Required</Text>
+          
           {/* Under Review Card - Only show if not approved */}
           {!user?.isTravelerApproved && (
             <View style={styles.reviewCard}>
-            <View style={styles.reviewCardBgCircle} />
-            <View style={styles.reviewHeaderRow}>
-              <View style={styles.reviewBadge}>
-                <Svg width="12" height="13" viewBox="0 0 12 13" fill="none">
-                  <Path d="M8.16667 12.25C7.35972 12.25 6.67188 11.9656 6.10313 11.3969C5.53438 10.8281 5.25 10.1403 5.25 9.33333C5.25 8.52639 5.53438 7.83854 6.10313 7.26979C6.67188 6.70104 7.35972 6.41667 8.16667 6.41667C8.97361 6.41667 9.66146 6.70104 10.2302 7.26979C10.799 7.83854 11.0833 8.52639 11.0833 9.33333C11.0833 10.1403 10.799 10.8281 10.2302 11.3969C9.66146 11.9656 8.97361 12.25 8.16667 12.25ZM9.14375 10.7188L9.55208 10.3104L8.45833 9.21667V7.58333H7.875V9.45L9.14375 10.7188ZM1.16667 11.6667C0.845833 11.6667 0.571181 11.5524 0.342708 11.324C0.114236 11.0955 0 10.8208 0 10.5V2.33333C0 2.0125 0.114236 1.73785 0.342708 1.50937C0.571181 1.2809 0.845833 1.16667 1.16667 1.16667H3.60208C3.70903 0.826389 3.91806 0.546875 4.22917 0.328125C4.54028 0.109375 4.88056 0 5.25 0C5.63889 0 5.98646 0.109375 6.29271 0.328125C6.59896 0.546875 6.80556 0.826389 6.9125 1.16667H9.33333C9.65417 1.16667 9.92882 1.2809 10.1573 1.50937C10.3858 1.73785 10.5 2.0125 10.5 2.33333V5.97917C10.325 5.85278 10.1403 5.74583 9.94583 5.65833C9.75139 5.57083 9.54722 5.49306 9.33333 5.425V2.33333H8.16667V4.08333H2.33333V2.33333H1.16667V10.5H4.25833C4.32639 10.7139 4.40417 10.9181 4.49167 11.1125C4.57917 11.3069 4.68611 11.4917 4.8125 11.6667H1.16667ZM5.25 2.33333C5.41528 2.33333 5.55382 2.27743 5.66563 2.16563C5.77743 2.05382 5.83333 1.91528 5.83333 1.75C5.83333 1.58472 5.77743 1.44618 5.66563 1.33438C5.55382 1.22257 5.41528 1.16667 5.25 1.16667C5.08472 1.16667 4.94618 1.22257 4.83437 1.33438C4.72257 1.44618 4.66667 1.58472 4.66667 1.75C4.66667 1.91528 4.72257 2.05382 4.83437 2.16563C4.94618 2.27743 5.08472 2.33333 5.25 2.33333Z" fill="#4A695C"/>
-                </Svg>
-                <Text style={styles.reviewBadgeText}>UNDER REVIEW</Text>
+              <View style={styles.reviewCardContent}>
+                <View style={styles.reviewIconContainer}>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                     <Path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="#00513D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
+                </View>
+                <View style={styles.reviewTextContent}>
+                  <Text style={styles.reviewTitleDark}>Verification in Progress</Text>
+                  <Text style={styles.reviewDescDark}>
+                    Validating your documents. Takes 24-48 hours.
+                  </Text>
+                </View>
               </View>
-              <Svg width="24" height="30" viewBox="0 0 24 30" fill="none">
-                <Path d="M10.425 20.325L18.9 11.85L16.7625 9.7125L10.425 16.05L7.275 12.9L5.1375 15.0375L10.425 20.325ZM12 30C8.525 29.125 5.65625 27.1312 3.39375 24.0187C1.13125 20.9062 0 17.45 0 13.65V4.5L12 0L24 4.5V13.65C24 17.45 22.8688 20.9062 20.6063 24.0187C18.3438 27.1312 15.475 29.125 12 30ZM12 26.85C14.6 26.025 16.75 24.375 18.45 21.9C20.15 19.425 21 16.675 21 13.65V6.5625L12 3.1875L3 6.5625V13.65C3 16.675 3.85 19.425 5.55 21.9C7.25 24.375 9.4 26.025 12 26.85Z" fill="#9DF4D2" fillOpacity="0.4"/>
-              </Svg>
-            </View>
-            <Text style={styles.reviewTitle}>Verification in Progress</Text>
-            <Text style={styles.reviewBody}>
-              Our team is currently validating your documents. This process usually takes 24- 48 hours to maintain the highest security standards.
-            </Text>
-            <View style={styles.reviewProgressBarTrack}>
-              <View style={[styles.reviewProgressBarFill, { width: '70%' }]} />
-            </View>
-          </View>
-        )}
-
-          {/* Complete your profile - Only show if not approved */}
-          {!user?.isTravelerApproved && (
-            <View style={styles.profileCard}>
-              <View style={styles.profileHeaderRow}>
-                <Text style={styles.profileTitle}>Complete your profile</Text>
-                <Text style={styles.profilePercent}>85%</Text>
-              </View>
-              <View style={styles.progressBarTrack}>
-                <View style={[styles.progressBarFill, { width: '85%' }]} />
-              </View>
-              <Text style={styles.profileHintText}>Add your local bank details to reach 100%.</Text>
             </View>
           )}
+        </View>
 
-          {/* Locked Services */}
-          <View style={styles.lockedServicesContainer}>
+        {/* Dashboard Grid / Locked Services */}
+        <View style={styles.dashboardSection}>
+          <View style={styles.sectionHeaderRow}>
+             <Text style={styles.sectionHeader}>Traveler Dashboard</Text>
+             <TouchableOpacity><Text style={styles.viewAllText}>View all</Text></TouchableOpacity>
+          </View>
+          
+          <View style={styles.gridContainer}>
             {/* Available Routes */}
-            <View style={styles.lockedServiceCard}>
-              <View style={styles.lockedIconContainer}>
-                <Svg width="18" height="18" viewBox="0 0 18 18" fill="none"><Path d="M6 18C4.9 18 3.95833 17.6083 3.175 16.825C2.39167 16.0417 2 15.1 2 14V5.825C1.41667 5.60833 0.9375 5.24583 0.5625 4.7375C0.1875 4.22917 0 3.65 0 3C0 2.16667 0.291667 1.45833 0.875 0.875C1.45833 0.291667 2.16667 0 3 0C3.83333 0 4.54167 0.291667 5.125 0.875C5.70833 1.45833 6 2.16667 6 3C6 3.65 5.8125 4.22917 5.4375 4.7375C5.0625 5.24583 4.58333 5.60833 4 5.825V14C4 14.55 4.19583 15.0208 4.5875 15.4125C4.97917 15.8042 5.45 16 6 16C6.55 16 7.02083 15.8042 7.4125 15.4125C7.80417 15.0208 8 14.55 8 14V4C8 2.9 8.39167 1.95833 9.175 1.175C9.95833 0.391667 10.9 0 12 0C13.1 0 14.0417 0.391667 14.825 1.175C15.6083 1.95833 16 2.9 16 4V12.175C16.5833 12.3917 17.0625 12.7542 17.4375 13.2625C17.8125 13.7708 18 14.35 18 15C18 15.8333 17.7083 16.5417 17.125 17.125C16.5417 17.7083 15.8333 18 15 18C14.1667 18 13.4583 17.7083 12.875 17.125C12.2917 16.5417 12 15.8333 12 15C12 14.35 12.1875 13.7667 12.5625 13.25C12.9375 12.7333 13.4167 12.375 14 12.175V4C14 3.45 13.8042 2.97917 13.4125 2.5875C13.0208 2.19583 12.55 2 12 2C11.45 2 10.9792 2.19583 10.5875 2.5875C10.1958 2.97917 10 3.45 10 4V14C10 15.1 9.60833 16.0417 8.825 16.825C8.04167 17.6083 7.1 18 6 18ZM3 4C3.28333 4 3.52083 3.90417 3.7125 3.7125C3.90417 3.52083 4 3.28333 4 3C4 2.71667 3.90417 2.47917 3.7125 2.2875C3.52083 2.09583 3.28333 2 3 2C2.71667 2 2.47917 2.09583 2.2875 2.2875C2.09583 2.47917 2 2.71667 2 3C2 3.28333 2.09583 3.52083 2.2875 3.7125C2.47917 3.90417 2.71667 4 3 4ZM15 16C15.2833 16 15.5208 15.9042 15.7125 15.7125C15.9042 15.5208 16 15.2833 16 15C16 14.7167 15.9042 14.4792 15.7125 14.2875C15.5208 14.0958 15.2833 14 15 14C14.7167 14 14.4792 14.0958 14.2875 14.2875C14.0958 14.4792 14 14.7167 14 15C14 15.2833 14.0958 15.5208 14.2875 15.7125C14.4792 15.9042 14.7167 16 15 16Z" fill="#00513D"/></Svg>
+            <TouchableOpacity 
+              style={styles.gridCard}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('My Trips' as any)}
+            >
+              <View style={styles.gridIconHeader}>
+                <View style={styles.gridIconBox}>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2"><Path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" strokeLinecap="round" strokeLinejoin="round"/></Svg>
+                </View>
               </View>
-              <View style={styles.lockedServiceContent}>
-                <Text style={styles.lockedServiceTitle}>Available Routes</Text>
-                <Text style={styles.lockedServiceDesc}>Explore corridors with high demand.</Text>
-              </View>
-              <View style={styles.lockedBadgeContainer}>
-                <Svg width="12" height="16" viewBox="0 0 12 16" fill="none"><Path d="M1.5 15.75C1.0875 15.75 0.734375 15.6031 0.440625 15.3094C0.146875 15.0156 0 14.6625 0 14.25V6.75C0 6.3375 0.146875 5.98438 0.440625 5.69063C0.734375 5.39688 1.0875 5.25 1.5 5.25H2.25V3.75C2.25 2.7125 2.61562 1.82812 3.34687 1.09687C4.07812 0.365625 4.9625 0 6 0C7.0375 0 7.92188 0.365625 8.65312 1.09687C9.38437 1.82812 9.75 2.7125 9.75 3.75V5.25H10.5C10.9125 5.25 11.2656 5.39688 11.5594 5.69063C11.8531 5.98438 12 6.3375 12 6.75V14.25C12 14.6625 11.8531 15.0156 11.5594 15.3094C11.2656 15.6031 10.9125 15.75 10.5 15.75H1.5ZM1.5 14.25H10.5V6.75H1.5V14.25ZM6 12C6.4125 12 6.76562 11.8531 7.05937 11.5594C7.35312 11.2656 7.5 10.9125 7.5 10.5C7.5 10.0875 7.35312 9.73438 7.05937 9.44063C6.76562 9.14688 6.4125 9 6 9C5.5875 9 5.23438 9.14688 4.94063 9.44063C4.64688 9.73438 4.5 10.0875 4.5 10.5C4.5 10.9125 4.64688 11.2656 4.94063 11.5594C5.23438 11.8531 5.5875 12 6 12ZM3.75 5.25H8.25V3.75C8.25 3.125 8.03125 2.59375 7.59375 2.15625C7.15625 1.71875 6.625 1.5 6 1.5C5.375 1.5 4.84375 1.71875 4.40625 2.15625C3.96875 2.59375 3.75 3.125 3.75 3.75V5.25ZM1.5 14.25V6.75V14.25Z" fill="#052017"/></Svg>
-                <Text style={styles.lockedText}>LOCKED</Text>
-              </View>
-            </View>
+              <Text style={styles.gridTitle}>Trips</Text>
+              <Text style={styles.gridDesc}>Manage your trips.</Text>
+            </TouchableOpacity>
 
             {/* Earnings */}
-            <View style={styles.lockedServiceCard}>
-              <View style={styles.lockedIconContainer}>
-                <Svg width="22" height="16" viewBox="0 0 22 16" fill="none"><Path d="M13 9C12.1667 9 11.4583 8.70833 10.875 8.125C10.2917 7.54167 10 6.83333 10 6C10 5.16667 10.2917 4.45833 10.875 3.875C11.4583 3.29167 12.1667 3 13 3C13.8333 3 14.5417 3.29167 15.125 3.875C15.7083 4.45833 16 5.16667 16 6C16 6.83333 15.7083 7.54167 15.125 8.125C14.5417 8.70833 13.8333 9 13 9ZM6 12C5.45 12 4.97917 11.8042 4.5875 11.4125C4.19583 11.0208 4 10.55 4 10V2C4 1.45 4.19583 0.979167 4.5875 0.5875C4.97917 0.195833 5.45 0 6 0H20C20.55 0 21.0208 0.195833 21.4125 0.5875C21.8042 0.979167 22 1.45 22 2V10C22 10.55 21.8042 11.0208 21.4125 11.4125C21.0208 11.8042 20.55 12 20 12H6ZM8 10H18C18 9.45 18.1958 8.97917 18.5875 8.5875C18.9792 8.19583 19.45 8 20 8V4C19.45 4 18.9792 3.80417 18.5875 3.4125C18.1958 3.02083 18 2.55 18 2H8C8 2.55 7.80417 3.02083 7.4125 3.4125C7.02083 3.80417 6.55 4 6 4V8C6.55 8 7.02083 8.19583 7.4125 8.5875C7.80417 8.97917 8 9.45 8 10ZM19 16H2C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14V3H2V14H19V16ZM6 10V2V10Z" fill="#00513D"/></Svg>
+            {/* <View style={styles.gridCard}>
+              <View style={styles.gridIconHeader}>
+                <View style={styles.gridIconBox}>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2"><Path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/></Svg>
+                </View>
+                <View style={styles.lockedBadge}>
+                  <Text style={styles.lockedBadgeText}>LOCKED</Text>
+                </View>
               </View>
-              <View style={styles.lockedServiceContent}>
-                <Text style={styles.lockedServiceTitle}>Earnings</Text>
-                <Text style={styles.lockedServiceDesc}>Track your courier revenue in real-time.</Text>
-              </View>
-              <View style={styles.lockedBadgeContainer}>
-                 <Svg width="12" height="16" viewBox="0 0 12 16" fill="none"><Path d="M1.5 15.75C1.0875 15.75 0.734375 15.6031 0.440625 15.3094C0.146875 15.0156 0 14.6625 0 14.25V6.75C0 6.3375 0.146875 5.98438 0.440625 5.69063C0.734375 5.39688 1.0875 5.25 1.5 5.25H2.25V3.75C2.25 2.7125 2.61562 1.82812 3.34687 1.09687C4.07812 0.365625 4.9625 0 6 0C7.0375 0 7.92188 0.365625 8.65312 1.09687C9.38437 1.82812 9.75 2.7125 9.75 3.75V5.25H10.5C10.9125 5.25 11.2656 5.39688 11.5594 5.69063C11.8531 5.98438 12 6.3375 12 6.75V14.25C12 14.6625 11.8531 15.0156 11.5594 15.3094C11.2656 15.6031 10.9125 15.75 10.5 15.75H1.5ZM1.5 14.25H10.5V6.75H1.5V14.25ZM6 12C6.4125 12 6.76562 11.8531 7.05937 11.5594C7.35312 11.2656 7.5 10.9125 7.5 10.5C7.5 10.0875 7.35312 9.73438 7.05937 9.44063C6.76562 9.14688 6.4125 9 6 9C5.5875 9 5.23438 9.14688 4.94063 9.44063C4.64688 9.73438 4.5 10.0875 4.5 10.5C4.5 10.9125 4.64688 11.2656 4.94063 11.5594C5.23438 11.8531 5.5875 12 6 12ZM3.75 5.25H8.25V3.75C8.25 3.125 8.03125 2.59375 7.59375 2.15625C7.15625 1.71875 6.625 1.5 6 1.5C5.375 1.5 4.84375 1.71875 4.40625 2.15625C3.96875 2.59375 3.75 3.125 3.75 3.75V5.25ZM1.5 14.25V6.75V14.25Z" fill="#052017"/></Svg>
-                 <Text style={styles.lockedText}>LOCKED</Text>
-              </View>
-            </View>
+              <Text style={styles.gridTitle}>Earnings</Text>
+              <Text style={styles.gridDesc}>Track your courier revenue.</Text>
+            </View> */}
 
             {/* Wallet */}
-            <View style={styles.lockedServiceCard}>
-              <View style={styles.lockedIconContainer}>
-                <Svg width="19" height="18" viewBox="0 0 19 18" fill="none"><Path d="M2 16V2C2 2 2 2.37083 2 3.1125C2 3.85417 2 4.81667 2 6V12C2 13.1833 2 14.1458 2 14.8875C2 15.6292 2 16 2 16ZM2 18C1.45 18 0.979167 17.8042 0.5875 17.4125C0.195833 17.0208 0 16.55 0 16V2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0H16C16.55 0 17.0208 0.195833 17.4125 0.5875C17.8042 0.979167 18 1.45 18 2V4.5H16V2H2V16H16V13.5H18V16C18 16.55 17.8042 17.0208 17.4125 17.4125C17.0208 17.8042 16.55 18 16 18H2ZM10 14C9.45 14 8.97917 13.8042 8.5875 13.4125C8.19583 13.0208 8 12.55 8 12V6C8 5.45 8.19583 4.97917 8.5875 4.5875C8.97917 4.19583 9.45 4 10 4H17C17.55 4 18.0208 4.19583 18.4125 4.5875C18.8042 4.97917 19 5.45 19 6V12C19 12.55 18.8042 13.0208 18.4125 13.4125C18.0208 13.8042 17.55 14 17 14H10ZM17 12V6H10V12H17ZM13 10.5C13.4167 10.5 13.7708 10.3542 14.0625 10.0625C14.3542 9.77083 14.5 9.41667 14.5 9C14.5 8.58333 14.3542 8.22917 14.0625 7.9375C13.7708 7.64583 13.4167 7.5 13 7.5C12.5833 7.5 12.2292 7.64583 11.9375 7.9375C11.6458 8.22917 11.5 8.58333 11.5 9C11.5 9.41667 11.6458 9.77083 11.9375 10.0625C12.2292 10.3542 12.5833 10.5 13 10.5Z" fill="#00513D"/></Svg>
-              </View>
-              <View style={styles.lockedServiceContent}>
-                <Text style={styles.lockedServiceTitle}>Wallet</Text>
-                <Text style={styles.lockedServiceDesc}>Manage payouts and linked accounts.</Text>
-              </View>
-              <View style={styles.lockedBadgeContainer}>
-                 <Svg width="12" height="16" viewBox="0 0 12 16" fill="none"><Path d="M1.5 15.75C1.0875 15.75 0.734375 15.6031 0.440625 15.3094C0.146875 15.0156 0 14.6625 0 14.25V6.75C0 6.3375 0.146875 5.98438 0.440625 5.69063C0.734375 5.39688 1.0875 5.25 1.5 5.25H2.25V3.75C2.25 2.7125 2.61562 1.82812 3.34687 1.09687C4.07812 0.365625 4.9625 0 6 0C7.0375 0 7.92188 0.365625 8.65312 1.09687C9.38437 1.82812 9.75 2.7125 9.75 3.75V5.25H10.5C10.9125 5.25 11.2656 5.39688 11.5594 5.69063C11.8531 5.98438 12 6.3375 12 6.75V14.25C12 14.6625 11.8531 15.0156 11.5594 15.3094C11.2656 15.6031 10.9125 15.75 10.5 15.75H1.5ZM1.5 14.25H10.5V6.75H1.5V14.25ZM6 12C6.4125 12 6.76562 11.8531 7.05937 11.5594C7.35312 11.2656 7.5 10.9125 7.5 10.5C7.5 10.0875 7.35312 9.73438 7.05937 9.44063C6.76562 9.14688 6.4125 9 6 9C5.5875 9 5.23438 9.14688 4.94063 9.44063C4.64688 9.73438 4.5 10.0875 4.5 10.5C4.5 10.9125 4.64688 11.2656 4.94063 11.5594C5.23438 11.8531 5.5875 12 6 12ZM3.75 5.25H8.25V3.75C8.25 3.125 8.03125 2.59375 7.59375 2.15625C7.15625 1.71875 6.625 1.5 6 1.5C5.375 1.5 4.84375 1.71875 4.40625 2.15625C3.96875 2.59375 3.75 3.125 3.75 3.75V5.25ZM1.5 14.25V6.75V14.25Z" fill="#052017"/></Svg>
-                 <Text style={styles.lockedText}>LOCKED</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Tips for Travelers */}
-          <View style={styles.tipsSection}>
-            <Text style={styles.tipsHeader}>Tips for Travelers</Text>
-            
-            <View style={styles.tipsCardImage}>
-              <View style={styles.tipsImgContainer}>
-                 <View style={{width: '100%', height: '100%', backgroundColor: 'rgba(0,108,82,0.1)'}} />
-              </View>
-              <View style={styles.tipsTextContent}>
-                <Text style={styles.tipsTitle}>Maximize Earnings</Text>
-                <Text style={styles.tipsDesc}>Learn how to batch multiple deliveries along a single journey to triple your hourly rate.</Text>
-              </View>
-            </View>
-
-            <View style={styles.tipsCardStandard}>
-              <View>
-                <View style={styles.tipsIconBox}>
-                  <Svg width="20" height="19" viewBox="0 0 20 19" fill="none"><Path d="M6.85 14.825L10 12.925L13.15 14.85L12.325 11.25L15.1 8.85L11.45 8.525L10 5.125L8.55 8.5L4.9 8.825L7.675 11.25L6.85 14.825ZM3.825 19L5.45 11.975L0 7.25L7.2 6.625L10 0L12.8 6.625L20 7.25L14.55 11.975L16.175 19L10 15.275L3.825 19Z" fill="#00513D"/></Svg>
+            <TouchableOpacity 
+              style={styles.gridCard} 
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Profile' as any)}
+            >
+              <View style={styles.gridIconHeader}>
+                <View style={styles.gridIconBox}>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2"><Path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" strokeLinecap="round" strokeLinejoin="round"/></Svg>
                 </View>
-                <Text style={[styles.tipsTitle, {marginTop: 12}]}>Maintain 5-Stars</Text>
-                <Text style={styles.tipsDesc}>Top-rated travelers get priority access to long-haul, high-payout international routes.</Text>
+              </View>
+              <Text style={styles.gridTitle}>Profile</Text>
+              <Text style={styles.gridDesc}>Manage your Profile.</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tips for Travelers */}
+        <View style={styles.tipsSection}>
+          <View style={styles.sectionHeaderRow}>
+             <Text style={styles.sectionHeader}>Traveler Tips</Text>
+             <TouchableOpacity><Text style={styles.viewAllText}>View all</Text></TouchableOpacity>
+          </View>
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 16, paddingRight: 24}}>
+            <View style={styles.tipCard}>
+              <View style={styles.tipImagePlaceholder}>
+                 <LinearGradient colors={['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
+                 <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2" style={{opacity: 0.5}}>
+                    <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" strokeLinecap="round" strokeLinejoin="round"/>
+                 </Svg>
+                 <View style={styles.tipBadge}>
+                    <Text style={styles.tipBadgeText}>Efficiency</Text>
+                 </View>
+              </View>
+              <View style={styles.tipContent}>
+                 <Text style={styles.tipTitle}>Maximize Earnings</Text>
+                 <Text style={styles.tipSubtitle}>Batch multiple deliveries</Text>
               </View>
             </View>
 
-            <View style={{ height: 130 }} /> 
-          </View>
+            <View style={styles.tipCard}>
+              <View style={styles.tipImagePlaceholder}>
+                 <LinearGradient colors={['#E6E6FA', '#D8BFD8']} style={StyleSheet.absoluteFillObject} />
+                 <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4A0E4E" strokeWidth="2" style={{opacity: 0.5}}>
+                    <Path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" strokeLinecap="round" strokeLinejoin="round"/>
+                 </Svg>
+                 <View style={styles.tipBadge}>
+                    <Text style={styles.tipBadgeText}>Quality</Text>
+                 </View>
+              </View>
+              <View style={styles.tipContent}>
+                 <Text style={styles.tipTitle}>Maintain 5-Stars</Text>
+                 <Text style={styles.tipSubtitle}>Get priority access</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
 
-        </ScrollView>
-      </View>
-    </View>
+        <View style={{ height: 100 }} /> 
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
-  scrollWrapper: {
-    flex: 1,
-    zIndex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    gap: 32,
-  },
-  /* HEADER STYLES */
-  headerWrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : (StatusBar.currentHeight || 0) + 12,
-  },
-  headerCard: {
-    marginTop: Platform.OS === 'ios' ? 44 : 0,
+  headerContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: '#FAFAFA',
   },
-  userInfo: {
+  userInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -280,30 +395,30 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#E7F5EF',
-    padding: 2,
+    backgroundColor: '#E7F5EF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarPlaceholder: {
-    flex: 1,
-    backgroundColor: '#006C52',
+    width: 44,
+    height: 44,
+    backgroundColor: '#C3E8DA',
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarImage: {
-    flex: 1,
+    width: 44,
+    height: 44,
     borderRadius: 22,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
+    color: '#00513D',
+    fontFamily: Typography.bold,
     fontSize: 18,
   },
-  greetingText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontFamily: Typography.medium,
+  greetingTextContainer: {
+    justifyContent: 'center',
   },
   userNameText: {
     fontSize: 18,
@@ -311,271 +426,308 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
     letterSpacing: -0.5,
   },
+  greetingText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+  },
   notificationBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  notifDot: {
+  notifBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: -2,
+    right: -2,
     backgroundColor: '#EF4444',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },
-  bellIconBox: {
-    width: 45,
+  notifBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontFamily: Typography.bold,
+  },
+  scrollContent: {
+    paddingTop: 8,
+  },
+  bannerSection: {
+    marginBottom: 24,
+  },
+  bannerWrapper: {
+    width: width,
+    paddingHorizontal: 24,
+  },
+  bannerContainer: {
+    width: '100%',
+    height: 140,
+    borderRadius: 20,
+    overflow: 'hidden',
+    padding: 24,
+    justifyContent: 'center',
+  },
+  bannerContent: {
+    zIndex: 2,
+    width: '70%',
+  },
+  bannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontFamily: Typography.bold,
+    marginBottom: 8,
+    lineHeight: 28,
+  },
+  bannerDesc: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontFamily: Typography.medium,
+    lineHeight: 18,
+  },
+  bannerIconOverlay: {
+    position: 'absolute',
+    right: -20,
+    bottom: -10,
+    zIndex: 1,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingRight: 24,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  viewAllText: {
+    color: '#006C52',
+    fontFamily: Typography.medium,
+    fontSize: 14,
+  },
+  cardsSection: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+    gap: 16,
+  },
+  reviewCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  reviewIconContainer: {
+    width: 48,
     height: 48,
+    borderRadius: 12,
+    backgroundColor: '#E7F5EF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  greetingContainer: {
-    gap: 4,
+  reviewTextContent: {
+    flex: 1,
   },
-  greetingSubtitle: {
-    color: '#3F4944',
+  reviewTitleDark: {
     fontSize: 16,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    marginBottom: 4,
+  },
+  reviewDescDark: {
+    fontSize: 13,
+    color: '#64748B',
     fontFamily: Typography.medium,
+    lineHeight: 18,
   },
-  greetingTitle: {
-    fontSize: 28,
-    color: '#00513D',
-    fontFamily: Typography.bold,
-    letterSpacing: -0.8,
-  },
-  /* REVIEW CARD */
-  reviewCard: {
-    backgroundColor: '#006C52',
-    borderRadius: 32,
-    padding: 24,
-    gap: 12,
-    overflow: 'hidden',
-    shadowColor: 'rgba(0,0,0,0.10)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  reviewCardBgCircle: {
-    position: 'absolute',
-    right: -40,
-    top: -40,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(157, 244, 210, 0.1)',
-  },
-  reviewHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  reviewBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#C5E7D7',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    gap: 8,
-  },
-  reviewBadgeText: {
-    color: '#4A695C',
-    fontSize: 10,
-    fontFamily: Typography.bold,
-    letterSpacing: 1,
-  },
-  reviewTitle: {
-    color: '#94EAC9',
-    fontSize: 20,
-    fontFamily: Typography.bold,
-    marginTop: 6,
-  },
-  reviewBody: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 22,
-    fontFamily: Typography.bold,
-  },
-  reviewProgressBarTrack: {
-    width: '100%',
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-    marginTop: 8,
-  },
-  reviewProgressBarFill: {
-    height: '100%',
-    backgroundColor: '#9DF4D2',
-    borderRadius: 2,
-  },
-  /* PROFILE CARD */
   profileCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    gap: 16,
-    shadowColor: 'rgba(5, 32, 23, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   profileHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
+    marginBottom: 12,
   },
-  profileTitle: {
-    color: '#052017',
-    fontSize: 18,
+  profileTitleDark: {
+    fontSize: 15,
+    color: '#0F172A',
     fontFamily: Typography.bold,
   },
   profilePercent: {
-    color: '#00513D',
-    fontSize: 16,
+    fontSize: 15,
+    color: '#006C52',
     fontFamily: Typography.bold,
   },
   progressBarTrack: {
     width: '100%',
-    height: 12,
-    backgroundColor: '#CBE9DA',
-    borderRadius: 6,
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#00513D',
-    borderRadius: 6,
+    backgroundColor: '#006C52',
+    borderRadius: 4,
   },
-  profileHintText: {
-    color: '#3F4944',
-    fontSize: 14,
-    fontFamily: Typography.medium,
+  dashboardSection: {
+    paddingLeft: 24,
+    marginBottom: 32,
   },
-  /* LOCKED SERVICES */
-  lockedServicesContainer: {
-    gap: 16,
-  },
-  lockedServiceCard: {
+  gridContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DCFBEB',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(157, 244, 210, 0.1)',
-  },
-  lockedIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lockedServiceContent: {
-    flex: 1,
-    marginLeft: 16,
-    marginRight: 12,
-    gap: 4,
-  },
-  lockedServiceTitle: {
-    color: '#052017',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-  },
-  lockedServiceDesc: {
-    color: '#3F4944',
-    fontSize: 12,
-    fontFamily: Typography.medium,
-    lineHeight: 18,
-  },
-  lockedBadgeContainer: {
-    alignItems: 'center',
-    opacity: 0.6,
-    gap: 4,
-  },
-  lockedText: {
-    color: '#052017',
-    fontSize: 9,
-    fontFamily: Typography.bold,
-    letterSpacing: -0.5,
-  },
-  /* TIPS FOR TRAVELERS */
-  tipsSection: {
+    flexWrap: 'wrap',
     gap: 16,
+    paddingRight: 24,
   },
-  tipsHeader: {
-    color: '#00513D',
-    fontSize: 20,
-    fontFamily: Typography.bold,
-    paddingHorizontal: 4,
-  },
-  tipsCardImage: {
-    backgroundColor: '#D7F5E5',
-    borderRadius: 24,
-    overflow: 'hidden',
-  },
-  tipsImgContainer: {
-    width: '100%',
-    height: 120,
-    backgroundColor: 'rgba(0, 108, 82, 0.1)',
-  },
-  tipsTextContent: {
-    padding: 20,
-    gap: 8,
-  },
-  tipsTitle: {
-    color: '#052017',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-  },
-  tipsDesc: {
-    color: '#3F4944',
-    fontSize: 14,
-    lineHeight: 22,
-    fontFamily: Typography.medium,
-  },
-  tipsCardStandard: {
-    backgroundColor: '#CBE9DA',
-    borderRadius: 24,
-    padding: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  tipsIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 81, 61, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  readGuideBtn: {
+  gridCard: {
+    width: (width - 48 - 16) / 2,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 2,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
-    marginLeft: 16,
   },
-
+  gridIconHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  gridIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FAFAFA',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lockedBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  lockedBadgeText: {
+    fontSize: 9,
+    color: '#64748B',
+    fontFamily: Typography.bold,
+  },
+  gridTitle: {
+    fontSize: 16,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    marginBottom: 4,
+  },
+  gridDesc: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+    lineHeight: 16,
+  },
+  tipsSection: {
+    paddingLeft: 24,
+  },
+  tipCard: {
+    width: width * 0.6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+    marginBottom: 24,
+  },
+  tipImagePlaceholder: {
+    height: 120,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tipBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  tipBadgeText: {
+    fontSize: 10,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  tipContent: {
+    padding: 16,
+  },
+  tipTitle: {
+    fontSize: 16,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    marginBottom: 4,
+  },
+  tipSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+  },
 });
 
 export default TravelerHomeScreen;
+
