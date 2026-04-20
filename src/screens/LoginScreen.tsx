@@ -10,9 +10,11 @@ import {
   Dimensions,
   StatusBar,
   ScrollView,
+  Image,
 } from 'react-native';
+
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
+
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
@@ -21,6 +23,7 @@ import CustomInput from '../components/common/CustomInput';
 import * as authService from '../services/authService';
 import { ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
+import Svg, { Path } from 'react-native-svg';
 
 
 
@@ -114,14 +117,12 @@ const LoginScreen = ({ navigation }: any) => {
               
               {/* Logo Section */}
               <View style={styles.logoRow}>
-                <View style={styles.logoIconBox}>
-                  <Svg width="23" height="25" viewBox="0 0 23 25" fill="none">
-                    <Path
-                      d="M10 21.7812V13.2188L2.5 8.875V17.4375L10 21.7812ZM12.5 21.7812L20 17.4375V8.875L12.5 13.2188V21.7812ZM10 24.6562L1.25 19.625C0.854167 19.3958 0.546875 19.0938 0.328125 18.7188C0.109375 18.3438 0 17.9271 0 17.4688V7.53125C0 7.07292 0.109375 6.65625 0.328125 6.28125C0.546875 5.90625 0.854167 5.60417 1.25 5.375L10 0.34375C10.3958 0.114583 10.8125 0 11.25 0C11.6875 0 12.1042 0.114583 12.5 0.34375L21.25 5.375C21.6458 5.60417 21.9531 5.90625 22.1719 6.28125C22.3906 6.65625 22.5 7.07292 22.5 7.53125V17.4688C22.5 17.9271 22.3906 18.3438 22.1719 18.7188C21.9531 19.0938 21.6458 19.3958 21.25 19.625L12.5 24.6562C12.1042 24.8854 11.6875 25 11.25 25C10.8125 25 10.3958 24.8854 10 24.6562ZM16.25 8.15625L18.6562 6.78125L11.25 2.5L8.8125 3.90625L16.25 8.15625ZM11.25 11.0625L13.6875 9.65625L6.28125 5.375L3.84375 6.78125L11.25 11.0625Z"
-                      fill="white"
-                    />
-                  </Svg>
-                </View>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+
                 <Text style={styles.brandName}>Drop Mate</Text>
               </View>
 
@@ -253,19 +254,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  logoIconBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    shadowColor: '#00513D',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 4,
+  logoImage: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
   },
   brandName: {
     fontSize: 30,

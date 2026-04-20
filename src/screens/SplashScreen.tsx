@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing, StatusBar, Image } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
+
 import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
 import { Typography } from '../constants/Typography';
@@ -154,19 +154,12 @@ const SplashScreen = ({ navigation }: any) => {
               <Animated.View style={[styles.ripple, { transform: [{ scale: ripple1Scale }], opacity: ripple1Opacity }]} />
               <Animated.View style={[styles.ripple, { transform: [{ scale: ripple2Scale }], opacity: ripple2Opacity }]} />
               
-              <LinearGradient
-                colors={[Colors.primaryDark, Colors.primary]}
-                useAngle={true}
-                angle={135}
-                style={styles.logoBackground}
-              >
-                <Svg width={42} height={42} viewBox="0 0 36 40" fill="none">
-                  <Path
-                    d="M16 39.45V21.15L0 11.9V27.95C0 28.6833 0.175 29.35 0.525 29.95C0.875 30.55 1.36667 31.0333 2 31.4L16 39.45ZM20 39.45L34 31.4C34.6333 31.0333 35.125 30.55 35.475 29.95C35.825 29.35 36 28.6833 36 27.95V11.9L20 21.15V39.45ZM27.95 11.95L33.85 8.5L20 0.55C19.3667 0.183333 18.7 0 18 0C17.3 0 16.6333 0.183333 16 0.55L12.05 2.8L27.95 11.95ZM18 17.7L23.95 14.3L8.1 5.1L2.1 8.55L18 17.7Z"
-                    fill={Colors.white}
-                  />
-                </Svg>
-              </LinearGradient>
+              <Image
+                source={require('../assets/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+
             </Animated.View>
 
             {/* Subtle Animated Text */}
@@ -234,17 +227,9 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     backgroundColor: Colors.primaryLight,
   },
-  logoBackground: {
+  logoImage: {
     width: 100,
     height: 100,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primaryDark,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 15, 
   },
   textContainer: {
     alignItems: 'center',
