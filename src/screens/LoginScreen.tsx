@@ -123,7 +123,7 @@ const LoginScreen = ({ navigation }: any) => {
                   resizeMode="contain"
                 />
 
-                <Text style={styles.brandName}>Drop Mate</Text>
+                <Text style={styles.brandName}>rop Mate</Text>
               </View>
 
               {/* Welcome Text */}
@@ -255,12 +255,12 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoImage: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
+    width: 56,
+    height: 56,
+    marginRight: -6,
   },
   brandName: {
-    fontSize: 30,
+    fontSize: 46,
     color: Colors.text.brand,
     fontFamily: Typography.bold,
     letterSpacing: -0.8,

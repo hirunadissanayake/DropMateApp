@@ -29,8 +29,8 @@ const BRAND_LIGHT = '#DCFBEB';
 
 const TravelerTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { token, user } = useAuthStore();
-  const isApproved = user?.isTravelerApproved === true;
+  const { token } = useAuthStore();
+
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -88,18 +88,6 @@ const TravelerTripsScreen = () => {
   };
 
   const handleCreateTrip = () => {
-    if (!isApproved) {
-      setAlertConfig({
-        title: 'Access Restricted',
-        message: 'You cannot create a trip until your account has been approved by our admin team. This usually takes 24–48 hours.',
-        confirmText: 'OK',
-        type: 'info',
-        showCancel: false,
-        action: () => setAlertVisible(false)
-      });
-      setAlertVisible(true);
-      return;
-    }
     navigation.navigate('CreateTrip' as any);
   };
 
@@ -162,37 +150,17 @@ const TravelerTripsScreen = () => {
             <Text style={styles.headerSubtitle}>Manage your upcoming travel routes</Text>
           </View>
           <TouchableOpacity 
-            style={[styles.addButton, !isApproved && styles.addButtonLocked]} 
+            style={styles.addButton} 
             activeOpacity={0.8}
             onPress={handleCreateTrip}
           >
-            {isApproved ? (
-              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <Path d="M12 5V19M5 12H19" />
-              </Svg>
-            ) : (
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <Path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" />
-                <Path d="M12 8v4" />
-                <Path d="M12 16h.01" />
-              </Svg>
-            )}
+            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M12 5V19M5 12H19" />
+            </Svg>
           </TouchableOpacity>
         </View>
 
-        {/* Approval banner */}
-        {!isApproved && (
-          <View style={styles.approvalBanner}>
-            <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" />
-              <Path d="M12 8v4" />
-              <Path d="M12 16h.01" />
-            </Svg>
-            <Text style={styles.approvalBannerText}>
-              Your account is pending admin approval. Creating trips will be available once approved.
-            </Text>
-          </View>
-        )}
+
 
         {loading ? (
           <View style={styles.centerContainer}>
@@ -215,12 +183,10 @@ const TravelerTripsScreen = () => {
               <Text style={styles.emptyTitle}>No trips found</Text>
               <Text style={styles.emptySubtitle}>You haven't added any travel trips yet. Create your first trip to start earning.</Text>
               <TouchableOpacity 
-                style={[styles.createNowButton, !isApproved && styles.createNowButtonLocked]}
+                style={styles.createNowButton}
                 onPress={handleCreateTrip}
               >
-                <Text style={styles.createNowText}>
-                  {isApproved ? 'Create Now' : 'Pending Approval'}
-                </Text>
+                <Text style={styles.createNowText}>Create Now</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -395,32 +361,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  addButtonLocked: {
-    backgroundColor: '#94A3B8',
-    shadowColor: '#94A3B8',
-  },
-  approvalBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: '#FEF3C7',
-    borderRadius: 14,
-    marginHorizontal: 24,
-    marginBottom: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  approvalBannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-    fontFamily: Typography.medium,
-    lineHeight: 18,
-  },
-  createNowButtonLocked: {
-    backgroundColor: '#94A3B8',
-  },
+
   scrollContent: {
     paddingHorizontal: 20,
     gap: 16,

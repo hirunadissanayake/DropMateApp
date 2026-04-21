@@ -36,8 +36,7 @@ const BRAND_GREEN = '#006C52';
 const CreateTripScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
-  const { token, user } = useAuthStore();
-  const isApproved = user?.isTravelerApproved === true;
+  const { token } = useAuthStore();
   
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
@@ -77,23 +76,10 @@ const CreateTripScreen = () => {
 
 
   useEffect(() => {
-    if (!isApproved) {
-      setAlertConfig({
-        title: 'Access Restricted',
-        message: 'You cannot create a trip until your account has been approved by our admin team.',
-        confirmText: 'OK',
-        type: 'info',
-        showCancel: false,
-        action: () => {
-          setAlertVisible(false);
-          navigation.goBack();
-        }
-      });
-      setAlertVisible(true);
-    } else if (token) {
+    if (token) {
       fetchFromLocations();
     }
-  }, [token, isApproved, navigation]);
+  }, [token]);
 
   const onRefresh = async () => {
     setRefreshing(true);

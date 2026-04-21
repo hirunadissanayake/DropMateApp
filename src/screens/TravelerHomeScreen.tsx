@@ -283,15 +283,18 @@ const TravelerHomeScreen = ({ navigation }: any) => {
             <TouchableOpacity 
               style={styles.gridCard}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('My Trips' as any)}
             >
               <View style={styles.gridIconHeader}>
                 <View style={styles.gridIconBox}>
-                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2"><Path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" strokeLinecap="round" strokeLinejoin="round"/></Svg>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00513D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <Path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                    <Path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" />
+                    <Path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                  </Svg>
                 </View>
               </View>
-              <Text style={styles.gridTitle}>Trips</Text>
-              <Text style={styles.gridDesc}>Manage your trips.</Text>
+              <Text style={styles.gridTitle}>Help Center</Text>
+              <Text style={styles.gridDesc}>Get support & FAQs.</Text>
             </TouchableOpacity>
 
             {/* Earnings */}
