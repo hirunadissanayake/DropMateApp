@@ -505,81 +505,83 @@ const TripDetailsScreen = () => {
           </Text>
         </View>
 
-        <View style={styles.infoBlock}>
-          <Text style={styles.sectionLabel}>
-            ASSIGNED PARCELS ({trip.parcels?.length || 0})
-          </Text>
-          {trip.parcels && trip.parcels.length > 0 ? (
-            trip.parcels.map((parcel: any, idx: number) => (
-              <TouchableOpacity
-                key={parcel.id}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('ParcelDetails', { parcelId: parcel.id })}
-                style={[
-                  styles.parcelRow,
-                  idx !== trip.parcels.length - 1 && styles.borderBottom,
-                ]}>
-                <View style={styles.parcelIconBox}>
-                  <Svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#006C52"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                    <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
-                    <Path d="M12 22.08V12" />
-                  </Svg>
-                </View>
-                <View style={styles.parcelInfo}>
-                  <Text style={styles.parcelName} numberOfLines={1}>
-                    {parcel.name}
-                  </Text>
-                  <Text style={styles.parcelMeta}>
-                    {parcel.weight} kg • {parcel.fromLocation} to{' '}
-                    {parcel.toLocation}
-                  </Text>
-                </View>
-                <View style={styles.parcelArrow}>
-                  <Svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#CBD5E1"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <Path d="M9 18l6-6-6-6" />
-                  </Svg>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Svg
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#E2E8F0"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round">
-                <Circle cx="12" cy="12" r="10" />
-                <Line x1="12" y1="8" x2="12" y2="12" />
-                <Line x1="12" y1="16" x2="12.01" y2="16" />
-              </Svg>
-              <Text style={styles.emptyParcelsText}>
-                No parcels assigned yet.{'\n'}When customers book you, they'll
-                appear here.
-              </Text>
-            </View>
-          )}
-        </View>
+        {user?.id === trip.travelerId && (
+          <View style={styles.infoBlock}>
+            <Text style={styles.sectionLabel}>
+              ASSIGNED PARCELS ({trip.parcels?.length || 0})
+            </Text>
+            {trip.parcels && trip.parcels.length > 0 ? (
+              trip.parcels.map((parcel: any, idx: number) => (
+                <TouchableOpacity
+                  key={parcel.id}
+                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('ParcelDetails', { parcelId: parcel.id })}
+                  style={[
+                    styles.parcelRow,
+                    idx !== trip.parcels.length - 1 && styles.borderBottom,
+                  ]}>
+                  <View style={styles.parcelIconBox}>
+                    <Svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#006C52"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round">
+                      <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                      <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
+                      <Path d="M12 22.08V12" />
+                    </Svg>
+                  </View>
+                  <View style={styles.parcelInfo}>
+                    <Text style={styles.parcelName} numberOfLines={1}>
+                      {parcel.name}
+                    </Text>
+                    <Text style={styles.parcelMeta}>
+                      {parcel.weight} kg • {parcel.fromLocation} to{' '}
+                      {parcel.toLocation}
+                    </Text>
+                  </View>
+                  <View style={styles.parcelArrow}>
+                    <Svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#CBD5E1"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round">
+                      <Path d="M9 18l6-6-6-6" />
+                    </Svg>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#E2E8F0"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round">
+                  <Circle cx="12" cy="12" r="10" />
+                  <Line x1="12" y1="8" x2="12" y2="12" />
+                  <Line x1="12" y1="16" x2="12.01" y2="16" />
+                </Svg>
+                <Text style={styles.emptyParcelsText}>
+                  No parcels assigned yet.{'\n'}When customers book you, they'll
+                  appear here.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {!!trip.note && (
           <View style={[styles.infoBlock, styles.noteCard]}>

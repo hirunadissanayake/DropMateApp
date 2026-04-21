@@ -131,6 +131,7 @@ const SignupScreen = ({ navigation, route }: any) => {
     email: '',
     phone: '',
     nicNumber: '',
+    permanentAddress: '',
     password: '',
     confirmPassword: '',
   });
@@ -142,12 +143,13 @@ const SignupScreen = ({ navigation, route }: any) => {
     formData.email.trim() !== '' &&
     formData.phone.trim() !== '' &&
     formData.nicNumber.trim() !== '' &&
+    formData.permanentAddress.trim() !== '' &&
     formData.password.trim() !== '' &&
     formData.confirmPassword.trim() !== '' &&
     agreed;
 
   const handleSignup = () => {
-    const { fullName, email, phone, nicNumber, password, confirmPassword } = formData;
+    const { fullName, email, phone, nicNumber, permanentAddress, password, confirmPassword } = formData;
     const newErrors: any = {};
 
     if (!fullName.trim()) {
@@ -175,6 +177,12 @@ const SignupScreen = ({ navigation, route }: any) => {
       newErrors.nicNumber = 'NIC number is required';
     } else if (!/[0-9]/.test(nicNumber)) {
       newErrors.nicNumber = 'NIC cannot be only letters';
+    }
+
+    if (!permanentAddress.trim()) {
+      newErrors.permanentAddress = 'Permanent address is required';
+    } else if (/^\d+$/.test(permanentAddress.trim())) {
+      newErrors.permanentAddress = 'Permanent address cannot be only numbers';
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
@@ -297,6 +305,20 @@ const SignupScreen = ({ navigation, route }: any) => {
                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                     <Path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill={c} />
                     <Path d="M6 14H11V16H6V14Z" fill={c} />
+                  </Svg>
+                )}
+              />
+
+              <InputField
+                label="PERMANENT ADDRESS"
+                placeholder="Enter your permanent address"
+                value={formData.permanentAddress}
+                onChangeText={(t) => setFormData({ ...formData, permanentAddress: t })}
+                error={errors.permanentAddress}
+                autoCapitalize="sentences"
+                icon={(c) => (
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <Path d="M12 3L4 9V21H10V15H14V21H20V9L12 3Z" fill={c} />
                   </Svg>
                 )}
               />

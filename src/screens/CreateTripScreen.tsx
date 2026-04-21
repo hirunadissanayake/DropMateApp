@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,7 +17,6 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
@@ -75,11 +75,13 @@ const CreateTripScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
 
-  useEffect(() => {
-    if (token) {
-      fetchFromLocations();
-    }
-  }, [token]);
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        fetchFromLocations();
+      }
+    }, [token])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

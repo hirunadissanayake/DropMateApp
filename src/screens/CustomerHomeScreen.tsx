@@ -81,7 +81,16 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   }, []);
 
   const fetchActiveParcels = async () => {
-    if (!token) return;
+    console.log('[DEBUG] Fetching parcels - Status:', { 
+      hasToken: !!token, 
+      isApproved: user?.isCustomerApproved, 
+      role: user?.roleActive 
+    });
+
+    if (!token || !user?.isCustomerApproved || user?.roleActive !== 'CUSTOMER') {
+      setLoadingParcels(false);
+      return;
+    }
     try {
       const data = await parcelService.getMyParcels(token);
       const active = data.filter((p: any) => {
@@ -97,9 +106,12 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   };
 
   const fetchRecommendedTrips = async () => {
-    if (!token) return;
+    if (!token || !user?.isCustomerApproved || user?.roleActive !== 'CUSTOMER') {
+      setLoadingTrips(false);
+      return;
+    }
     try {
-      const data = await authService.getMe(token).then(() => tripService.getActiveTrips(token));
+      const data = await tripService.getActiveTrips(token);
       // Just take the first 5 for recommendation
       setRecommendedTrips(data.slice(0, 5));
     } catch (error) {
@@ -113,7 +125,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     useCallback(() => {
       fetchActiveParcels();
       fetchRecommendedTrips();
-    }, [token])
+    }, [token, user?.isCustomerApproved])
   );
 
   const onRefresh = useCallback(async () => {
@@ -122,13 +134,28 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     try {
       const userData = await authService.getMe(token);
       setUser(userData);
-      await fetchActiveParcels();
+      
+      if (userData.isCustomerApproved && userData.roleActive === 'CUSTOMER') {
+        // Fetch parcels
+        const pData = await parcelService.getMyParcels(token);
+        const active = pData.filter((p: any) => {
+          const s = p.status?.toUpperCase();
+          return s === 'PENDING' || s === 'IN_TRANSIT' || s === 'MATCHED';
+        });
+        setActiveParcels(active);
+        
+        // Fetch trips
+        const tData = await tripService.getActiveTrips(token);
+        setRecommendedTrips(tData.slice(0, 5));
+      }
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {
       setRefreshing(false);
+      setLoadingParcels(false);
+      setLoadingTrips(false);
     }
-  }, [token]);
+  }, [token, setUser]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -172,7 +199,13 @@ const CustomerHomeScreen = ({ navigation }: any) => {
           </View>
           <View>
             <Text style={styles.greetingText}>{getGreeting()},</Text>
-            <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
+              <View style={styles.modeIndicator}>
+                <View style={styles.activeDot} />
+                <Text style={styles.modeText}>Customer Mode</Text>
+              </View>
+            </View>
           </View>
         </TouchableOpacity>
 
@@ -545,6 +578,31 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#0F172A',
     fontFamily: Typography.bold,
+  },
+  modeIndicator: {
+    backgroundColor: '#ECFDF5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+    marginRight: 4,
+  },
+  modeText: {
+    fontSize: 10,
+    color: '#059669',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   notificationBtn: {
     width: 42,

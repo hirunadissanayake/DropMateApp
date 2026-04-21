@@ -7,6 +7,7 @@ export const requestOtp = async (data: any) => {
   // Append text fields
   formData.append('phone', data.phone);
   formData.append('nicNumber', data.nicNumber);
+  formData.append('permanentAddress', data.permanentAddress);
   formData.append('name', data.fullName);
   formData.append('email', data.email);
   formData.append('password', data.password);

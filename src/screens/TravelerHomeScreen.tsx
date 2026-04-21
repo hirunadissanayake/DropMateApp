@@ -122,7 +122,13 @@ const TravelerHomeScreen = ({ navigation }: any) => {
             )}
           </View>
           <View style={styles.greetingTextContainer}>
-            <Text style={styles.userNameText}>Hi, {userName}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.userNameText}>Hi, {userName}</Text>
+              <View style={styles.modeIndicator}>
+                <View style={styles.activeDot} />
+                <Text style={styles.modeText}>Traveler Mode</Text>
+              </View>
+            </View>
             <Text style={styles.greetingText}>{getGreeting()}</Text>
           </View>
         </TouchableOpacity>
@@ -433,6 +439,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     fontFamily: Typography.medium,
+  },
+  modeIndicator: {
+    backgroundColor: '#ECFDF5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+    marginRight: 4,
+  },
+  modeText: {
+    fontSize: 10,
+    color: '#059669',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   notificationBtn: {
     width: 44,

@@ -90,6 +90,7 @@ const PersonalDetailsScreen = () => {
                     <InfoRow label="Full Name" value={user?.name} icon="user" />
                     <InfoRow label="Email Address" value={user?.email} icon="mail" />
                     <InfoRow label="NIC Number" value={user?.nicNumber} icon="credit-card" />
+                    <InfoRow label="Permanent Address" value={user?.permanentAddress} icon="map-pin" />
                     <InfoRow label="Phone Number" value={user?.phone} icon="phone" />
                 </View>
             </View>
@@ -175,6 +176,7 @@ const renderIcon = (name: string) => {
     if(name === 'mail') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="2" y="4" width="20" height="16" rx="2"/><Path d="M22 6l-10 7L2 6"/></Svg>
     if(name === 'credit-card') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="1" y="4" width="22" height="16" rx="2"/><Path d="M1 10h22"/></Svg>
     if(name === 'phone') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></Svg>
+    if(name === 'map-pin') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><Circle cx="12" cy="10" r="3"/></Svg>
     return null;
 }
 

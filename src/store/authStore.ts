@@ -11,6 +11,7 @@ interface User {
   nicFrontUrl: string | null;
   nicBackUrl: string | null;
   nicNumber: string;
+  permanentAddress: string | null;
   weightCapacity: number | string | null;
   vehicleType: string | null;
   termsAccepted: boolean;
