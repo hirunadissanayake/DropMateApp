@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Share,
   FlatList,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -50,6 +51,12 @@ const ParcelDetailsScreen = () => {
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [isTripModalVisible, setIsTripModalVisible] = useState(false);
   const [requestingMatch, setRequestingMatch] = useState(false);
+
+  // OTP & Payment State
+  const [otpCode, setOtpCode] = useState('');
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otpType, setOtpType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
+  const [processingOtp, setProcessingOtp] = useState(false);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -216,6 +223,107 @@ const ParcelDetailsScreen = () => {
         visible: true,
         title: "Error",
         message: error.message || "Failed to reject match.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInitiatePickup = async () => {
+    setLoading(true);
+    try {
+      await deliveryService.initiatePickup(token!, parcelId);
+      setAlertConfig({
+        visible: true,
+        title: "OTP Sent",
+        message: "A pickup OTP has been sent to the sender. Ask them for the code to confirm pickup.",
+        type: 'success',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          setOtpType('PICKUP');
+          setOtpModalVisible(true);
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: error.message || "Failed to initiate pickup.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length < 4) return;
+    setProcessingOtp(true);
+    try {
+      if (otpType === 'PICKUP') {
+        await deliveryService.verifyPickup(token!, parcelId, otpCode);
+        setOtpModalVisible(false);
+        setAlertConfig({
+          visible: true,
+          title: "Picked Up!",
+          message: "You have successfully picked up the parcel. It is now in transit.",
+          type: 'success',
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            fetchDetails();
+          }
+        });
+      } else {
+        await deliveryService.verifyDelivery(token!, parcelId, otpCode);
+        setOtpModalVisible(false);
+        setAlertConfig({
+          visible: true,
+          title: "Delivered!",
+          message: "Parcel delivered successfully. Payment has been processed.",
+          type: 'success',
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            fetchDetails();
+          }
+        });
+      }
+      setOtpCode('');
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Verification Failed",
+        message: error.message || "Invalid OTP code.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setProcessingOtp(false);
+    }
+  };
+
+  const handleInitiateDelivery = async () => {
+    setLoading(true);
+    try {
+      await deliveryService.initiateDelivery(token!, parcelId);
+      setAlertConfig({
+        visible: true,
+        title: "Delivery Started",
+        message: "A delivery OTP has been sent to the receiver. Ask them for the code to confirm delivery.",
+        type: 'success',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          setOtpType('DELIVERY');
+          setOtpModalVisible(true);
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: error.message || "Failed to initiate delivery.",
         type: 'error',
         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
       });
@@ -420,15 +528,25 @@ const ParcelDetailsScreen = () => {
             </View>
           )}
 
-          {/* Pricing Section */}
+          {/* Pricing & Payment Section */}
           <View style={styles.priceCard}>
             <LinearGradient
               colors={['#006C52', '#004D3A']}
               style={styles.priceGradient}
             >
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Total Price</Text>
-                <Text style={styles.priceValue}>LKR {parcel.price?.toLocaleString()}</Text>
+                <View>
+                  <Text style={styles.priceLabel}>Total Price</Text>
+                  <Text style={styles.priceValue}>LKR {parcel.price?.toLocaleString()}</Text>
+                </View>
+                <View style={styles.paymentBadge}>
+                  <Text style={styles.paymentMethodText}>
+                    {parcel.paymentMethod === 'ONLINE' ? 'ONLINE' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
+                  </Text>
+                  <Text style={[styles.paymentStatusText, { color: parcel.paymentStatus === 'PAID' ? '#4ADE80' : '#F87171' }]}>
+                    {parcel.paymentStatus}
+                  </Text>
+                </View>
               </View>
               <View style={styles.priceDivider} />
               <View style={styles.priceSubRows}>
@@ -443,6 +561,51 @@ const ParcelDetailsScreen = () => {
               </View>
             </LinearGradient>
           </View>
+
+          {/* Delivery Lifecycle Actions */}
+          {user?.id === parcel.matchedTrip?.travelerId && (
+            <View style={styles.actionSection}>
+              {parcel.status === 'MATCHED' && (
+                <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiatePickup}>
+                  <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                    <Text style={styles.actionButtonText}>Confirm Pickup</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+              {parcel.status === 'PICKED_UP' && (
+                <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiateDelivery}>
+                  <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                    <Text style={styles.actionButtonText}>Complete Delivery</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+              {parcel.status === 'DELIVERED' && (
+                <View style={styles.completedBadge}>
+                  <Text style={styles.completedText}>Delivered Successfully</Text>
+                </View>
+              )}
+              {/* Cash on Pickup warning: show at MATCHED step (before pickup) */}
+              {parcel.paymentMethod === 'CASH_ON_PICKUP' && parcel.status === 'MATCHED' && (
+                <View style={styles.cashWarningCard}>
+                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+                     <Circle cx="12" cy="12" r="10" />
+                     <Path d="M12 8v4M12 16h.01" />
+                   </Svg>
+                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} in cash from the SENDER before picking up the parcel.</Text>
+                </View>
+              )}
+              {/* Cash on Delivery warning: show at PICKED_UP step (before delivery) */}
+              {parcel.paymentMethod === 'CASH_ON_DELIVERY' && parcel.status === 'PICKED_UP' && (
+                <View style={styles.cashWarningCard}>
+                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+                     <Circle cx="12" cy="12" r="10" />
+                     <Path d="M12 8v4M12 16h.01" />
+                   </Svg>
+                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} in cash from the RECEIVER before handing over the parcel.</Text>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Incoming Match Requests */}
           {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user?.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
@@ -677,6 +840,55 @@ const ParcelDetailsScreen = () => {
                 <ActivityIndicator size="large" color="#006C52" />
               </View>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* OTP Verification Modal */}
+      <Modal
+        visible={otpModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.otpOverlay}>
+          <View style={styles.otpContent}>
+            <Text style={styles.otpTitle}>{otpType === 'PICKUP' ? 'Verify Pickup' : 'Verify Delivery'}</Text>
+            <Text style={styles.otpSubtitle}>
+              {otpType === 'PICKUP' 
+                ? "Enter the 6-digit code provided by the sender." 
+                : "Enter the 6-digit code provided by the receiver."}
+            </Text>
+            
+            <View style={styles.otpInputContainer}>
+              <TextInput
+                style={styles.otpInput}
+                placeholder="000000"
+                keyboardType="number-pad"
+                maxLength={6}
+                value={otpCode}
+                onChangeText={setOtpCode}
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.otpActions}>
+              <TouchableOpacity 
+                style={styles.otpCancelBtn} 
+                onPress={() => {
+                  setOtpModalVisible(false);
+                  setOtpCode('');
+                }}
+              >
+                <Text style={styles.otpCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.otpConfirmBtn, otpCode.length < 4 && { opacity: 0.5 }]} 
+                onPress={handleVerifyOtp}
+                disabled={otpCode.length < 4 || processingOtp}
+              >
+                {processingOtp ? <ActivityIndicator color="#FFF" /> : <Text style={styles.otpConfirmText}>Verify Code</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1344,6 +1556,147 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: Typography.bold,
     color: '#006C52',
+  },
+  paymentBadge: {
+    alignItems: 'flex-end',
+  },
+  paymentMethodText: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontFamily: Typography.bold,
+    marginBottom: 2,
+  },
+  paymentStatusText: {
+    fontSize: 14,
+    fontFamily: Typography.bold,
+  },
+  actionSection: {
+    marginTop: 24,
+    gap: 12,
+  },
+  primaryActionButton: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 6,
+  },
+  actionGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: Typography.bold,
+    letterSpacing: 0.5,
+  },
+  completedBadge: {
+    backgroundColor: '#DCFBEB',
+    paddingVertical: 18,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  completedText: {
+    color: '#059669',
+    fontSize: 16,
+    fontFamily: Typography.bold,
+  },
+  cashWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFFBEB',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+  },
+  cashWarningText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#92400E',
+    fontFamily: Typography.medium,
+  },
+  otpOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  otpContent: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 32,
+    padding: 30,
+    alignItems: 'center',
+  },
+  otpTitle: {
+    fontSize: 22,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    marginBottom: 8,
+  },
+  otpSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 24,
+    fontFamily: Typography.regular,
+  },
+  otpInputContainer: {
+    width: '100%',
+    marginBottom: 30,
+  },
+  otpInput: {
+    height: 70,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    fontSize: 32,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    textAlign: 'center',
+    letterSpacing: 8,
+  },
+  otpActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  otpCancelBtn: {
+    flex: 1,
+    height: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  otpCancelText: {
+    color: '#64748B',
+    fontSize: 15,
+    fontFamily: Typography.bold,
+  },
+  otpConfirmBtn: {
+    flex: 2,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: '#006C52',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otpConfirmText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: Typography.bold,
   },
 });
 

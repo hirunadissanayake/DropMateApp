@@ -41,5 +41,9 @@ export const ENDPOINTS = {
     PENDING_MATCHES: `${BASE_URL}/api/delivery/pending-matches`,
     ACCEPT_MATCH: (id: string) => `${BASE_URL}/api/delivery/match/${id}/accept`,
     REJECT_MATCH: (id: string) => `${BASE_URL}/api/delivery/match/${id}/reject`,
+    INITIATE_PICKUP: `${BASE_URL}/api/delivery/pickup/initiate`,
+    VERIFY_PICKUP: `${BASE_URL}/api/delivery/pickup/verify`,
+    INITIATE_DELIVERY: `${BASE_URL}/api/delivery/delivery/initiate`,
+    VERIFY_DELIVERY: `${BASE_URL}/api/delivery/delivery/verify`,
   },
 };

@@ -44,3 +44,47 @@ export const rejectMatch = async (token: string, matchId: string) => {
     throw error.response?.data || error;
   }
 };
+
+export const initiatePickup = async (token: string, parcelId: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.DELIVERY.INITIATE_PICKUP, { parcelId }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const verifyPickup = async (token: string, parcelId: string, code: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.DELIVERY.VERIFY_PICKUP, { parcelId, code }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const initiateDelivery = async (token: string, parcelId: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.DELIVERY.INITIATE_DELIVERY, { parcelId }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const verifyDelivery = async (token: string, parcelId: string, code: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.DELIVERY.VERIFY_DELIVERY, { parcelId, code }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};

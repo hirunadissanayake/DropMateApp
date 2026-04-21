@@ -14,6 +14,7 @@ export const createParcel = async (token: string, data: any) => {
   formData.append('receiverPhone', data.receiverPhone);
   formData.append('deliveryMethod', data.deliveryMethod);
   formData.append('note', data.note || '');
+  formData.append('paymentMethod', data.paymentMethod || 'ONLINE');
 
   // Append images
   if (data.images && data.images.length > 0) {

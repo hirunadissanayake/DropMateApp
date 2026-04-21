@@ -47,6 +47,7 @@ const CreateParcelScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
   const [additionalNote, setAdditionalNote] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('CASH_ON_DELIVERY');
   const [loading, setLoading] = useState(false);
   
   const [fromLocationList, setFromLocationList] = useState<string[]>([]);
@@ -250,6 +251,7 @@ const CreateParcelScreen = () => {
         receiverPhone: phoneNumber,
         deliveryMethod: method,
         note: additionalNote,
+        paymentMethod: paymentMethod,
       };
 
       const response = await parcelService.createParcel(token!, data);
@@ -403,6 +405,42 @@ const CreateParcelScreen = () => {
                     <Text style={styles.methodText}>{method}</Text>
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.fieldSection}>
+                <Text style={styles.fieldLabel}>PAYMENT METHOD</Text>
+                <View style={styles.paymentMethodContainer}>
+                  <TouchableOpacity 
+                    style={[styles.paymentOption, paymentMethod === 'ONLINE' && styles.paymentOptionActive]}
+                    onPress={() => setPaymentMethod('ONLINE')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.paymentOptionText, paymentMethod === 'ONLINE' && styles.paymentOptionTextActive]}>Online Payment</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.paymentOption, paymentMethod === 'CASH_ON_PICKUP' && styles.paymentOptionActive]}
+                    onPress={() => setPaymentMethod('CASH_ON_PICKUP')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.paymentOptionText, paymentMethod === 'CASH_ON_PICKUP' && styles.paymentOptionTextActive]}>Cash on Pickup</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.paymentOption, paymentMethod === 'CASH_ON_DELIVERY' && styles.paymentOptionActive]}
+                    onPress={() => setPaymentMethod('CASH_ON_DELIVERY')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.paymentOptionText, paymentMethod === 'CASH_ON_DELIVERY' && styles.paymentOptionTextActive]}>Cash on Delivery</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.paymentInfoText}>
+                  {paymentMethod === 'ONLINE' 
+                    ? "Payment is held securely by DropMate until delivery is confirmed."
+                    : paymentMethod === 'CASH_ON_PICKUP'
+                    ? "Sender pays the traveler in cash when handing over the parcel."
+                    : "Receiver pays the traveler in cash upon successful delivery."}
+                </Text>
               </View>
             </View>
 
@@ -729,6 +767,40 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: Typography.medium,
     lineHeight: 45,
+  },
+  paymentMethodContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  paymentOption: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentOptionActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
+  },
+  paymentOptionText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+  },
+  paymentOptionTextActive: {
+    color: '#059669',
+    fontFamily: Typography.bold,
+  },
+  paymentInfoText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.regular,
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   priceCard: {
     backgroundColor: '#004D3A',
