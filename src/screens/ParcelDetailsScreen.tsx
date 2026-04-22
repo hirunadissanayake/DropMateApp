@@ -16,6 +16,7 @@ import {
   Share,
   FlatList,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -58,6 +59,7 @@ const ParcelDetailsScreen = () => {
   const [otpType, setOtpType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
   const [processingOtp, setProcessingOtp] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -87,7 +89,13 @@ const ParcelDetailsScreen = () => {
       console.error('Fetch details error:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDetails();
   };
 
   const getStatusColor = (status: string) => {
@@ -360,7 +368,18 @@ const ParcelDetailsScreen = () => {
         colors={['#F0FFF8', '#FFFFFF']}
         style={StyleSheet.absoluteFillObject}
       />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={['#006C52']} 
+            tintColor="#006C52"
+          />
+        }
+      >
         {/* Image Gallery */}
         <View style={styles.imageContainer}>
           <ScrollView

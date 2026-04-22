@@ -207,12 +207,36 @@ const ShipmentsScreen = () => {
               {item.status.toUpperCase() === 'MATCHED' ? 'ACCEPTED' : item.status}
             </Text>
           </View>
+
+          {/* Payment Method & Status Badge */}
+          <View style={[
+            styles.paymentBadge, 
+            { backgroundColor: item.paymentMethod === 'ONLINE' ? '#EFF6FF' : '#FFFBEB' }
+          ]}>
+             <Text style={[
+               styles.paymentBadgeText, 
+               { color: item.paymentMethod === 'ONLINE' ? '#2563EB' : '#D97706' }
+             ]}>
+               {item.paymentMethod === 'ONLINE' ? 'CARD' : item.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH (PICKUP)' : 'CASH (DELIVERY)'}
+             </Text>
+             <Text style={[styles.paymentStatusDot, { color: item.paymentStatus === 'PAID' ? '#059669' : '#94A3B8' }]}>
+               {" • "}
+             </Text>
+             <Text style={[
+               styles.paymentStatusText, 
+               { color: item.paymentStatus === 'PAID' ? '#059669' : '#D97706' }
+             ]}>
+               {item.paymentStatus}
+             </Text>
+          </View>
+
           {item.isRequested && item.status === 'PENDING' && (
             <View style={styles.requestedBadgeSmall}>
               <Text style={styles.requestedBadgeText}>REQUESTED</Text>
             </View>
           )}
         </View>
+
       </View>
 
       <View style={styles.routeContainer}>
@@ -240,41 +264,6 @@ const ShipmentsScreen = () => {
           <Text style={styles.detailLabel}>PRICE</Text>
           <Text style={styles.detailValue}>LKR {item.price.toLocaleString()}</Text>
         </View>
-
-        {(item.status === 'PENDING' || item.status === 'CANCELLED' || (item.status === 'MATCHED' && item.paymentMethod === 'ONLINE' && item.paymentStatus === 'PENDING')) && (
-          <>
-            <View style={styles.footerDivider} />
-            <View style={styles.actionCol}>
-              {item.status === 'PENDING' ? (
-                <TouchableOpacity 
-                  style={styles.cancelBtnSmall} 
-                  onPress={() => handleCancelPress(item.id)}
-                >
-                  <Text style={styles.cancelBtnTextSmall}>Cancel</Text>
-                </TouchableOpacity>
-              ) : item.status === 'MATCHED' && item.paymentMethod === 'ONLINE' && item.paymentStatus === 'PENDING' ? (
-                <TouchableOpacity 
-                  style={styles.payBtnSmall} 
-                  onPress={() => handlePay(item.id)}
-                  disabled={!!payingParcelId}
-                >
-                  {payingParcelId === item.id ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.payBtnTextSmall}>Pay Card</Text>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity 
-                  style={styles.deleteBtnSmall} 
-                  onPress={() => handleDeletePress(item.id)}
-                >
-                  <Text style={styles.deleteBtnTextSmall}>Delete</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -545,6 +534,28 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  paymentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  paymentBadgeText: {
+    fontSize: 9,
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  paymentStatusDot: {
+    fontSize: 10,
+    fontFamily: Typography.bold,
+  },
+  paymentStatusText: {
+    fontSize: 9,
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
   },
   requestedBadgeSmall: {
     backgroundColor: '#006C52',

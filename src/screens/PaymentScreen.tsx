@@ -3,22 +3,30 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
+  StatusBar,
+  ScrollView,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import BackButton from '../components/common/BackButton';
 import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as paymentService from '../services/paymentService';
 import CustomAlert from '../components/common/CustomAlert';
+import { ENDPOINTS } from '../utils/endPoints';
 
 // Import PayHere SDK
 import PayHere from '@payhere/payhere-mobilesdk-reactnative';
+
+const BRAND_GREEN = '#00875A';
+const BRAND_DARK = '#004D3A';
 
 export default function PaymentScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -37,9 +45,9 @@ export default function PaymentScreen() {
   });
 
   // ── Polls the backend every 2s to verify the PayHere webhook was received ──
-  const pollPaymentStatus = (maxRetries = 10) => {
+  const pollPaymentStatus = (maxRetries = 15) => {
     let retries = 0;
-    setStatusText('Verifying payment...');
+    setStatusText('Syncing with payment server...');
 
     const interval = setInterval(async () => {
       retries++;
@@ -76,15 +84,14 @@ export default function PaymentScreen() {
         console.error('Polling error:', e);
       }
 
-      // Stop polling after max retries to avoid infinite loop
       if (retries >= maxRetries) {
         clearInterval(interval);
         setIsProcessing(false);
         setStatusText('');
         setAlertConfig({
           visible: true,
-          title: 'Verification Timeout',
-          message: 'We could not verify your payment automatically. Please check your parcel status.',
+          title: 'Verification Pending',
+          message: 'Your payment is being processed. It will reflect in your shipment status shortly.',
           type: 'info',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
@@ -92,29 +99,26 @@ export default function PaymentScreen() {
           },
         });
       }
-    }, 2000); // Poll every 2 seconds
+    }, 2000);
   };
 
   const handlePayHerePayment = async () => {
     setIsProcessing(true);
-    setStatusText('Preparing payment...');
+    setStatusText('Preparing secure gateway...');
 
     try {
-      // ── Step 1: Fetch the secure hash from our backend ──
       const hashData = await paymentService.generatePaymentHash(token!, parcelId);
 
-      // ── Step 2: Build the PayHere payment object ──
       const paymentObject = {
         sandbox: hashData.sandbox,
         merchant_id: hashData.merchant_id,
-        notify_url: 'https://drop-mate.onrender.com/api/payment/webhook',
+        notify_url: ENDPOINTS.PAYMENT.WEBHOOK,
         order_id: hashData.order_id,
         items: 'DropMate Parcel Delivery',
-        amount: hashData.amount,      // Already formatted as "1000.00" from backend
+        amount: hashData.amount,
         currency: hashData.currency,
-        hash: hashData.hash,          // Cryptographically signed by our backend
+        hash: hashData.hash,
 
-        // Customer details — hardcoded for now, can be fetched from user profile later
         first_name: 'Customer',
         last_name: 'DropMate',
         email: 'customer@dropmate.com',
@@ -126,16 +130,12 @@ export default function PaymentScreen() {
 
       setStatusText('');
 
-      // ── Step 3: Launch the PayHere SDK ──
       PayHere.startPayment(
         paymentObject,
         (_paymentId: string) => {
-          // ✅ PayHere SDK says "success" — but we trust our backend webhook, not this callback.
-          // Start polling the backend to confirm the webhook was received.
           pollPaymentStatus();
         },
         (errorData) => {
-          // ❌ PayHere reported an error
           setIsProcessing(false);
           setStatusText('');
           setAlertConfig({
@@ -147,7 +147,6 @@ export default function PaymentScreen() {
           });
         },
         () => {
-          // 🚪 User closed the PayHere sheet without paying
           setIsProcessing(false);
           setStatusText('');
         }
@@ -158,8 +157,8 @@ export default function PaymentScreen() {
       setStatusText('');
       setAlertConfig({
         visible: true,
-        title: 'Error',
-        message: error?.message || 'Could not initialize payment. Please try again.',
+        title: 'Initialization Error',
+        message: error?.message || 'Could not connect to payment provider.',
         type: 'error',
         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
       });
@@ -167,140 +166,221 @@ export default function PaymentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>Checkout</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>Total to Pay</Text>
-          <Text style={styles.amountValue}>LKR {amount.toLocaleString()}</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.header}>
+          <BackButton onPress={() => navigation.goBack()} />
+          <Text style={styles.headerTitle}>Secure Checkout</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            You will be redirected to the secure PayHere payment gateway. You can pay using your Visa, Mastercard, EzCash, or mCash.
-          </Text>
-        </View>
-      </View>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.summaryCard}>
+             <Text style={styles.summaryLabel}>PAYMENT FOR</Text>
+             <Text style={styles.parcelId}>Parcel #{parcelId.slice(-8).toUpperCase()}</Text>
+             
+             <View style={styles.divider} />
+             
+             <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Delivery Fee</Text>
+                <Text style={styles.priceValue}>LKR {amount.toLocaleString()}</Text>
+             </View>
+             <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Processing Fee</Text>
+                <Text style={styles.priceValue}>LKR 0.00</Text>
+             </View>
+             
+             <View style={[styles.priceRow, { marginTop: 12 }]}>
+                <Text style={styles.totalLabel}>Total Amount</Text>
+                <Text style={styles.totalValue}>LKR {amount.toLocaleString()}</Text>
+             </View>
+          </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.payButton, isProcessing && styles.payButtonDisabled]} 
-          onPress={handlePayHerePayment}
-          disabled={isProcessing}
-        >
-          <LinearGradient 
-            colors={isProcessing ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']} 
-            style={styles.payGradient}
+          <View style={styles.trustSection}>
+             <Text style={styles.trustText}>ACCEPTED PAYMENT METHODS</Text>
+             <View style={styles.methodRow}>
+                <View style={styles.methodIcon}><Text style={styles.methodIconText}>VISA</Text></View>
+                <View style={styles.methodIcon}><Text style={styles.methodIconText}>MC</Text></View>
+                <View style={styles.methodIcon}><Text style={styles.methodIconText}>AMEX</Text></View>
+                <View style={styles.methodIcon}><Text style={styles.methodIconText}>M-CASH</Text></View>
+             </View>
+             
+             <View style={styles.infoBox}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                   <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
+                </Svg>
+                <Text style={styles.infoText}>
+                   Your payment is processed securely via PayHere. We do not store your card details.
+                </Text>
+             </View>
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <TouchableOpacity 
+            style={[styles.payButton, isProcessing && styles.payButtonDisabled]} 
+            onPress={handlePayHerePayment}
+            disabled={isProcessing}
+            activeOpacity={0.8}
           >
-            {isProcessing ? (
-              <View style={{ alignItems: 'center' }}>
-                <ActivityIndicator color="#FFFFFF" />
-                {statusText ? (
-                  <Text style={[styles.payButtonText, { fontSize: 12, marginTop: 6, opacity: 0.8 }]}>
-                    {statusText}
-                  </Text>
-                ) : null}
-              </View>
-            ) : (
-              <Text style={styles.payButtonText}>Proceed to PayHere</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+            <LinearGradient 
+              colors={isProcessing ? ['#CBD5E1', '#94A3B8'] : [BRAND_GREEN, BRAND_DARK]} 
+              style={styles.payGradient}
+            >
+              {isProcessing ? (
+                <View style={styles.processingRow}>
+                  <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 12 }} />
+                  <Text style={styles.processingText}>{statusText || 'Processing...'}</Text>
+                </View>
+              ) : (
+                <View style={styles.payBtnRow}>
+                   <Text style={styles.payButtonText}>Pay LKR {amount.toLocaleString()}</Text>
+                   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                      <Path d="M5 12h14M12 5l7 7-7 7" />
+                   </Svg>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+          <Text style={styles.secureNote}>🔒 SSL SECURE PAYMENT</Text>
+        </View>
+      </SafeAreaView>
 
       <CustomAlert
         visible={alertConfig.visible}
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
-        confirmText="OK"
+        confirmText="Done"
         onConfirm={alertConfig.onConfirm}
-        onCancel={alertConfig.onConfirm}
+        onCancel={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: Typography.bold,
-    color: '#0F172A',
+  headerTitle: { 
+    fontSize: 18, 
+    fontFamily: Typography.bold, 
+    color: '#0F172A' 
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    paddingTop: 40,
-  },
-  amountContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  amountLabel: {
-    fontSize: 16,
-    color: '#64748B',
-    fontFamily: Typography.medium,
-    marginBottom: 8,
-  },
-  amountValue: {
-    fontSize: 42,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
+  scrollContent: { padding: 24 },
+  summaryCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 24,
+    padding: 24,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    width: '100%',
+    marginBottom: 32,
   },
-  infoText: {
-    fontSize: 15,
-    color: '#475569',
+  summaryLabel: { 
+    fontSize: 11, 
+    fontFamily: Typography.bold, 
+    color: '#94A3B8',
+    letterSpacing: 1,
+    marginBottom: 8
+  },
+  parcelId: { 
+    fontSize: 20, 
+    fontFamily: Typography.bold, 
+    color: '#1E293B',
+    marginBottom: 20
+  },
+  divider: { 
+    height: 1, 
+    backgroundColor: '#E2E8F0', 
+    marginBottom: 20,
+    borderStyle: 'dashed'
+  },
+  priceRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 12 
+  },
+  priceLabel: { fontSize: 14, fontFamily: Typography.medium, color: '#64748B' },
+  priceValue: { fontSize: 14, fontFamily: Typography.bold, color: '#1E293B' },
+  totalLabel: { fontSize: 16, fontFamily: Typography.bold, color: '#0F172A' },
+  totalValue: { fontSize: 22, fontFamily: Typography.bold, color: BRAND_GREEN },
+  trustSection: { alignItems: 'center' },
+  trustText: { 
+    fontSize: 11, 
+    fontFamily: Typography.bold, 
+    color: '#94A3B8',
+    letterSpacing: 1,
+    marginBottom: 16
+  },
+  methodRow: { 
+    flexDirection: 'row', 
+    gap: 10, 
+    marginBottom: 32 
+  },
+  methodIcon: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  methodIconText: { fontSize: 10, fontFamily: Typography.bold, color: '#475569' },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+    alignItems: 'center'
+  },
+  infoText: { 
+    flex: 1, 
+    fontSize: 13, 
+    color: '#64748B', 
     fontFamily: Typography.medium,
-    textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 18
   },
-  footer: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
+  footer: { 
+    padding: 24, 
+    borderTopWidth: 1, 
     borderTopColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF'
   },
-  payButton: {
-    borderRadius: 12,
+  payButton: { 
+    borderRadius: 20, 
     overflow: 'hidden',
+    marginBottom: 16
   },
-  payButtonDisabled: {
-    opacity: 0.7,
+  payButtonDisabled: { opacity: 0.8 },
+  payGradient: { 
+    paddingVertical: 18, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
-  payGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  payBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  payButtonText: { 
+    color: '#FFFFFF', 
+    fontSize: 16, 
+    fontFamily: Typography.bold 
   },
-  payButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: Typography.bold,
+  processingRow: { flexDirection: 'row', alignItems: 'center' },
+  processingText: { color: '#FFFFFF', fontSize: 14, fontFamily: Typography.medium },
+  secureNote: { 
+    textAlign: 'center', 
+    fontSize: 11, 
+    fontFamily: Typography.bold, 
+    color: '#94A3B8',
+    letterSpacing: 1
   },
 });

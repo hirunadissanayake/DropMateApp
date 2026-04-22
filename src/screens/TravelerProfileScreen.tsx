@@ -248,6 +248,22 @@ const TravelerProfileScreen = () => {
 
           <View style={styles.settingsSection}>
             <Text style={styles.sectionHeaderTitle}>Account Overview</Text>
+
+              <TouchableOpacity 
+              style={styles.itemRow}
+              onPress={() => navigation.navigate('PersonalDetails')}
+            >
+              <View style={styles.itemIconBox}>
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.5"><Circle cx="12" cy="7" r="4"/><Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></Svg>
+              </View>
+              <View style={{ flex: 1 }}>
+                  <Text style={styles.itemLabel}>Personal Details</Text>
+                  <Text style={styles.itemSubLabel}>Identify, Documents & Status</Text>
+              </View>
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+                  <Path d="M9 18l6-6-6-6" />
+              </Svg>
+            </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.itemRow}
@@ -263,22 +279,6 @@ const TravelerProfileScreen = () => {
               <View style={{ flex: 1 }}>
                   <Text style={styles.itemLabel}>My Earnings</Text>
                   <Text style={styles.itemSubLabel}>Balance, History & Withdrawals</Text>
-              </View>
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
-                  <Path d="M9 18l6-6-6-6" />
-              </Svg>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.itemRow}
-              onPress={() => navigation.navigate('PersonalDetails')}
-            >
-              <View style={styles.itemIconBox}>
-                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.5"><Circle cx="12" cy="7" r="4"/><Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></Svg>
-              </View>
-              <View style={{ flex: 1 }}>
-                  <Text style={styles.itemLabel}>Personal Details</Text>
-                  <Text style={styles.itemSubLabel}>Identify, Documents & Status</Text>
               </View>
               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
                   <Path d="M9 18l6-6-6-6" />

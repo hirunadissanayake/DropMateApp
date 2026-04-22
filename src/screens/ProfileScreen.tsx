@@ -231,7 +231,7 @@ const ProfileScreen = () => {
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>Account Overview</Text>
           
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             style={styles.itemRow}
             onPress={() => navigation.navigate('Wallet')}
           >
@@ -249,7 +249,7 @@ const ProfileScreen = () => {
             <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
                 <Path d="M9 18l6-6-6-6" />
             </Svg>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity 
             style={styles.itemRow}
