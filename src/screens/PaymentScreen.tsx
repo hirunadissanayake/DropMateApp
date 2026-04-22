@@ -19,6 +19,7 @@ import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as paymentService from '../services/paymentService';
+import * as authService from '../services/authService';
 import CustomAlert from '../components/common/CustomAlert';
 import { ENDPOINTS } from '../utils/endPoints';
 
@@ -32,7 +33,7 @@ export default function PaymentScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Payment'>>();
   const { parcelId, amount } = route.params;
-  const { token } = useAuthStore();
+  const { token, user, setUser } = useAuthStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState('');
@@ -43,6 +44,21 @@ export default function PaymentScreen() {
     type: 'success' as 'success' | 'error' | 'info',
     onConfirm: () => {},
   });
+
+  // Refresh user profile if missing email/phone
+  React.useEffect(() => {
+    const refreshProfile = async () => {
+      if (token && (!user?.email || !user?.phone)) {
+        try {
+          const latestUser = await authService.getMe(token);
+          setUser(latestUser);
+        } catch (error) {
+          console.error('Failed to refresh profile in PaymentScreen:', error);
+        }
+      }
+    };
+    refreshProfile();
+  }, [token, user?.email, user?.phone]);
 
   // ── Polls the backend every 2s to verify the PayHere webhook was received ──
   const pollPaymentStatus = (maxRetries = 15) => {
@@ -119,12 +135,12 @@ export default function PaymentScreen() {
         currency: hashData.currency,
         hash: hashData.hash,
 
-        first_name: 'Customer',
-        last_name: 'DropMate',
-        email: 'customer@dropmate.com',
-        phone: '0771234567',
-        address: 'Colombo',
-        city: 'Colombo',
+        first_name: user?.name?.split(' ')[0] || 'Customer',
+        last_name: user?.name?.split(' ').slice(1).join(' ') || 'User',
+        email: user?.email || 'customer@dropmate.com',
+        phone: user?.phone || '0770000000',
+        address: user?.permanentAddress || 'Sri Lanka',
+        city: user?.city || 'Colombo',
         country: 'Sri Lanka',
       };
 

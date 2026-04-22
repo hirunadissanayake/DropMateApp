@@ -91,6 +91,7 @@ const PersonalDetailsScreen = () => {
                     <InfoRow label="Email Address" value={user?.email} icon="mail" />
                     <InfoRow label="NIC Number" value={user?.nicNumber} icon="credit-card" />
                     <InfoRow label="Permanent Address" value={user?.permanentAddress} icon="map-pin" />
+                    <InfoRow label="City" value={user?.city} icon="map-pin" />
                     <InfoRow label="Phone Number" value={user?.phone} icon="phone" />
                 </View>
             </View>

@@ -14,6 +14,8 @@ import {
   Alert,
   RefreshControl,
   StatusBar,
+  PermissionsAndroid,
+  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -47,7 +49,7 @@ const CreateParcelScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
   const [additionalNote, setAdditionalNote] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('CASH_ON_DELIVERY');
+  const [paymentMethod, setPaymentMethod] = useState('ONLINE');
   const [loading, setLoading] = useState(false);
   
   const [fromLocationList, setFromLocationList] = useState<string[]>([]);
@@ -157,6 +159,33 @@ const CreateParcelScreen = () => {
 
   const pickImageFromCamera = async () => {
     try {
+      if (Platform.OS === 'android') {
+        const hasPermission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+        if (!hasPermission) {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: 'Camera Access Required',
+              message: 'DropMate requires camera access to take photos of your parcel.',
+              buttonNeutral: 'Later',
+              buttonNegative: 'Deny',
+              buttonPositive: 'Allow Access',
+            }
+          );
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+              Toast.show({
+                type: 'error',
+                text1: 'Permission Required',
+                text2: 'Please enable camera access in Settings.',
+                onPress: () => Linking.openSettings()
+              });
+            }
+            return;
+          }
+        }
+      }
+
       const result = await launchCamera({
         mediaType: 'photo',
         quality: 0.8,
@@ -395,6 +424,7 @@ const CreateParcelScreen = () => {
                     value={weight}
                     onChangeText={setWeight}
                     placeholder="0.0"
+                    placeholderTextColor="#000000"
                   />
                   <ErrorMessage message={errors.weight} />
                 </View>

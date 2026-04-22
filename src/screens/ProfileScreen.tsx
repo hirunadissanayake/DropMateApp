@@ -217,7 +217,7 @@ const ProfileScreen = () => {
               style={styles.nameDisplayRow}
               onPress={() => setIsEditing(true)}
             >
-              <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
+                <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
               <View style={styles.nameEditIcon}>
                 <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
                   <Path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
