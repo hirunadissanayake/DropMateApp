@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   StatusBar,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -45,6 +46,7 @@ const TripDetailsScreen = () => {
   const [newCapacity, setNewCapacity] = useState('');
   const [updatingCapacity, setUpdatingCapacity] = useState(false);
   const [allRequested, setAllRequested] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: '',
@@ -54,6 +56,12 @@ const TripDetailsScreen = () => {
     onCancel: () => {},
     confirmText: 'OK'
   });
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchDetails();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     fetchDetails();
@@ -233,6 +241,12 @@ const TripDetailsScreen = () => {
         return '#FEE2E2';
       case 'IN_TRANSIT':
         return '#DBEAFE';
+      case 'MATCHED':
+        return '#E0E7FF';
+      case 'PICKED_UP':
+        return '#FEF08A';
+      case 'DELIVERED':
+        return '#D1FAE5';
       default:
         return '#F1F5F9';
     }
@@ -250,6 +264,12 @@ const TripDetailsScreen = () => {
         return '#DC2626';
       case 'IN_TRANSIT':
         return '#2563EB';
+      case 'MATCHED':
+        return '#4338CA';
+      case 'PICKED_UP':
+        return '#A16207';
+      case 'DELIVERED':
+        return '#059669';
       default:
         return '#475569';
     }
@@ -330,7 +350,10 @@ const TripDetailsScreen = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#006C52']} />
+        }>
         
         {/* Action Button for Customers */}
         {user?.roleActive === 'CUSTOMER' && trip.travelerId !== user.id && trip.status === 'ACTIVE' && (
@@ -536,9 +559,29 @@ const TripDetailsScreen = () => {
                     </Svg>
                   </View>
                   <View style={styles.parcelInfo}>
-                    <Text style={styles.parcelName} numberOfLines={1}>
-                      {parcel.name}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 8 }}>
+                      <Text style={[styles.parcelName, { flex: 1 }]} numberOfLines={1}>
+                        {parcel.name}
+                      </Text>
+                      {parcel.status && (
+                        <View style={{
+                           backgroundColor: getStatusBg(parcel.status),
+                           paddingHorizontal: 8,
+                           paddingVertical: 2,
+                           borderRadius: 12,
+                           marginLeft: 8
+                        }}>
+                           <Text style={{
+                             fontSize: 10,
+                             fontFamily: Typography.bold,
+                             color: getStatusColor(parcel.status),
+                             textTransform: 'uppercase'
+                           }}>
+                             {parcel.status.replace('_', ' ')}
+                           </Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.parcelMeta}>
                       {parcel.weight} kg • {parcel.fromLocation} to{' '}
                       {parcel.toLocation}

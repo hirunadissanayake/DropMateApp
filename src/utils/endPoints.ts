@@ -23,6 +23,7 @@ export const ENDPOINTS = {
     MY_PARCELS: `${BASE_URL}/api/parcels/my`,
     ACTIVE: `${BASE_URL}/api/parcels/active`,
     CANCEL: (id: string) => `${BASE_URL}/api/parcels/${id}/cancel`,
+    PAY: (id: string) => `${BASE_URL}/api/parcels/${id}/pay`,
     DELETE: (id: string) => `${BASE_URL}/api/parcels/${id}`,
   },
   TRIPS: {

@@ -57,6 +57,7 @@ const ParcelDetailsScreen = () => {
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [otpType, setOtpType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
   const [processingOtp, setProcessingOtp] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -186,6 +187,7 @@ const ParcelDetailsScreen = () => {
         title: "Match Accepted!",
         message: "You have successfully matched with this traveler. You can now see their contact details.",
         type: 'info',
+        confirmText: 'OK',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
           fetchDetails(); // Refresh to show matched status and contact info
@@ -240,6 +242,7 @@ const ParcelDetailsScreen = () => {
         title: "OTP Sent",
         message: "A pickup OTP has been sent to the sender. Ask them for the code to confirm pickup.",
         type: 'success',
+        confirmText: 'OK',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
           setOtpType('PICKUP');
@@ -271,6 +274,7 @@ const ParcelDetailsScreen = () => {
           title: "Picked Up!",
           message: "You have successfully picked up the parcel. It is now in transit.",
           type: 'success',
+          confirmText: 'OK',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
             fetchDetails();
@@ -284,6 +288,7 @@ const ParcelDetailsScreen = () => {
           title: "Delivered!",
           message: "Parcel delivered successfully. Payment has been processed.",
           type: 'success',
+          confirmText: 'OK',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
             fetchDetails();
@@ -313,6 +318,7 @@ const ParcelDetailsScreen = () => {
         title: "Delivery Started",
         message: "A delivery OTP has been sent to the receiver. Ask them for the code to confirm delivery.",
         type: 'success',
+        confirmText: 'OK',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
           setOtpType('DELIVERY');
@@ -329,6 +335,33 @@ const ParcelDetailsScreen = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePay = async () => {
+    setPaying(true);
+    try {
+      await parcelService.payParcel(token!, parcelId);
+      setAlertConfig({
+        visible: true,
+        title: "Payment Successful",
+        message: "Your payment has been received and is held securely by DropMate. The traveler can now proceed with the pickup.",
+        type: 'success',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+          fetchDetails();
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Payment Failed",
+        message: error.message || "Something went wrong while processing your payment.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -541,7 +574,7 @@ const ParcelDetailsScreen = () => {
                 </View>
                 <View style={styles.paymentBadge}>
                   <Text style={styles.paymentMethodText}>
-                    {parcel.paymentMethod === 'ONLINE' ? 'ONLINE' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
+                    {parcel.paymentMethod === 'ONLINE' ? 'CARD PAYMENT' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
                   </Text>
                   <Text style={[styles.paymentStatusText, { color: parcel.paymentStatus === 'PAID' ? '#4ADE80' : '#F87171' }]}>
                     {parcel.paymentStatus}
@@ -561,6 +594,26 @@ const ParcelDetailsScreen = () => {
               </View>
             </LinearGradient>
           </View>
+
+          {/* Customer Payment Action */}
+          {user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.paymentMethod === 'ONLINE' && parcel.paymentStatus === 'PENDING' && (
+            <View style={styles.actionSection}>
+              <TouchableOpacity 
+                style={styles.primaryActionButton} 
+                onPress={handlePay}
+                disabled={paying}
+              >
+                <LinearGradient colors={['#3B82F6', '#2563EB']} style={styles.actionGradient}>
+                  {paying ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.actionButtonText}>Pay with Card (LKR {parcel.price?.toLocaleString()})</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+              <Text style={styles.paymentWaitText}>The traveler is waiting for your payment to start the pickup.</Text>
+            </View>
+          )}
 
           {/* Delivery Lifecycle Actions */}
           {user?.id === parcel.matchedTrip?.travelerId && (
@@ -1607,6 +1660,13 @@ const styles = StyleSheet.create({
     color: '#059669',
     fontSize: 16,
     fontFamily: Typography.bold,
+  },
+  paymentWaitText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+    textAlign: 'center',
+    marginTop: 4,
   },
   cashWarningCard: {
     flexDirection: 'row',

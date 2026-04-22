@@ -40,6 +40,8 @@ interface Parcel {
   imageUrls: string[];
   createdAt: string;
   isRequested?: boolean;
+  paymentMethod: string;
+  paymentStatus: string;
 }
 
 const ShipmentsScreen = () => {
@@ -55,6 +57,7 @@ const ShipmentsScreen = () => {
   const [cancellingParcelId, setCancellingParcelId] = useState<string | null>(null);
   const [deletingParcelId, setDeletingParcelId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [payingParcelId, setPayingParcelId] = useState<string | null>(null);
 
   const fetchParcels = async () => {
     if (!token) return;
@@ -144,6 +147,28 @@ const ShipmentsScreen = () => {
     }
   };
 
+  const handlePay = async (id: string) => {
+    if (!token) return;
+    setPayingParcelId(id);
+    try {
+      await parcelService.payParcel(token, id);
+      Toast.show({
+        type: 'success',
+        text1: 'Payment Successful',
+        text2: 'Card payment received. Traveler can now pick up.',
+      });
+      fetchParcels();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Payment Failed',
+        text2: error.message || 'Something went wrong',
+      });
+    } finally {
+      setPayingParcelId(null);
+    }
+  };
+
   const renderParcelItem = ({ item }: { item: Parcel }) => (
     <TouchableOpacity 
       style={styles.parcelCard}
@@ -216,7 +241,7 @@ const ShipmentsScreen = () => {
           <Text style={styles.detailValue}>LKR {item.price.toLocaleString()}</Text>
         </View>
 
-        {(item.status === 'PENDING' || item.status === 'CANCELLED') && (
+        {(item.status === 'PENDING' || item.status === 'CANCELLED' || (item.status === 'MATCHED' && item.paymentMethod === 'ONLINE' && item.paymentStatus === 'PENDING')) && (
           <>
             <View style={styles.footerDivider} />
             <View style={styles.actionCol}>
@@ -226,6 +251,18 @@ const ShipmentsScreen = () => {
                   onPress={() => handleCancelPress(item.id)}
                 >
                   <Text style={styles.cancelBtnTextSmall}>Cancel</Text>
+                </TouchableOpacity>
+              ) : item.status === 'MATCHED' && item.paymentMethod === 'ONLINE' && item.paymentStatus === 'PENDING' ? (
+                <TouchableOpacity 
+                  style={styles.payBtnSmall} 
+                  onPress={() => handlePay(item.id)}
+                  disabled={!!payingParcelId}
+                >
+                  {payingParcelId === item.id ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.payBtnTextSmall}>Pay Card</Text>
+                  )}
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity 
@@ -603,6 +640,24 @@ const styles = StyleSheet.create({
   deleteBtnTextSmall: {
     fontSize: 12,
     color: '#DC2626',
+    fontFamily: Typography.bold,
+  },
+  payBtnSmall: {
+    backgroundColor: '#006C52',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  payBtnTextSmall: {
+    fontSize: 12,
+    color: '#FFFFFF',
     fontFamily: Typography.bold,
   },
   emptyContainer: {

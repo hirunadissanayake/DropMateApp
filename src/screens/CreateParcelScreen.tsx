@@ -417,7 +417,7 @@ const CreateParcelScreen = () => {
                     onPress={() => setPaymentMethod('ONLINE')}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.paymentOptionText, paymentMethod === 'ONLINE' && styles.paymentOptionTextActive]}>Online Payment</Text>
+                    <Text style={[styles.paymentOptionText, paymentMethod === 'ONLINE' && styles.paymentOptionTextActive]}>Card Payment</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.paymentOption, paymentMethod === 'CASH_ON_PICKUP' && styles.paymentOptionActive]}
@@ -436,7 +436,7 @@ const CreateParcelScreen = () => {
                 </View>
                 <Text style={styles.paymentInfoText}>
                   {paymentMethod === 'ONLINE' 
-                    ? "Payment is held securely by DropMate until delivery is confirmed."
+                    ? "Pay securely using your credit or debit card."
                     : paymentMethod === 'CASH_ON_PICKUP'
                     ? "Sender pays the traveler in cash when handing over the parcel."
                     : "Receiver pays the traveler in cash upon successful delivery."}

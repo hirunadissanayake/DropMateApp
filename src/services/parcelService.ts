@@ -132,3 +132,14 @@ export const getAllActiveParcels = async (token: string) => {
     throw error.response?.data || error;
   }
 };
+
+export const payParcel = async (token: string, id: string) => {
+  try {
+    const response = await axios.post(ENDPOINTS.PARCELS.PAY(id), {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
