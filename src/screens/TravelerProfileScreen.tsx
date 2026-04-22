@@ -251,6 +251,26 @@ const TravelerProfileScreen = () => {
             
             <TouchableOpacity 
               style={styles.itemRow}
+              onPress={() => navigation.navigate('TravelerEarnings')}
+            >
+              <View style={styles.itemIconBox}>
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.5">
+                    <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <Path d="M1 10h22" />
+                    <Path d="M12 14h6" />
+                  </Svg>
+              </View>
+              <View style={{ flex: 1 }}>
+                  <Text style={styles.itemLabel}>My Earnings</Text>
+                  <Text style={styles.itemSubLabel}>Balance, History & Withdrawals</Text>
+              </View>
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+                  <Path d="M9 18l6-6-6-6" />
+              </Svg>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.itemRow}
               onPress={() => navigation.navigate('PersonalDetails')}
             >
               <View style={styles.itemIconBox}>

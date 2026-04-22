@@ -302,6 +302,7 @@ const ParcelDetailsScreen = () => {
         title: "Verification Failed",
         message: error.message || "Invalid OTP code.",
         type: 'error',
+        confirmText: 'OK',
         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
       });
     } finally {

@@ -22,6 +22,7 @@ interface User {
   roleActive: 'CUSTOMER' | 'TRAVELER' | null;
   rating: number;
   trustScore: number;
+  walletBalance: number;
   createdAt: string;
   updatedAt: string;
 }

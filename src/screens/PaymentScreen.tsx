@@ -5,23 +5,20 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  TextInput,
   ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import Svg, { Path, Rect } from 'react-native-svg';
 import BackButton from '../components/common/BackButton';
 import LinearGradient from 'react-native-linear-gradient';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
-import * as parcelService from '../services/parcelService';
+import * as paymentService from '../services/paymentService';
 import CustomAlert from '../components/common/CustomAlert';
+
+// Import PayHere SDK
+import PayHere from '@payhere/payhere-mobilesdk-reactnative';
 
 export default function PaymentScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -29,12 +26,8 @@ export default function PaymentScreen() {
   const { parcelId, amount } = route.params;
   const { token } = useAuthStore();
 
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const [statusText, setStatusText] = useState('');
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: '',
@@ -43,203 +36,182 @@ export default function PaymentScreen() {
     onConfirm: () => {},
   });
 
-  const formatCardNumber = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    const match = cleaned.match(/.{1,4}/g);
-    setCardNumber(match ? match.join(' ') : cleaned);
+  // ── Polls the backend every 2s to verify the PayHere webhook was received ──
+  const pollPaymentStatus = (maxRetries = 10) => {
+    let retries = 0;
+    setStatusText('Verifying payment...');
+
+    const interval = setInterval(async () => {
+      retries++;
+      try {
+        const { paymentStatus } = await paymentService.getPaymentStatus(token!, parcelId);
+
+        if (paymentStatus === 'PAID') {
+          clearInterval(interval);
+          setIsProcessing(false);
+          setStatusText('');
+          setAlertConfig({
+            visible: true,
+            title: 'Payment Successful! 🎉',
+            message: 'Your payment is confirmed and your parcel is now active.',
+            type: 'success',
+            onConfirm: () => {
+              setAlertConfig(prev => ({ ...prev, visible: false }));
+              navigation.goBack();
+            },
+          });
+        } else if (paymentStatus === 'FAILED') {
+          clearInterval(interval);
+          setIsProcessing(false);
+          setStatusText('');
+          setAlertConfig({
+            visible: true,
+            title: 'Payment Failed',
+            message: 'Your payment could not be processed. Please try again.',
+            type: 'error',
+            onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          });
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+
+      // Stop polling after max retries to avoid infinite loop
+      if (retries >= maxRetries) {
+        clearInterval(interval);
+        setIsProcessing(false);
+        setStatusText('');
+        setAlertConfig({
+          visible: true,
+          title: 'Verification Timeout',
+          message: 'We could not verify your payment automatically. Please check your parcel status.',
+          type: 'info',
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            navigation.goBack();
+          },
+        });
+      }
+    }, 2000); // Poll every 2 seconds
   };
 
-  const formatExpiry = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length >= 3) {
-      setExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`);
-    } else {
-      setExpiry(cleaned);
-    }
-  };
+  const handlePayHerePayment = async () => {
+    setIsProcessing(true);
+    setStatusText('Preparing payment...');
 
-  const handlePayment = async () => {
-    if (!cardNumber || !expiry || !cvc || !name) {
+    try {
+      // ── Step 1: Fetch the secure hash from our backend ──
+      const hashData = await paymentService.generatePaymentHash(token!, parcelId);
+
+      // ── Step 2: Build the PayHere payment object ──
+      const paymentObject = {
+        sandbox: hashData.sandbox,
+        merchant_id: hashData.merchant_id,
+        notify_url: 'https://drop-mate.onrender.com/api/payment/webhook',
+        order_id: hashData.order_id,
+        items: 'DropMate Parcel Delivery',
+        amount: hashData.amount,      // Already formatted as "1000.00" from backend
+        currency: hashData.currency,
+        hash: hashData.hash,          // Cryptographically signed by our backend
+
+        // Customer details — hardcoded for now, can be fetched from user profile later
+        first_name: 'Customer',
+        last_name: 'DropMate',
+        email: 'customer@dropmate.com',
+        phone: '0771234567',
+        address: 'Colombo',
+        city: 'Colombo',
+        country: 'Sri Lanka',
+      };
+
+      setStatusText('');
+
+      // ── Step 3: Launch the PayHere SDK ──
+      PayHere.startPayment(
+        paymentObject,
+        (_paymentId: string) => {
+          // ✅ PayHere SDK says "success" — but we trust our backend webhook, not this callback.
+          // Start polling the backend to confirm the webhook was received.
+          pollPaymentStatus();
+        },
+        (errorData) => {
+          // ❌ PayHere reported an error
+          setIsProcessing(false);
+          setStatusText('');
+          setAlertConfig({
+            visible: true,
+            title: 'Payment Failed',
+            message: errorData,
+            type: 'error',
+            onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          });
+        },
+        () => {
+          // 🚪 User closed the PayHere sheet without paying
+          setIsProcessing(false);
+          setStatusText('');
+        }
+      );
+
+    } catch (error: any) {
+      setIsProcessing(false);
+      setStatusText('');
       setAlertConfig({
         visible: true,
-        title: 'Missing Fields',
-        message: 'Please fill in all card details to proceed.',
+        title: 'Error',
+        message: error?.message || 'Could not initialize payment. Please try again.',
         type: 'error',
         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
       });
-      return;
     }
-
-    setIsProcessing(true);
-    
-    // Simulate real Stripe Gateway processing delay
-    setTimeout(async () => {
-      try {
-        await parcelService.payParcel(token!, parcelId);
-        setAlertConfig({
-          visible: true,
-          title: 'Payment Successful',
-          message: 'Your payment was processed securely via Stripe.',
-          type: 'success',
-          onConfirm: () => {
-            setAlertConfig(prev => ({ ...prev, visible: false }));
-            navigation.goBack(); // Return to Parcel Details
-          },
-        });
-      } catch (error: any) {
-        setAlertConfig({
-          visible: true,
-          title: 'Payment Failed',
-          message: error.message || 'The payment could not be processed.',
-          type: 'error',
-          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 2000);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <BackButton onPress={() => navigation.goBack()} />
-            <Text style={styles.headerTitle}>Card Payment</Text>
-            <View style={{ width: 40 }} />
-          </View>
+      <View style={styles.header}>
+        <BackButton onPress={() => navigation.goBack()} />
+        <Text style={styles.headerTitle}>Checkout</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-          <View style={styles.amountContainer}>
-            <Text style={styles.amountLabel}>Total to Pay</Text>
-            <Text style={styles.amountValue}>LKR {amount.toLocaleString()}</Text>
-          </View>
-
-          <View style={styles.cardPreview}>
-            <LinearGradient
-              colors={['#1E293B', '#0F172A']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cardGradient}
-            >
-              <View style={styles.cardHeaderRow}>
-                <Svg width="40" height="24" viewBox="0 0 24 24" fill="none">
-                  <Rect x="2" y="5" width="20" height="14" rx="2" fill="#E2E8F0" />
-                  <Rect x="2" y="9" width="20" height="3" fill="#94A3B8" />
-                </Svg>
-                <Text style={styles.cardLogo}>STRIPE</Text>
-              </View>
-              
-              <Text style={styles.cardNumberPreview}>
-                {cardNumber || '**** **** **** ****'}
-              </Text>
-              
-              <View style={styles.cardFooterRow}>
-                <View>
-                  <Text style={styles.cardLabelPreview}>Card Holder</Text>
-                  <Text style={styles.cardValuePreview}>{name.toUpperCase() || 'YOUR NAME'}</Text>
-                </View>
-                <View>
-                  <Text style={styles.cardLabelPreview}>Expires</Text>
-                  <Text style={styles.cardValuePreview}>{expiry || 'MM/YY'}</Text>
-                </View>
-              </View>
-            </LinearGradient>
-          </View>
-
-          <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Cardholder Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="John Doe"
-                placeholderTextColor="#94A3B8"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Card Number</Text>
-              <View style={styles.inputWithIcon}>
-                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" style={styles.inputIcon}>
-                  <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                  <Path d="M1 10h22" />
-                </Svg>
-                <TextInput
-                  style={[styles.input, { flex: 1, borderWidth: 0, paddingHorizontal: 0 }]}
-                  placeholder="0000 0000 0000 0000"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="numeric"
-                  maxLength={19}
-                  value={cardNumber}
-                  onChangeText={formatCardNumber}
-                />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                <Text style={styles.label}>Expiry Date</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="numeric"
-                  maxLength={5}
-                  value={expiry}
-                  onChangeText={formatExpiry}
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                <Text style={styles.label}>CVC</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="numeric"
-                  maxLength={4}
-                  secureTextEntry
-                  value={cvc}
-                  onChangeText={setCvc}
-                />
-              </View>
-            </View>
-            
-            <View style={styles.secureBadge}>
-              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2">
-                <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <Path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </Svg>
-              <Text style={styles.secureText}>Payments are secure and encrypted by Stripe</Text>
-            </View>
-
-          </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.payButton, isProcessing && styles.payButtonDisabled]} 
-            onPress={handlePayment}
-            disabled={isProcessing}
-          >
-            <LinearGradient 
-              colors={isProcessing ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']} 
-              style={styles.payGradient}
-            >
-              {isProcessing ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.payButtonText}>Pay LKR {amount.toLocaleString()}</Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+      <View style={styles.content}>
+        <View style={styles.amountContainer}>
+          <Text style={styles.amountLabel}>Total to Pay</Text>
+          <Text style={styles.amountValue}>LKR {amount.toLocaleString()}</Text>
         </View>
-      </KeyboardAvoidingView>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoText}>
+            You will be redirected to the secure PayHere payment gateway. You can pay using your Visa, Mastercard, EzCash, or mCash.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.payButton, isProcessing && styles.payButtonDisabled]} 
+          onPress={handlePayHerePayment}
+          disabled={isProcessing}
+        >
+          <LinearGradient 
+            colors={isProcessing ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']} 
+            style={styles.payGradient}
+          >
+            {isProcessing ? (
+              <View style={{ alignItems: 'center' }}>
+                <ActivityIndicator color="#FFFFFF" />
+                {statusText ? (
+                  <Text style={[styles.payButtonText, { fontSize: 12, marginTop: 6, opacity: 0.8 }]}>
+                    {statusText}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <Text style={styles.payButtonText}>Proceed to PayHere</Text>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
       <CustomAlert
         visible={alertConfig.visible}
@@ -259,9 +231,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  scrollContent: {
-    paddingBottom: 40,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -275,121 +244,41 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
     color: '#0F172A',
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingTop: 40,
+  },
   amountContainer: {
     alignItems: 'center',
-    marginVertical: 15,
+    marginBottom: 40,
   },
   amountLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#64748B',
     fontFamily: Typography.medium,
-    marginBottom: 4,
-  },
-  amountValue: {
-    fontSize: 32,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  cardPreview: {
-    marginHorizontal: 20,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  cardGradient: {
-    borderRadius: 16,
-    padding: 24,
-    height: 200,
-    justifyContent: 'space-between',
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardLogo: {
-    color: 'rgba(255,255,255,0.8)',
-    fontFamily: Typography.bold,
-    letterSpacing: 2,
-    fontSize: 16,
-  },
-  cardNumberPreview: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontFamily: Typography.medium,
-    letterSpacing: 3,
-    marginTop: 20,
-  },
-  cardFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  cardLabelPreview: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 10,
-    fontFamily: Typography.regular,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  cardValuePreview: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontFamily: Typography.bold,
-    letterSpacing: 1,
-  },
-  formContainer: {
-    paddingHorizontal: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: Typography.medium,
-    color: '#475569',
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
+  amountValue: {
+    fontSize: 42,
     color: '#0F172A',
-    fontFamily: Typography.regular,
+    fontFamily: Typography.bold,
   },
-  inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  infoCard: {
     backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    width: '100%',
   },
-  inputIcon: {
-    marginRight: 12,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  secureBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  secureText: {
-    fontSize: 12,
-    color: '#10B981',
+  infoText: {
+    fontSize: 15,
+    color: '#475569',
     fontFamily: Typography.medium,
-    marginLeft: 6,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   footer: {
     padding: 20,

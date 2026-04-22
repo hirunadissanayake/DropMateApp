@@ -233,6 +233,26 @@ const ProfileScreen = () => {
           
           <TouchableOpacity 
             style={styles.itemRow}
+            onPress={() => navigation.navigate('Wallet')}
+          >
+            <View style={styles.itemIconBox}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5">
+                  <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <Path d="M1 10h22" />
+                  <Path d="M12 14h6" />
+                </Svg>
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={styles.itemLabel}>My Wallet</Text>
+                <Text style={styles.itemSubLabel}>Payment history & Credits</Text>
+            </View>
+            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
+                <Path d="M9 18l6-6-6-6" />
+            </Svg>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.itemRow}
             onPress={() => navigation.navigate('PersonalDetails')}
           >
             <View style={styles.itemIconBox}>

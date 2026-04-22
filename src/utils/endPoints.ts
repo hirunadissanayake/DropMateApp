@@ -47,4 +47,14 @@ export const ENDPOINTS = {
     INITIATE_DELIVERY: `${BASE_URL}/api/delivery/delivery/initiate`,
     VERIFY_DELIVERY: `${BASE_URL}/api/delivery/delivery/verify`,
   },
+  PAYMENT: {
+    GENERATE_HASH: `${BASE_URL}/api/payment/generate-hash`,
+    STATUS: (parcelId: string) => `${BASE_URL}/api/payment/status/${parcelId}`,
+    WEBHOOK: `${BASE_URL}/api/payment/webhook`,
+  },
+  WALLET: {
+    SUMMARY: `${BASE_URL}/api/wallet/summary`,
+    TRANSACTIONS: `${BASE_URL}/api/wallet/transactions`,
+    WITHDRAW: `${BASE_URL}/api/wallet/withdraw`,
+  },
 };
