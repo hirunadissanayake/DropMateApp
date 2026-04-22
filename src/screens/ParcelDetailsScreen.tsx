@@ -338,31 +338,8 @@ const ParcelDetailsScreen = () => {
     }
   };
 
-  const handlePay = async () => {
-    setPaying(true);
-    try {
-      await parcelService.payParcel(token!, parcelId);
-      setAlertConfig({
-        visible: true,
-        title: "Payment Successful",
-        message: "Your payment has been received and is held securely by DropMate. The traveler can now proceed with the pickup.",
-        type: 'success',
-        onConfirm: () => {
-          setAlertConfig(prev => ({ ...prev, visible: false }));
-          fetchDetails();
-        }
-      });
-    } catch (error: any) {
-      setAlertConfig({
-        visible: true,
-        title: "Payment Failed",
-        message: error.message || "Something went wrong while processing your payment.",
-        type: 'error',
-        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-      });
-    } finally {
-      setPaying(false);
-    }
+  const handlePay = () => {
+    navigation.navigate('Payment', { parcelId, amount: parcel.price });
   };
 
   if (loading) {
@@ -601,14 +578,9 @@ const ParcelDetailsScreen = () => {
               <TouchableOpacity 
                 style={styles.primaryActionButton} 
                 onPress={handlePay}
-                disabled={paying}
               >
-                <LinearGradient colors={['#3B82F6', '#2563EB']} style={styles.actionGradient}>
-                  {paying ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.actionButtonText}>Pay with Card (LKR {parcel.price?.toLocaleString()})</Text>
-                  )}
+                <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                  <Text style={styles.actionButtonText}>Pay with Card (LKR {parcel.price?.toLocaleString()})</Text>
                 </LinearGradient>
               </TouchableOpacity>
               <Text style={styles.paymentWaitText}>The traveler is waiting for your payment to start the pickup.</Text>

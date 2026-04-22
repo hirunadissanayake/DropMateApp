@@ -313,14 +313,14 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 style={styles.primaryAction}
                 onPress={() => navigation.navigate('CreateParcel')}
               >
-                <View style={styles.actionIconCircle}>
-                   {renderServiceIcon('package', '#FFF', 28)}
+                <View style={[styles.actionIconCircle, { backgroundColor: '#F0F9FF' }]}>
+                   {renderServiceIcon('package', '#006C52', 28)}
                 </View>
                 <View style={styles.actionTextContent}>
                   <Text style={styles.actionLabel}>Send a Parcel</Text>
                   <Text style={styles.actionDesc}>Reliable peer-to-peer delivery</Text>
                 </View>
-                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0" strokeWidth="2">
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2">
                    <Path d="M9 18l6-6-6-6" />
                 </Svg>
               </TouchableOpacity>
@@ -336,6 +336,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                   <Text style={styles.actionLabelDark}>Discover Trips</Text>
                   <Text style={styles.actionDescDark}>Find travelers headed your way</Text>
                 </View>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2">
+                   <Path d="M9 18l6-6-6-6" />
+                </Svg>
               </TouchableOpacity>
             </View>
 
@@ -685,10 +688,12 @@ const styles = StyleSheet.create({
   primaryAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
-    padding: 20,
+    backgroundColor: '#FFF',
+    padding: 16,
     borderRadius: 20,
     gap: 16,
+    borderWidth:1,
+    borderColor: '#d9e8f8ff',
   },
   secondaryAction: {
     flexDirection: 'row',
@@ -698,7 +703,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#d9e8f8ff',
   },
   actionIconCircle: {
     width: 48,
@@ -713,12 +718,12 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 18,
-    color: '#FFF',
+    color: '#0F172A',
     fontFamily: Typography.bold,
   },
   actionDesc: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: '#64748B',
     fontFamily: Typography.medium,
   },
   actionLabelDark: {
