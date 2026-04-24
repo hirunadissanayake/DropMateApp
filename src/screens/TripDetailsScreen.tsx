@@ -152,10 +152,20 @@ const TripDetailsScreen = () => {
       setIsParcelModalVisible(false);
       
       // Update local trip state to include the new requested parcel ID
-      setTrip((prev: any) => ({ 
-        ...prev, 
-        requestedParcelIds: [...(prev.requestedParcelIds || []), parcelId] 
-      }));
+      setTrip((prev: any) => {
+        const updatedRequestedIds = [...(prev.requestedParcelIds || []), parcelId];
+        
+        // Recalculate allRequested based on the updated requestedParcelIds
+        // We use the current myParcels list and check how many would be left
+        const remainingParcels = myParcels.filter(p => p.id !== parcelId);
+        setAllRequested(myParcels.length > 0 && remainingParcels.length === 0);
+        setMyParcels(remainingParcels);
+
+        return { 
+          ...prev, 
+          requestedParcelIds: updatedRequestedIds 
+        };
+      });
 
       setTimeout(() => {
         setAlertConfig({

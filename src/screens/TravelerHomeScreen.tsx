@@ -66,8 +66,19 @@ const TravelerHomeScreen = ({ navigation }: any) => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    if (!token) return;
+    try {
+      const userData = await authService.getMe(token);
+      setUser(userData);
+    } catch (error) {
+      console.error('Fetch user profile error:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
+      fetchUserProfile();
       fetchUnreadCount();
     }, [token])
   );

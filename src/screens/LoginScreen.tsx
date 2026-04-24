@@ -54,9 +54,11 @@ const LoginScreen = ({ navigation }: any) => {
       console.log('Login success:', response);
       
       if (response.token && response.user) {
-        setAuth(response.token, response.user);
+        // Fetch full profile to ensure we have the selfieUrl and other details
+        const fullUser = await authService.getMe(response.token);
+        setAuth(response.token, fullUser);
         
-        const routeName = response.user.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
+        const routeName = fullUser.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
         
         Toast.show({
           type: 'success',
