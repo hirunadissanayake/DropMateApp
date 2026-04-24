@@ -20,6 +20,8 @@ import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as walletService from '../services/walletService';
 import { WalletSummary, WalletTransaction } from '../services/walletService';
+import * as bankService from '../services/bankService';
+import { BankDetail } from '../services/bankService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import BackButton from '../components/common/BackButton';
@@ -48,21 +50,30 @@ const TravelerEarningsScreen = () => {
   // Withdrawal modal state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [accountHolderName, setAccountHolderName] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  
+  // Saved bank accounts
+  const [bankAccounts, setBankAccounts] = useState<BankDetail[]>([]);
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [summaryData, txData] = await Promise.all([
+      const [summaryData, txData, bankData] = await Promise.all([
         walletService.getWalletSummary(token!),
         walletService.getTransactionHistory(token!),
+        bankService.getBankDetails(token!),
       ]);
       setSummary(summaryData);
       setTransactions(txData);
+      setBankAccounts(bankData);
+
+      // Auto-select default or first bank
+      if (bankData.length > 0 && !selectedBankId) {
+        const defaultBank = bankData.find(b => b.isDefault) || bankData[0];
+        setSelectedBankId(defaultBank.id);
+      }
     } catch (error) {
-      console.error('Wallet fetch error:', error);
+      console.error('Wallet/Bank fetch error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,24 +95,22 @@ const TravelerEarningsScreen = () => {
       Toast.show({ type: 'error', text1: 'Invalid amount' });
       return;
     }
-    if (!bankName || !accountNumber || !accountHolderName) {
-      Toast.show({ type: 'error', text1: 'Please fill all bank details' });
+
+    if (!selectedBankId) {
+      Toast.show({ type: 'error', text1: 'Please select a payout method' });
       return;
     }
 
     setIsWithdrawing(true);
     try {
-      const result = await walletService.requestWithdrawal(token!, {
+      const payload: any = { 
         amount,
-        bankName,
-        accountNumber,
-        accountHolderName,
-      });
+        bankDetailId: selectedBankId
+      };
+
+      const result = await walletService.requestWithdrawal(token!, payload);
       setShowWithdrawModal(false);
       setWithdrawAmount('');
-      setBankName('');
-      setAccountNumber('');
-      setAccountHolderName('');
       Toast.show({ type: 'success', text1: 'Withdrawal Requested', text2: result.message });
       fetchData(); // Refresh balance
     } catch (error: any) {
@@ -235,39 +244,42 @@ const TravelerEarningsScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Bank Name</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="e.g. Commercial Bank"
-                  value={bankName}
-                  onChangeText={setBankName}
-                  placeholderTextColor="#94A3B8"
-                />
-              </View>
-
-              <View style={styles.inputRow}>
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>Account Number</Text>
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="12345..."
-                    keyboardType="numeric"
-                    value={accountNumber}
-                    onChangeText={setAccountNumber}
-                    placeholderTextColor="#94A3B8"
-                  />
+                <View style={styles.bankHeaderRow}>
+                   <Text style={styles.inputLabel}>Payout Method</Text>
+                   <TouchableOpacity onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}>
+                      <Text style={styles.manageBanksText}>Manage Accounts</Text>
+                   </TouchableOpacity>
                 </View>
-              </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Account Holder Name</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Name as in bank book"
-                  value={accountHolderName}
-                  onChangeText={setAccountHolderName}
-                  placeholderTextColor="#94A3B8"
-                />
+                {bankAccounts.length > 0 ? (
+                  <View style={styles.bankSelector}>
+                    {bankAccounts.map((bank) => (
+                      <TouchableOpacity 
+                        key={bank.id}
+                        style={[
+                          styles.bankSelectOption,
+                          selectedBankId === bank.id && styles.bankSelectOptionActive
+                        ]}
+                        onPress={() => setSelectedBankId(bank.id)}
+                      >
+                        <View style={[styles.radioCircle, selectedBankId === bank.id && styles.radioCircleActive]}>
+                          {selectedBankId === bank.id && <View style={styles.radioInner} />}
+                        </View>
+                        <View style={styles.bankSelectInfo}>
+                          <Text style={styles.bankSelectName}>{bank.bankName}</Text>
+                          <Text style={styles.bankSelectAcc}>Acc: {bank.accountNumber}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.noBanksBtn}
+                    onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}
+                  >
+                    <Text style={styles.noBanksText}>+ Add Saved Bank Account</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View style={styles.infoNotice}>
@@ -511,6 +523,8 @@ const styles = StyleSheet.create({
     fontFamily: Typography.medium,
     color: '#0F172A'
   },
+  inputError: { borderColor: '#EF4444' },
+  errorText: { color: '#EF4444', fontSize: 12, marginTop: 6, marginLeft: 4, fontFamily: Typography.medium },
   infoNotice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -548,6 +562,79 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold, 
     fontSize: 15 
   },
+  bankHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  manageBanksText: {
+    fontSize: 12,
+    color: BRAND_GREEN,
+    fontFamily: Typography.bold,
+  },
+  bankSelector: {
+    gap: 10
+  },
+  bankSelectOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 14,
+  },
+  bankSelectOptionActive: {
+    borderColor: BRAND_GREEN,
+    backgroundColor: '#F0FDF4',
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  radioCircleActive: {
+    borderColor: BRAND_GREEN
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: BRAND_GREEN
+  },
+  bankSelectInfo: {
+    flex: 1
+  },
+  bankSelectName: {
+    fontSize: 14,
+    fontFamily: Typography.bold,
+    color: '#1E293B'
+  },
+  bankSelectAcc: {
+    fontSize: 12,
+    fontFamily: Typography.medium,
+    color: '#64748B'
+  },
+  noBanksBtn: {
+    backgroundColor: '#F1F5F9',
+    padding: 16,
+    borderRadius: 16,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center'
+  },
+  noBanksText: {
+    fontSize: 14,
+    fontFamily: Typography.bold,
+    color: BRAND_GREEN
+  }
 });
 
 export default TravelerEarningsScreen;

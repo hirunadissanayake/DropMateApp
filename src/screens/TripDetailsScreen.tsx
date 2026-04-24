@@ -334,14 +334,14 @@ const TripDetailsScreen = () => {
             <View
               style={[
                 styles.statusPill,
-                {backgroundColor: getStatusBg(trip.status)},
+                {backgroundColor: trip.isExpired ? '#E2E8F0' : getStatusBg(trip.status)},
               ]}>
               <Text
                 style={[
                   styles.statusText,
-                  {color: getStatusColor(trip.status)},
+                  {color: trip.isExpired ? '#475569' : getStatusColor(trip.status)},
                 ]}>
-                {trip.status}
+                {trip.isExpired ? 'EXPIRED' : trip.status}
               </Text>
             </View>
           </View>
@@ -493,7 +493,7 @@ const TripDetailsScreen = () => {
             <Text style={styles.statLabel}>LIMIT</Text>
             <View style={styles.statValueRow}>
               <Text style={styles.statValue}>{trip.capacityKg} kg</Text>
-              {user?.id === trip.travelerId && trip.status === 'ACTIVE' && (
+              {user?.id === trip.travelerId && trip.status === 'ACTIVE' && !trip.isExpired && (
                 <TouchableOpacity 
                   onPress={() => {
                     setNewCapacity(trip.capacityKg.toString());

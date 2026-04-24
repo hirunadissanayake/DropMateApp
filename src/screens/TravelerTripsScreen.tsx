@@ -34,6 +34,7 @@ const TravelerTripsScreen = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
   
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState<{
@@ -162,11 +163,28 @@ const TravelerTripsScreen = () => {
 
 
 
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'ongoing' && styles.activeTabButton]}
+            onPress={() => setActiveTab('ongoing')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'ongoing' && styles.activeTabText]}>Ongoing</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'history' && styles.activeTabButton]}
+            onPress={() => setActiveTab('history')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>History</Text>
+          </TouchableOpacity>
+        </View>
+
         {loading ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={BRAND_GREEN} />
           </View>
-        ) : trips.length === 0 ? (
+        ) : trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).length === 0 ? (
           <ScrollView
             contentContainerStyle={styles.emptyScroll}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />}
@@ -181,13 +199,19 @@ const TravelerTripsScreen = () => {
                 <View style={styles.emptyCircle} />
               </View>
               <Text style={styles.emptyTitle}>No trips found</Text>
-              <Text style={styles.emptySubtitle}>You haven't added any travel trips yet. Create your first trip to start earning.</Text>
-              <TouchableOpacity 
-                style={styles.createNowButton}
-                onPress={handleCreateTrip}
-              >
-                <Text style={styles.createNowText}>Create Now</Text>
-              </TouchableOpacity>
+              <Text style={styles.emptySubtitle}>
+                {activeTab === 'ongoing' 
+                  ? "You haven't added any upcoming trips yet. Create your first trip to start earning."
+                  : "You don't have any past or completed trips yet."}
+              </Text>
+              {activeTab === 'ongoing' && (
+                <TouchableOpacity 
+                  style={styles.createNowButton}
+                  onPress={handleCreateTrip}
+                >
+                  <Text style={styles.createNowText}>Create Now</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </ScrollView>
         ) : (
@@ -196,7 +220,7 @@ const TravelerTripsScreen = () => {
             contentContainerStyle={styles.scrollContent}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />}
           >
-            {trips.map((trip) => (
+            {trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).map((trip) => (
               <TripCard 
                 key={trip.id} 
                 trip={trip} 
@@ -226,6 +250,7 @@ const TravelerTripsScreen = () => {
 
 const TripCard = ({ trip, onCancel, onDelete }: any) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [isExpanded, setIsExpanded] = useState(false);
   const statusColor = trip.status === 'ACTIVE' ? '#059669' : trip.status === 'COMPLETED' ? '#2563EB' : '#DC2626';
   const date = new Date(trip.travelDate).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -233,12 +258,25 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
     year: 'numeric',
   });
 
-  const canCancel = trip.status === 'ACTIVE' && (!trip.parcels || trip.parcels.length === 0) && (!trip.usedCapacity || trip.usedCapacity === 0);
-  const canDelete = trip.status === 'CANCELLED';
+  const getParcelStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return '#F59E0B';
+      case 'MATCHED':
+      case 'ACCEPTED': return '#4338CA';
+      case 'PICKED_UP': return '#A16207';
+      case 'IN_TRANSIT': return '#2563EB';
+      case 'DELIVERED': return '#059669';
+      case 'CANCELLED': return '#DC2626';
+      default: return '#64748B';
+    }
+  };
+
+  const canCancel = trip.status === 'ACTIVE' && (!trip.parcels || trip.parcels.length === 0) && (!trip.usedCapacity || trip.usedCapacity === 0) && !trip.isExpired;
+  const canDelete = trip.status === 'CANCELLED' || (trip.isExpired && (!trip.parcels || trip.parcels.length === 0));
 
   return (
     <TouchableOpacity 
-      style={styles.card} 
+      style={[styles.card, { opacity: trip.isExpired ? 0.7 : 1 }]} 
       activeOpacity={0.9}
       onPress={() => navigation.navigate('TripDetails', { tripId: trip.id })}
     >
@@ -262,8 +300,10 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
           </View>
         </View>
         <View style={styles.headerRightCol}>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{trip.status}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: trip.isExpired ? '#64748B15' : statusColor + '15' }]}>
+            <Text style={[styles.statusText, { color: trip.isExpired ? '#64748B' : statusColor }]}>
+              {trip.isExpired ? 'EXPIRED' : trip.status}
+            </Text>
           </View>
           {canCancel && (
             <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
@@ -306,16 +346,44 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
         </View>
         <View style={styles.infoCol}>
           <Text style={styles.infoLabel}>PARCELS</Text>
-          <View style={styles.infoRow}>
+          <TouchableOpacity 
+            style={styles.infoRow} 
+            onPress={() => setIsExpanded(!isExpanded)}
+            activeOpacity={0.7}
+          >
             <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
               <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
               <Path d="M12 22.08V12" />
             </Svg>
             <Text style={styles.footerText}>{trip.parcels?.length || 0} Assigned</Text>
-          </View>
+            {trip.parcels && trip.parcels.length > 0 && (
+              <Svg 
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
+              >
+                <Path d="M6 9l6 6 6-6" />
+              </Svg>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
+
+      {isExpanded && trip.parcels && trip.parcels.length > 0 && (
+        <View style={styles.expandedParcels}>
+          <View style={styles.expandedDivider} />
+          <View style={styles.parcelStatusesContainer}>
+            {trip.parcels.map((p: any) => (
+              <View key={p.id} style={styles.parcelStatusRow}>
+                <View style={[styles.statusDotSmall, { backgroundColor: getParcelStatusColor(p.status) }]} />
+                <Text style={[styles.parcelStatusText, { color: getParcelStatusColor(p.status) }]} numberOfLines={1}>
+                  {p.name}: {p.status.replace('_', ' ')}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -360,6 +428,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+  },
+  activeTabButton: {
+    backgroundColor: BRAND_GREEN,
+  },
+  tabText: {
+    fontSize: 15,
+    color: '#64748B',
+    fontFamily: Typography.bold,
+  },
+  activeTabText: {
+    color: '#FFFFFF',
   },
 
   scrollContent: {
@@ -549,6 +641,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#475569',
     fontFamily: Typography.bold,
+  },
+  parcelStatusesContainer: {
+    marginTop: 4,
+    gap: 4,
+  },
+  parcelStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusDotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  parcelStatusText: {
+    fontSize: 9,
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+    flex: 1,
+  },
+  moreParcelsText: {
+    fontSize: 9,
+    color: '#94A3B8',
+    fontFamily: Typography.medium,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  expandedParcels: {
+    marginTop: 16,
+  },
+  expandedDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginBottom: 12,
   },
 });
 

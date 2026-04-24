@@ -57,4 +57,8 @@ export const ENDPOINTS = {
     TRANSACTIONS: `${BASE_URL}/api/wallet/transactions`,
     WITHDRAW: `${BASE_URL}/api/wallet/withdraw`,
   },
+  BANK: {
+    DETAILS: `${BASE_URL}/api/bank-details`,
+    DETAIL: (id: string) => `${BASE_URL}/api/bank-details/${id}`,
+  },
 };

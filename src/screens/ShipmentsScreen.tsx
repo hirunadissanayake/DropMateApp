@@ -58,6 +58,7 @@ const ShipmentsScreen = () => {
   const [deletingParcelId, setDeletingParcelId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [payingParcelId, setPayingParcelId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
 
   const fetchParcels = async () => {
     if (!token) return;
@@ -301,9 +302,29 @@ const ShipmentsScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'ongoing' && styles.activeTabButton]}
+            onPress={() => setActiveTab('ongoing')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'ongoing' && styles.activeTabText]}>Ongoing</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'history' && styles.activeTabButton]}
+            onPress={() => setActiveTab('history')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>History</Text>
+          </TouchableOpacity>
+        </View>
 
         <FlatList
-          data={parcels}
+          data={parcels.filter(p => {
+            const status = p.status.toUpperCase();
+            const isHistoryStatus = status === 'DELIVERED' || status === 'CANCELLED';
+            return activeTab === 'history' ? isHistoryStatus : !isHistoryStatus;
+          })}
           renderItem={renderParcelItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -320,8 +341,12 @@ const ShipmentsScreen = () => {
                   <Path d="M12 21V13" />
                 </Svg>
               </View>
-              <Text style={styles.emptyTitle}>No Shipments Yet</Text>
-              <Text style={styles.emptySubtitle}>Once you create a parcel, it will appear here for tracking.</Text>
+              <Text style={styles.emptyTitle}>No {activeTab === 'ongoing' ? 'Ongoing' : 'History'} Shipments</Text>
+              <Text style={styles.emptySubtitle}>
+                {activeTab === 'ongoing' 
+                  ? "Once you create a parcel, it will appear here for tracking."
+                  : "You don't have any delivered parcels yet."}
+              </Text>
             </View>
           }
         />
@@ -460,6 +485,30 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 4,
     fontFamily: Typography.medium,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+  },
+  activeTabButton: {
+    backgroundColor: '#006C52',
+  },
+  tabText: {
+    fontSize: 15,
+    color: '#64748B',
+    fontFamily: Typography.bold,
+  },
+  activeTabText: {
+    color: '#FFFFFF',
   },
   listContent: {
     paddingHorizontal: 20,

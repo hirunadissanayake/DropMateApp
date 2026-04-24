@@ -44,9 +44,10 @@ export const requestWithdrawal = async (
   token: string,
   payload: {
     amount: number;
-    bankName: string;
-    accountNumber: string;
-    accountHolderName: string;
+    bankDetailId?: string;
+    bankName?: string;
+    accountNumber?: string;
+    accountHolderName?: string;
   }
 ): Promise<{ message: string }> => {
   try {
