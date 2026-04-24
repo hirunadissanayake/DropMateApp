@@ -21,8 +21,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as authService from '../services/authService';
 import * as parcelService from '../services/parcelService';
 import * as tripService from '../services/tripService';
+import * as notificationService from '../services/notificationService';
 import { useAuthStore } from '../store/authStore';
 import dayjs from 'dayjs';
+
 import { Typography } from '../constants/Typography';
 import { Colors } from '../constants/Colors';
 
@@ -54,7 +56,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   const [recommendedTrips, setRecommendedTrips] = useState<any[]>([]);
   const [loadingParcels, setLoadingParcels] = useState(true);
   const [loadingTrips, setLoadingTrips] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
+
   const scrollViewRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
 
@@ -121,11 +125,24 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     }
   };
 
+  const fetchUnreadCount = async () => {
+    if (!token) return;
+    try {
+      const data = await notificationService.getNotifications(token);
+      setUnreadCount(data.unreadCount);
+    } catch (error) {
+      console.error('Fetch unread count error:', error);
+    }
+  };
+
   useFocusEffect(
+
     useCallback(() => {
       fetchActiveParcels();
       fetchRecommendedTrips();
+      fetchUnreadCount();
     }, [token, user?.isCustomerApproved])
+
   );
 
   const onRefresh = useCallback(async () => {
@@ -148,7 +165,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         const tData = await tripService.getActiveTrips(token);
         setRecommendedTrips(tData.slice(0, 5));
       }
+      fetchUnreadCount();
     } catch (error) {
+
       console.error('Refresh error:', error);
     } finally {
       setRefreshing(false);
@@ -209,13 +228,22 @@ const CustomerHomeScreen = ({ navigation }: any) => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.notificationBtn} 
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Notifications')}
+        >
           <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" />
             <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" />
           </Svg>
-          <View style={styles.notifBadge} />
+          {unreadCount > 0 && (
+            <View style={styles.notifBadge}>
+              <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
+
       </View>
 
       <ScrollView 
@@ -617,14 +645,22 @@ const styles = StyleSheet.create({
   },
   notifBadge: {
     position: 'absolute',
-    top: 11,
-    right: 12,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 0,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: '#EF4444',
-    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
     borderColor: '#FFF',
+  },
+  notifBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontFamily: Typography.bold,
+    
   },
   scrollContent: {
     paddingBottom: 20,

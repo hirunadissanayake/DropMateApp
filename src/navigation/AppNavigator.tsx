@@ -27,6 +27,7 @@ import PaymentScreen from '../screens/PaymentScreen';
 import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
 import WalletScreen from '../screens/WalletScreen';
 import BankDetailsScreen from '../screens/BankDetailsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -54,7 +55,9 @@ export type RootStackParamList = {
   TravelerEarnings: undefined;
   Wallet: undefined;
   BankDetails: undefined;
+  Notifications: undefined;
 };
+
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -165,7 +168,12 @@ export const AppNavigator = () => {
           name="BankDetails" 
           component={BankDetailsScreen} 
         />
+        <Stack.Screen 
+          name="Notifications" 
+          component={NotificationsScreen} 
+        />
       </Stack.Navigator>
+
 
     </NavigationContainer>
   );

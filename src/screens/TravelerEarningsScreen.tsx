@@ -52,6 +52,9 @@ const TravelerEarningsScreen = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   
+  // Transaction detail modal state
+  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
+  
   // Saved bank accounts
   const [bankAccounts, setBankAccounts] = useState<BankDetail[]>([]);
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
@@ -189,7 +192,12 @@ const TravelerEarningsScreen = () => {
               </View>
             ) : (
               transactions.map((tx) => (
-                <View key={tx.id} style={styles.transactionItem}>
+                <TouchableOpacity 
+                  key={tx.id} 
+                  style={styles.transactionItem}
+                  onPress={() => setSelectedTx(tx)}
+                  activeOpacity={0.7}
+                >
                   <View style={[styles.txIconBg, { 
                     backgroundColor: tx.type === 'DELIVERY_EARNED' ? '#ECFDF5' : '#FFF1F2' 
                   }]}>
@@ -204,7 +212,7 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
                     {tx.status === 'PENDING' && <Text style={styles.pendingText}>Processing</Text>}
                   </View>
-
+ 
                   <View style={styles.txRight}>
                     <Text style={[styles.txAmount, { 
                       color: tx.type === 'DELIVERY_EARNED' ? '#059669' : '#0F172A' 
@@ -213,7 +221,7 @@ const TravelerEarningsScreen = () => {
                     </Text>
                     <Text style={styles.txCurrency}>LKR</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
           </View>
@@ -308,6 +316,92 @@ const TravelerEarningsScreen = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+ 
+      {/* Transaction Detail Modal */}
+      <Modal visible={!!selectedTx} animationType="fade" transparent onRequestClose={() => setSelectedTx(null)}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setSelectedTx(null)}
+        >
+          <View style={styles.detailSheet}>
+            <View style={styles.modalIndicator} />
+            
+            <View style={styles.detailHeader}>
+              <View style={[styles.txIconBgLarge, { 
+                backgroundColor: selectedTx?.type === 'DELIVERY_EARNED' ? '#ECFDF5' : '#FFF1F2' 
+              }]}>
+                <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" 
+                  stroke={selectedTx?.type === 'DELIVERY_EARNED' ? BRAND_GREEN : '#E11D48'} strokeWidth="2.5">
+                  {selectedTx?.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
+                </Svg>
+              </View>
+              <Text style={styles.detailType}>
+                {selectedTx?.type === 'DELIVERY_EARNED' ? 'Delivery Earnings' : 'Withdrawal Payout'}
+              </Text>
+              <Text style={[styles.detailAmount, { 
+                color: selectedTx?.type === 'DELIVERY_EARNED' ? BRAND_GREEN : '#0F172A' 
+              }]}>
+                {selectedTx?.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(selectedTx?.amount || 0)}
+              </Text>
+              
+              <View style={[styles.detailStatusBadge, { 
+                backgroundColor: selectedTx?.status === 'COMPLETED' ? '#DCFCE7' : selectedTx?.status === 'PENDING' ? '#FEF3C7' : '#FEE2E2' 
+              }]}>
+                <Text style={[styles.detailStatusText, { 
+                  color: selectedTx?.status === 'COMPLETED' ? '#166534' : selectedTx?.status === 'PENDING' ? '#92400E' : '#991B1B' 
+                }]}>
+                  {selectedTx?.status}
+                </Text>
+              </View>
+            </View>
+ 
+            <View style={styles.detailBody}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Date & Time</Text>
+                <Text style={styles.detailValue}>
+                  {selectedTx ? new Date(selectedTx.createdAt).toLocaleString('en-LK', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                  }) : ''}
+                </Text>
+              </View>
+              
+              <View style={styles.detailDivider} />
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Description</Text>
+                <Text style={styles.detailValue}>{selectedTx?.description || 'No description provided'}</Text>
+              </View>
+ 
+              <View style={styles.detailDivider} />
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Transaction ID</Text>
+                <Text style={styles.detailValueSmall}>{selectedTx?.id}</Text>
+              </View>
+              
+              {selectedTx?.parcelId && (
+                <>
+                  <View style={styles.detailDivider} />
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Related Parcel ID</Text>
+                    <Text style={styles.detailValueSmall}>{selectedTx.parcelId}</Text>
+                  </View>
+                </>
+              )}
+            </View>
+ 
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedTx(null)}>
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -317,8 +411,8 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   heroSection: { 
     paddingBottom: 40,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerRow: {
     flexDirection: 'row',
@@ -328,7 +422,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerTitle: { 
-    fontSize: 18, 
+    fontSize: 28, 
     fontFamily: Typography.bold, 
     color: '#FFFFFF' 
   },
@@ -634,7 +728,91 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: Typography.bold,
     color: BRAND_GREEN
-  }
+  },
+  detailSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    padding: 32,
+    width: '100%',
+  },
+  detailHeader: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  txIconBgLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  detailType: {
+    fontSize: 14,
+    color: '#64748B',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  detailAmount: {
+    fontSize: 32,
+    fontFamily: Typography.bold,
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  detailStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  detailStatusText: {
+    fontSize: 12,
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+  },
+  detailBody: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 32,
+  },
+  detailRow: {
+    marginBottom: 0,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontFamily: Typography.bold,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 15,
+    color: '#1E293B',
+    fontFamily: Typography.bold,
+  },
+  detailValueSmall: {
+    fontSize: 12,
+    color: '#475569',
+    fontFamily: Typography.medium,
+  },
+  detailDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 16,
+  },
+  closeBtn: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 16,
+    borderRadius: 18,
+    alignItems: 'center',
+  },
+  closeBtnText: {
+    color: '#475569',
+    fontFamily: Typography.bold,
+    fontSize: 16,
+  },
 });
 
 export default TravelerEarningsScreen;

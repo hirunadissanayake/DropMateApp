@@ -336,7 +336,11 @@ const ProfileScreen = () => {
           )}
 
           <Text style={[styles.sectionTitle, { marginTop: 32 }]}>General</Text>
-          <SettingsItem icon="bell" label="Notifications" />
+          <SettingsItem 
+            icon="bell" 
+            label="Notifications" 
+            onPress={() => navigation.navigate('Notifications')}
+          />
           <SettingsItem 
             icon="lock" 
             label="Account Security" 

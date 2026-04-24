@@ -61,4 +61,10 @@ export const ENDPOINTS = {
     DETAILS: `${BASE_URL}/api/bank-details`,
     DETAIL: (id: string) => `${BASE_URL}/api/bank-details/${id}`,
   },
+  NOTIFICATIONS: {
+    GET_ALL: `${BASE_URL}/api/notifications`,
+    MARK_READ: (id: string) => `${BASE_URL}/api/notifications/${id}/read`,
+    MARK_ALL_READ: `${BASE_URL}/api/notifications/read-all`,
+    DELETE: (id: string) => `${BASE_URL}/api/notifications/${id}`,
+  },
 };
