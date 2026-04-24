@@ -1,6 +1,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { requestUserPermission, getFcmToken, setupFcmListeners } from '../services/fcmService';
+import '@react-native-firebase/app';
+import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
+
+
 
 import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -60,11 +67,42 @@ export type RootStackParamList = {
 
 
 
+import { navigationRef } from './navigationRef';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator = () => {
+  const { token } = useAuthStore();
+
+  useEffect(() => {
+    const setupFCM = async () => {
+      const hasPermission = await requestUserPermission();
+      if (hasPermission && token) {
+        await getFcmToken(token);
+      }
+    };
+
+    setupFCM();
+    
+    // Setup Listeners
+    const unsubscribeOnMessage = setupFcmListeners();
+
+    // Listen to token refresh
+    const unsubscribeTokenRefresh = onTokenRefresh(getMessaging(), async fcmToken => {
+        if (token) {
+            console.log('FCM Token Refreshed:', fcmToken);
+            await getFcmToken(token);
+        }
+    });
+
+    return () => {
+      unsubscribeOnMessage();
+      unsubscribeTokenRefresh();
+    };
+  }, [token]);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator 
         screenOptions={{ 
           headerShown: false,

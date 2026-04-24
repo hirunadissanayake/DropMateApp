@@ -80,3 +80,19 @@ export const deleteNotification = async (token: string, id: string) => {
     throw error;
   }
 };
+
+export const updateFcmToken = async (token: string, fcmToken: string) => {
+  try {
+    const response = await axios.patch(ENDPOINTS.AUTH.UPDATE_FCM_TOKEN, { fcmToken }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+};

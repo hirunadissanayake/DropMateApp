@@ -13,6 +13,7 @@ export const ENDPOINTS = {
     CHANGE_PASSWORD: `${BASE_URL}/api/auth/change-password`,
     REQUEST_NEW_ROLE: `${BASE_URL}/api/auth/request-new-role`,
     SWITCH_ROLE: `${BASE_URL}/api/auth/switch-role`,
+    UPDATE_FCM_TOKEN: `${BASE_URL}/api/auth/fcm-token`,
   },
   PARCELS: {
     CREATE: `${BASE_URL}/api/parcels/create`,
