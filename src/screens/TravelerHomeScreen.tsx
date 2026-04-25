@@ -11,6 +11,7 @@ import {
   StatusBar,
   RefreshControl,
   Animated,
+  AppState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -25,6 +26,10 @@ import RequestAlertModal, { RequestAlertData } from '../components/common/Reques
 import Toast from 'react-native-toast-message';
 import { setDeliveryRequestListener } from '../services/fcmService';
 import { BASE_URL } from '../utils/endPoints';
+import Sound from 'react-native-sound';
+
+// Enable playback in silence mode (iOS)
+Sound.setCategory('Playback');
 
 
 const { width } = Dimensions.get('window');
@@ -58,6 +63,64 @@ const TravelerHomeScreen = ({ navigation }: any) => {
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
+  
+  // Sound references
+  const alertSoundRef = useRef<Sound | null>(null);
+  const isSoundPlayingRef = useRef(false);
+  const lastResumeTimeRef = useRef(0);
+
+  // Initialize sound
+  useEffect(() => {
+    alertSoundRef.current = new Sound('request_alert.mp3', Sound.MAIN_BUNDLE, (error) => {
+      if (error) {
+        console.log('Failed to load sound', error);
+        return;
+      }
+      // Set volume and loop
+      alertSoundRef.current?.setVolume(1.0);
+      alertSoundRef.current?.setNumberOfLoops(-1); // Loop indefinitely until stopped
+    });
+
+    // Track AppState to prevent sound clashing on resume
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        lastResumeTimeRef.current = Date.now();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+      if (alertSoundRef.current) {
+        alertSoundRef.current.stop();
+        alertSoundRef.current.release();
+      }
+    };
+  }, []);
+
+  const playAlertSound = useCallback(() => {
+    if (!alertSoundRef.current || isSoundPlayingRef.current) return;
+    // If the app was just opened/resumed in the last 3 seconds, 
+    const timeSinceResume = Date.now() - lastResumeTimeRef.current;
+    const delay = Math.max(0, 3000 - timeSinceResume);
+
+    setTimeout(() => {
+      // Check again if we still need to play (modal might have been closed)
+      if (requestModalVisibleRef.current && !isSoundPlayingRef.current) {
+        isSoundPlayingRef.current = true;
+        alertSoundRef.current?.play((success) => {
+          isSoundPlayingRef.current = false;
+          if (!success) console.log('Sound playback failed');
+        });
+      }
+    }, delay);
+  }, []);
+
+  const stopAlertSound = useCallback(() => {
+    if (alertSoundRef.current) {
+      alertSoundRef.current.stop();
+      isSoundPlayingRef.current = false;
+    }
+  }, []);
   const scrollViewRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
 
@@ -128,7 +191,9 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
         if (remainingSeconds <= 0) {
           // If already expired, call the expire logic and don't show modal
-          await deliveryService.expireMatch(token, match.id || match._id);
+          if (token) {
+            await deliveryService.expireMatch(token, match.id || match._id);
+          }
           return;
         }
 
@@ -143,18 +208,26 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           offerPrice: match.offerPrice?.toString() || parcel.price?.toString() || parcel.offerPrice?.toString(),
           remainingSeconds: remainingSeconds,
         });
+
+        // Start playing the alert sound with grace period
+        playAlertSound();
+
         requestModalVisibleRef.current = true;
         setRequestModalVisible(true);
       }
-    } catch (error: any) {
-      console.log('fetchPendingRequests error:', error?.message || error);
+    } catch (error) {
+      console.log('Error fetching pending requests:', error);
     }
-  }, [token]);
+  }, [token, playAlertSound]);
 
   const handleAcceptRequest = useCallback(async (matchId: string) => {
     if (!token) return;
     try {
       await deliveryService.acceptMatch(token, matchId);
+      
+      // Stop sound on action
+      stopAlertSound();
+
       requestModalVisibleRef.current = false;
       setRequestModalVisible(false);
       setPendingRequestData(null);
@@ -176,12 +249,16 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       });
       throw error;
     }
-  }, [token]);
+  }, [token, stopAlertSound]);
 
   const handleDeclineRequest = useCallback(async (matchId: string, reason: string) => {
     if (!token) return;
     try {
       await deliveryService.rejectMatchWithReason(token, matchId, reason);
+      
+      // Stop sound on action
+      stopAlertSound();
+
       requestModalVisibleRef.current = false;
       setRequestModalVisible(false);
       setPendingRequestData(null);
@@ -203,12 +280,16 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       });
       throw error;
     }
-  }, [token]);
+  }, [token, stopAlertSound]);
 
   const handleExpireRequest = useCallback(async (matchId: string) => {
     if (!token) return;
     try {
       await deliveryService.expireMatch(token, matchId);
+      
+      // Stop sound on action
+      stopAlertSound();
+
       requestModalVisibleRef.current = false;
       setRequestModalVisible(false);
       setPendingRequestData(null);
@@ -224,20 +305,71 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       requestModalVisibleRef.current = false;
       setRequestModalVisible(false);
     }
-  }, [token]);
+  }, [token, stopAlertSound]);
 
   // ✅ FIX: Register FCM foreground listener so modal shows even when app is open
   useEffect(() => {
-    // When a DELIVERY_REQUEST FCM arrives in foreground, fetch & show modal
-    setDeliveryRequestListener(() => {
-      fetchPendingRequests();
+    // When a DELIVERY_REQUEST FCM arrives, use its data to show modal instantly
+    setDeliveryRequestListener(async (fcmData: any) => {
+      console.log('🔔 Received FCM Data for Modal:', fcmData);
+      
+      if (!fcmData || !fcmData.matchId) {
+        fetchPendingRequests(); // Fallback to fetching if data is missing
+        return;
+      }
+
+      // --- PARSE IMAGES ---
+      let parcelPhotos: string[] = [];
+      try {
+        if (fcmData.imageUrls) {
+          const rawUrls = JSON.parse(fcmData.imageUrls);
+          parcelPhotos = rawUrls.map((url: string) => formatImageUrl(url));
+        }
+      } catch (e) {
+        console.log('Error parsing FCM images:', e);
+      }
+
+      // --- CALCULATE REMAINING TIME ---
+      const createdAt = fcmData.createdAt ? new Date(fcmData.createdAt).getTime() : new Date().getTime();
+      const now = new Date().getTime();
+      const diffSeconds = Math.floor((now - createdAt) / 1000);
+      const MAX_SECONDS = 15 * 60;
+      const remainingSeconds = Math.max(0, MAX_SECONDS - diffSeconds);
+
+      if (remainingSeconds <= 0) {
+        if (token) {
+          await deliveryService.expireMatch(token, fcmData.matchId);
+        }
+        return;
+      }
+
+      // --- SET DATA & SHOW MODAL ---
+      setPendingRequestData({
+        matchId: fcmData.matchId,
+        parcelPhotos,
+        parcelTitle: fcmData.parcelTitle || 'New Delivery Request',
+        parcelWeight: fcmData.parcelWeight ? `${fcmData.parcelWeight} kg` : undefined,
+        fromLocation: fcmData.fromLocation,
+        toLocation: fcmData.toLocation,
+        senderName: fcmData.senderName || 'DropMate User',
+        offerPrice: fcmData.offerPrice?.toString(),
+        remainingSeconds,
+      });
+
+      // --- SOUND LOGIC ---
+      // Use the smart play function which handles the grace period
+      if (fcmData.origin === 'foreground') {
+        playAlertSound();
+      }
+
+      requestModalVisibleRef.current = true;
+      setRequestModalVisible(true);
     });
 
     return () => {
-      // Cleanup listener when screen unmounts
       setDeliveryRequestListener(null);
     };
-  }, [fetchPendingRequests]);
+  }, [token, fetchPendingRequests]);
 
   useFocusEffect(
     useCallback(() => {
@@ -321,7 +453,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.greetingTextContainer}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Text style={styles.userNameText}>Hi, {userName}</Text>
+              <Text style={styles.userNameText} numberOfLines={1}>Hi, {userName}</Text>
               <View style={styles.modeIndicator}>
                 <View style={styles.activeDot} />
                 <Text style={styles.modeText}>Traveler Mode</Text>
@@ -342,7 +474,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           </Svg>
           {unreadCount > 0 && (
             <View style={styles.notifBadge}>
-              <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -611,9 +743,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   userInfoRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 12,
   },
   avatarBorder: {
     width: 48,
@@ -642,6 +776,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   greetingTextContainer: {
+    flexShrink: 1,
     justifyContent: 'center',
   },
   userNameText: {
@@ -649,6 +784,7 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: Typography.bold,
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   greetingText: {
     fontSize: 14,
@@ -674,7 +810,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   modeText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#059669',
     fontFamily: Typography.bold,
     textTransform: 'uppercase',
@@ -695,12 +831,12 @@ const styles = StyleSheet.create({
   },
   notifBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: -8,
+    right: -6,
     backgroundColor: '#EF4444',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -708,8 +844,9 @@ const styles = StyleSheet.create({
   },
   notifBadgeText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: Typography.bold,
+
   },
   scrollContent: {
     paddingTop: 8,

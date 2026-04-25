@@ -285,18 +285,8 @@ const TripDetailsScreen = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#006C52" />
-      </View>
-    );
-  }
-
-  if (!trip) return null;
-
-  const usedCap = trip.usedCapacity || 0;
-  const totalCap = trip.capacityKg || 1;
+  const usedCap = trip?.usedCapacity ?? 0;
+  const totalCap = trip?.capacityKg ?? 1;
   const capPercentage = Math.min((usedCap / totalCap) * 100, 100);
 
   return (
@@ -306,8 +296,13 @@ const TripDetailsScreen = () => {
         backgroundColor="transparent"
         translucent
       />
-
-      <View style={styles.premiumHeader}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#006C52" />
+        </View>
+      ) : !trip ? null : (
+        <>
+          <View style={styles.premiumHeader}>
         <LinearGradient
           colors={['#004D3A', '#006C52', '#008C69']}
           start={{x: 0, y: 0}}
@@ -502,11 +497,11 @@ const TripDetailsScreen = () => {
             </View>
             <Text style={styles.statLabel}>LIMIT</Text>
             <View style={styles.statValueRow}>
-              <Text style={styles.statValue}>{trip.capacityKg} kg</Text>
+              <Text style={styles.statValue}>{trip.capacityKg ?? 0} kg</Text>
               {user?.id === trip.travelerId && trip.status === 'ACTIVE' && !trip.isExpired && (
                 <TouchableOpacity 
                   onPress={() => {
-                    setNewCapacity(trip.capacityKg.toString());
+                    setNewCapacity((trip.capacityKg ?? 0).toString());
                     setIsEditingCapacity(true);
                   }}
                   style={styles.statEditBtn}
@@ -763,14 +758,14 @@ const TripDetailsScreen = () => {
             <TouchableOpacity 
               style={[
                 styles.updateBtn,
-                (updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity) && styles.disabledUpdateBtn
+                (updatingCapacity || newCapacity === (trip.capacityKg ?? 0).toString() || !newCapacity) && styles.disabledUpdateBtn
               ]}
               onPress={handleUpdateCapacity}
-              disabled={updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity}
+              disabled={updatingCapacity || newCapacity === (trip.capacityKg ?? 0).toString() || !newCapacity}
             >
               <LinearGradient 
                 colors={
-                  (updatingCapacity || newCapacity === trip.capacityKg.toString() || !newCapacity) 
+                  (updatingCapacity || newCapacity === (trip.capacityKg ?? 0).toString() || !newCapacity) 
                     ? ['#94A3B8', '#64748B'] 
                     : ['#006C52', '#004D3A']
                 } 
@@ -780,7 +775,7 @@ const TripDetailsScreen = () => {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <Text style={styles.updateBtnText}>
-                    {newCapacity === trip.capacityKg.toString() ? 'No Changes' : 'Update Capacity'}
+                    {newCapacity === (trip.capacityKg ?? 0).toString() ? 'No Changes' : 'Update Capacity'}
                   </Text>
                 )}
               </LinearGradient>
@@ -788,6 +783,8 @@ const TripDetailsScreen = () => {
           </View>
         </View>
       </Modal>
+        </>
+      )}
     </View>
   );
 };

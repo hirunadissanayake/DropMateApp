@@ -88,7 +88,7 @@ const FindTripsScreen = () => {
               </View>
             )}
             <View style={styles.capacityBadge}>
-              <Text style={styles.capacityText}>{item.capacityKg} kg max</Text>
+              <Text style={styles.capacityText}>{item.capacityKg ?? 0} kg max</Text>
             </View>
           </View>
         </View>

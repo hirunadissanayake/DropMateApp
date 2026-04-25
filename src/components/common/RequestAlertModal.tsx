@@ -310,9 +310,6 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                   onPress={() => handleConfirmDecline(r.label)}
                 >
                   <Text style={styles.reasonItemText}>{r.label}</Text>
-                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
-                    <Path d="M9 18l6-6-6-6" />
-                  </Svg>
                 </TouchableOpacity>
               ))}
             </View>
@@ -354,10 +351,6 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
               </View>
             ))}
           </ScrollView>
-          
-          <View style={styles.galleryFooter}>
-            <Text style={styles.galleryFooterText}>Tap anywhere to close gallery</Text>
-          </View>
         </View>
       </Modal>
     </>

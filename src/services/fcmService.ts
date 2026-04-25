@@ -62,7 +62,7 @@ export const setupFcmListeners = () => {
     // If this is a delivery match request → trigger the request alert modal
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
       if (onDeliveryRequestCallback) {
-        onDeliveryRequestCallback(remoteMessage.data);
+        onDeliveryRequestCallback({ ...remoteMessage.data, origin: 'foreground' });
       }
       return; // Don't show generic toast for this type
     }
@@ -92,7 +92,10 @@ export const setupFcmListeners = () => {
     );
     const notifType = remoteMessage.data?.type as string | undefined;
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
-      // Navigate to TravelerHome so the screen fetches and shows the modal
+      // Navigate to TravelerHome and pass the data
+      if (onDeliveryRequestCallback) {
+        onDeliveryRequestCallback({ ...remoteMessage.data, origin: 'background' });
+      }
       navigate('TravelerHome' as any);
     } else if (remoteMessage.data) {
       navigate('Notifications');

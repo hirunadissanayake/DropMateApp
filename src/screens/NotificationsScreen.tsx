@@ -73,18 +73,50 @@ const groupNotifications = (notifications: Notification[]) => {
   return Object.entries(groups).filter(([_, items]) => items.length > 0);
 };
 
-const getIconForType = (type: string) => {
+const NotificationIcon = ({ type }: { type: string }) => {
   switch (type) {
     case 'PROFILE_APPROVED':
-      return { icon: '✅', color: '#10B981', bgColor: '#ECFDF5' };
+      return (
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M20 6L9 17l-5-5" />
+        </Svg>
+      );
     case 'PROFILE_REJECTED':
-      return { icon: '❌', color: '#EF4444', bgColor: '#FEF2F2' };
+      return (
+        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M18 6L6 18M6 6l12 12" />
+        </Svg>
+      );
     case 'PARCEL_REQUEST':
-      return { icon: '📦', color: '#3B82F6', bgColor: '#EFF6FF' };
+      return (
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
+          <Path d="M12 22.08V12" />
+        </Svg>
+      );
     case 'PAYMENT_RECEIVED':
-      return { icon: '💰', color: '#F59E0B', bgColor: '#FFFBEB' };
+      return (
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </Svg>
+      );
     default:
-      return { icon: '🔔', color: '#64748B', bgColor: '#F1F5F9' };
+      return (
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00875A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+        </Svg>
+      );
+  }
+};
+
+const getIconBgColor = (type: string) => {
+  switch (type) {
+    case 'PROFILE_APPROVED': return '#ECFDF5';
+    case 'PROFILE_REJECTED': return '#FEF2F2';
+    case 'PARCEL_REQUEST': return '#EFF6FF';
+    case 'PAYMENT_RECEIVED': return '#FFFBEB';
+    default: return '#E6F5EF';
   }
 };
 
@@ -168,7 +200,7 @@ const NotificationsScreen = () => {
 
   const renderRightActions = (id: string) => {
     return (
-      <View style={{ width: 90, height: '100%', paddingVertical: 6 }}>
+      <View style={{ width: 100, height: '100%' }}>
         <TouchableOpacity 
             style={styles.deleteSwipeAction} 
             onPress={() => handleDelete(id)}
@@ -183,110 +215,110 @@ const NotificationsScreen = () => {
     );
   };
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={BRAND_GREEN} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      <LinearGradient colors={[BRAND_GREEN, BRAND_DARK]} style={styles.heroSection}>
-        <SafeAreaView edges={['top']}>
-          <View style={styles.header}>
-            <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-            <Text style={styles.headerTitle}>Notifications</Text>
-            <View style={{ width: 44 }} />
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
-        }
-        contentContainerStyle={notifications.length === 0 ? { flex: 1 } : styles.scrollContent}
-      >
-        {notifications.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconCircle}>
-                <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
-                    <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
-                </Svg>
-            </View>
-            <Text style={styles.emptyText}>No notifications yet</Text>
-            <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
-          </View>
-        ) : (
-          <View style={styles.listContainer}>
-            {groupNotifications(notifications).map(([groupName, items], index) => (
-              <View key={groupName} style={styles.groupSection}>
-                <View style={styles.groupHeaderRow}>
-                  <Text style={styles.groupHeader}>{groupName}</Text>
-                  {index === 0 && notifications.some(n => !n.isRead) && (
-                    <TouchableOpacity onPress={handleMarkAllRead}>
-                      <Text style={styles.groupMarkAllText}>Mark all read</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                {items.map((item) => {
-                  const { icon, color, bgColor } = getIconForType(item.type);
-                  return (
-                    <Swipeable
-                      key={item.id}
-                      renderRightActions={() => renderRightActions(item.id)}
-                      friction={2}
-                      rightThreshold={40}
-                    >
-                      <TouchableOpacity
-                        style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
-                        onPress={() => handleMarkAsRead(item.id)}
-                        activeOpacity={0.9}
-                      >
-                        <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
-                          <Text style={{ fontSize: 22 }}>{icon}</Text>
-                        </View>
-                        
-                        <View style={styles.contentContainer}>
-                          <View style={styles.titleRow}>
-                            <Text style={[styles.itemTitle, !item.isRead && styles.unreadText]}>
-                              {item.title}
-                            </Text>
-                            {!item.isRead && <View style={styles.unreadDot} />}
-                          </View>
-                          <Text style={styles.itemBody} numberOfLines={2}>
-                            {item.body}
-                          </Text>
-                          <View style={styles.footerRow}>
-                            <Text style={styles.itemTime}>{formatDate(item.createdAt)}</Text>
-                            {item.isRead ? null : <Text style={styles.newBadge}>New</Text>}
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                    </Swipeable>
-                  );
-                })}
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={BRAND_GREEN} />
+        </View>
+      ) : (
+        <>
+          <LinearGradient colors={[BRAND_GREEN, BRAND_DARK]} style={styles.heroSection}>
+            <SafeAreaView edges={['top']}>
+              <View style={styles.header}>
+                <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
+                <Text style={styles.headerTitle}>Notifications</Text>
+                <View style={{ width: 44 }} />
               </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+            </SafeAreaView>
+          </LinearGradient>
 
-      <CustomAlert
-        visible={alertVisible}
-        title="Delete Notification"
-        message="Are you sure you want to delete this notification? This action cannot be undone."
-        type="warning"
-        confirmText="Delete"
-        loading={deleting}
-        onConfirm={confirmDelete}
-        onCancel={() => setAlertVisible(false)}
-      />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
+            }
+            contentContainerStyle={notifications.length === 0 ? { flex: 1 } : styles.scrollContent}
+          >
+            {notifications.length === 0 ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconCircle}>
+                    <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
+                        <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                    </Svg>
+                </View>
+                <Text style={styles.emptyText}>No notifications yet</Text>
+                <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
+              </View>
+            ) : (
+              <View style={styles.listContainer}>
+                {groupNotifications(notifications).map(([groupName, items], index) => (
+                  <View key={groupName} style={styles.groupSection}>
+                    <View style={styles.groupHeaderRow}>
+                      <Text style={styles.groupHeader}>{groupName}</Text>
+                      {index === 0 && notifications.some(n => !n.isRead) && (
+                        <TouchableOpacity onPress={handleMarkAllRead}>
+                          <Text style={styles.groupMarkAllText}>Mark all read</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    {items.map((item) => {
+                      const bgColor = getIconBgColor(item.type);
+                      return (
+                        <Swipeable
+                          key={item.id}
+                          renderRightActions={() => renderRightActions(item.id)}
+                          friction={2}
+                          rightThreshold={40}
+                        >
+                          <TouchableOpacity
+                            style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
+                            onPress={() => handleMarkAsRead(item.id)}
+                            activeOpacity={0.9}
+                          >
+                            <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
+                              <NotificationIcon type={item.type} />
+                            </View>
+                            
+                            <View style={styles.contentContainer}>
+                              <View style={styles.titleRow}>
+                                <Text style={[styles.itemTitle, !item.isRead && styles.unreadText]}>
+                                  {item.title}
+                                </Text>
+                                {!item.isRead && <View style={styles.unreadDot} />}
+                              </View>
+                              <Text style={styles.itemBody} numberOfLines={2}>
+                                {item.body}
+                              </Text>
+                              <View style={styles.footerRow}>
+                                <Text style={styles.itemTime}>{formatDate(item.createdAt)}</Text>
+                                {item.isRead ? null : <Text style={styles.newBadge}>New</Text>}
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        </Swipeable>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          <CustomAlert
+            visible={alertVisible}
+            title="Delete Notification"
+            message="Are you sure you want to delete this notification? This action cannot be undone."
+            type="warning"
+            confirmText="Delete"
+            loading={deleting}
+            onConfirm={confirmDelete}
+            onCancel={() => setAlertVisible(false)}
+          />
+        </>
+      )}
     </View>
   );
 };
@@ -427,9 +459,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
-    height: '100%',
-    borderRadius: 24,
+    flex: 1,
+    borderRadius: 20,
+    marginBottom: 6,
     marginLeft: 10,
   },
   deleteIconContainer: {

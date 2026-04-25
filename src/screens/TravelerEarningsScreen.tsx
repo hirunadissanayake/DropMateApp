@@ -123,22 +123,20 @@ const TravelerEarningsScreen = () => {
     }
   };
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={BRAND_GREEN} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={[BRAND_GREEN]} />}
-      >
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={BRAND_GREEN} />
+        </View>
+      ) : (
+        <>
+          <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={[BRAND_GREEN]} />}
+        >
         <LinearGradient colors={[BRAND_GREEN, BRAND_DARK]} style={styles.heroSection}>
           <SafeAreaView edges={['top']}>
             <View style={styles.headerRow}>
@@ -402,6 +400,8 @@ const TravelerEarningsScreen = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+        </>
+      )}
     </View>
   );
 };

@@ -1,6 +1,11 @@
 package com.dropmate
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.media.AudioAttributes
+import android.net.Uri
+import android.os.Build
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -35,10 +40,38 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    createNotificationChannel()
     SoLoader.init(this, OpenSourceMergedSoMapping)
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
       load()
+    }
+  }
+
+  private fun createNotificationChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val name = "Delivery Requests"
+      val descriptionText = "Notifications for new parcel delivery requests"
+      val importance = NotificationManager.IMPORTANCE_HIGH
+      val channel = NotificationChannel("delivery_requests", name, importance).apply {
+        description = descriptionText
+      }
+      
+      // Set custom sound for background notifications
+      try {
+        val soundUri = Uri.parse("android.resource://" + packageName + "/raw/request_alert")
+        val audioAttributes = AudioAttributes.Builder()
+          .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+          .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+          .build()
+        channel.setSound(soundUri, audioAttributes)
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+
+      val notificationManager: NotificationManager =
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+      notificationManager.createNotificationChannel(channel)
     }
   }
 }

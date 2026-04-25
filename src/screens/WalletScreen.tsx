@@ -61,18 +61,15 @@ const WalletScreen = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={BRAND_GREEN} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={BRAND_GREEN} />
+        </View>
+      ) : (
+        <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <BackButton onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>My Wallet</Text>
@@ -164,7 +161,8 @@ const WalletScreen = () => {
             )}
           </View>
         </ScrollView>
-      </SafeAreaView>
+        </SafeAreaView>
+      )}
     </View>
   );
 };
