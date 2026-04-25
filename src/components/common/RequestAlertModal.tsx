@@ -39,6 +39,7 @@ export interface RequestAlertData {
   toLocation?: string;
   senderName?: string;
   offerPrice?: string;
+  remainingSeconds?: number;
 }
 
 interface RequestAlertModalProps {
@@ -68,8 +69,9 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
 
   // Animations logic
   useEffect(() => {
-    if (visible) {
-      setTimeLeft(EXPIRY_SECONDS);
+    if (visible && data) {
+      // Use the remaining time from the server if available
+      setTimeLeft(data.remainingSeconds ?? EXPIRY_SECONDS);
       setIsAccepting(false);
       setIsDeclining(false);
       setShowReasonModal(false);
@@ -174,7 +176,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 </View>
               </View>
 
-              <Text style={styles.heading}>New Match Request!</Text>
+              <Text style={styles.heading}>New Request!</Text>
               <Text style={styles.subHeading}>You have a new delivery opportunity. Check the details and respond.</Text>
 
               {/* Single Image Card (Click to Expand) */}

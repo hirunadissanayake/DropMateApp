@@ -119,6 +119,19 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           if (fb) formattedPhotos.push(fb);
         }
 
+        // --- CALCULATE REMAINING TIME ---
+        const createdAt = new Date(match.createdAt).getTime();
+        const now = new Date().getTime();
+        const diffSeconds = Math.floor((now - createdAt) / 1000);
+        const MAX_SECONDS = 15 * 60; // 15 minutes
+        const remainingSeconds = Math.max(0, MAX_SECONDS - diffSeconds);
+
+        if (remainingSeconds <= 0) {
+          // If already expired, call the expire logic and don't show modal
+          await deliveryService.expireMatch(token, match.id || match._id);
+          return;
+        }
+
         setPendingRequestData({
           matchId: match.id || match._id,
           parcelPhotos: formattedPhotos,
@@ -128,6 +141,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           toLocation: parcel.toLocation || match.toLocation,
           senderName: match.sender?.name || parcel.senderName || 'DropMate User',
           offerPrice: match.offerPrice?.toString() || parcel.price?.toString() || parcel.offerPrice?.toString(),
+          remainingSeconds: remainingSeconds,
         });
         requestModalVisibleRef.current = true;
         setRequestModalVisible(true);
@@ -291,7 +305,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
         <TouchableOpacity 
           style={styles.userInfoRow} 
           activeOpacity={0.7}
-          onPress={() => navigation.navigate('TravelerProfile')}
+          
         >
           <View style={styles.avatarBorder}>
             {user?.selfieUrl ? (
