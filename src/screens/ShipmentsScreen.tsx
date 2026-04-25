@@ -266,6 +266,38 @@ const ShipmentsScreen = () => {
           <Text style={styles.detailValue}>LKR {item.price.toLocaleString()}</Text>
         </View>
       </View>
+
+      {/* PENDING: Cancel only */}
+      {item.status.toUpperCase() === 'PENDING' && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.actionBtnBase, styles.cancelBtnSmall, { flex: 1 }]}
+            onPress={(e) => { e.stopPropagation(); handleCancelPress(item.id); }}
+            activeOpacity={0.8}
+          >
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" style={{ marginRight: 5 }}>
+              <Path d="M18 6L6 18M6 6l12 12" />
+            </Svg>
+            <Text style={styles.cancelBtnTextSmall}>Cancel Parcel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* CANCELLED: Delete only */}
+      {item.status.toUpperCase() === 'CANCELLED' && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.actionBtnBase, styles.deleteBtnSmall, { flex: 1 }]}
+            onPress={(e) => { e.stopPropagation(); handleDeletePress(item.id); }}
+            activeOpacity={0.8}
+          >
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" style={{ marginRight: 5 }}>
+              <Path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+            </Svg>
+            <Text style={styles.deleteBtnTextSmall}>Delete Parcel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -315,14 +347,15 @@ const ShipmentsScreen = () => {
             onPress={() => setActiveTab('history')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>History</Text>
+            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>Delivered</Text>
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={parcels.filter(p => {
             const status = p.status.toUpperCase();
-            const isHistoryStatus = status === 'DELIVERED' || status === 'CANCELLED';
+            // History = only DELIVERED. CANCELLED stays in Ongoing so Delete button is visible immediately.
+            const isHistoryStatus = status === 'DELIVERED';
             return activeTab === 'history' ? isHistoryStatus : !isHistoryStatus;
           })}
           renderItem={renderParcelItem}
@@ -341,7 +374,7 @@ const ShipmentsScreen = () => {
                   <Path d="M12 21V13" />
                 </Svg>
               </View>
-              <Text style={styles.emptyTitle}>No {activeTab === 'ongoing' ? 'Ongoing' : 'History'} Shipments</Text>
+              <Text style={styles.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
               <Text style={styles.emptySubtitle}>
                 {activeTab === 'ongoing' 
                   ? "Once you create a parcel, it will appear here for tracking."
@@ -672,13 +705,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  actionBtnBase: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
   cancelBtnSmall: {
     backgroundColor: '#FEF2F2',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FEE2E2',
   },
@@ -689,11 +732,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnSmall: {
     backgroundColor: '#FEF2F2',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
+    paddingHorizontal: 18,
     borderWidth: 1,
     borderColor: '#FEE2E2',
   },

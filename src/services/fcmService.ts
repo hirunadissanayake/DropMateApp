@@ -59,7 +59,7 @@ export const setupFcmListeners = () => {
 
     const notifType = remoteMessage.data?.type as string | undefined;
 
-    // If this is a delivery match request → trigger the request alert modal
+    // If this is a delivery request → trigger the request alert modal
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
       if (onDeliveryRequestCallback) {
         onDeliveryRequestCallback({ ...remoteMessage.data, origin: 'foreground' });
