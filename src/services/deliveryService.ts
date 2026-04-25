@@ -45,6 +45,28 @@ export const rejectMatch = async (token: string, matchId: string) => {
   }
 };
 
+export const rejectMatchWithReason = async (token: string, matchId: string, reason: string) => {
+  try {
+    const response = await axios.patch(ENDPOINTS.DELIVERY.REJECT_MATCH(matchId), { reason }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const expireMatch = async (token: string, matchId: string) => {
+  try {
+    const response = await axios.patch(ENDPOINTS.DELIVERY.EXPIRE_MATCH(matchId), {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
 export const initiatePickup = async (token: string, parcelId: string) => {
   try {
     const response = await axios.post(ENDPOINTS.DELIVERY.INITIATE_PICKUP, { parcelId }, {

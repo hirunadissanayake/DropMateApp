@@ -43,14 +43,31 @@ import { navigate } from '../navigation/navigationRef';
 
 import Toast from 'react-native-toast-message';
 
+// Callback registry for request alert modal trigger
+let onDeliveryRequestCallback: ((data: any) => void) | null = null;
+
+export const setDeliveryRequestListener = (callback: ((data: any) => void) | null) => {
+  onDeliveryRequestCallback = callback;
+};
+
 export const setupFcmListeners = () => {
   const messaging = getMessaging();
 
   // Foreground message handling
   const unsubscribeOnMessage = onMessage(messaging, async remoteMessage => {
     console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
-    
-    // Show a beautiful in-app banner (Toast) when app is open
+
+    const notifType = remoteMessage.data?.type as string | undefined;
+
+    // If this is a delivery match request → trigger the request alert modal
+    if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
+      if (onDeliveryRequestCallback) {
+        onDeliveryRequestCallback(remoteMessage.data);
+      }
+      return; // Don't show generic toast for this type
+    }
+
+    // Show a beautiful in-app banner (Toast) for all other notifications
     if (remoteMessage.notification) {
       Toast.show({
         type: 'info',
@@ -73,8 +90,12 @@ export const setupFcmListeners = () => {
       'Notification caused app to open from background state:',
       remoteMessage.notification,
     );
-    if (remoteMessage.data) {
-        navigate('Notifications');
+    const notifType = remoteMessage.data?.type as string | undefined;
+    if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
+      // Navigate to TravelerHome so the screen fetches and shows the modal
+      navigate('TravelerHome' as any);
+    } else if (remoteMessage.data) {
+      navigate('Notifications');
     }
   });
 
@@ -86,7 +107,10 @@ export const setupFcmListeners = () => {
           'Notification caused app to open from quit state:',
           remoteMessage.notification,
         );
-        // Handle initial notification
+        const notifType = remoteMessage.data?.type as string | undefined;
+        if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
+          navigate('TravelerHome' as any);
+        }
       }
     });
 

@@ -17,9 +17,14 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, G, Defs, ClipPath, Circle } from 'react-native-svg';
 import * as authService from '../services/authService';
 import * as notificationService from '../services/notificationService';
+import * as deliveryService from '../services/deliveryService';
 import { useAuthStore } from '../store/authStore';
 import { Typography } from '../constants/Typography';
 import { useFocusEffect } from '@react-navigation/native';
+import RequestAlertModal, { RequestAlertData } from '../components/common/RequestAlertModal';
+import Toast from 'react-native-toast-message';
+import { setDeliveryRequestListener } from '../services/fcmService';
+import { BASE_URL } from '../utils/endPoints';
 
 
 const { width } = Dimensions.get('window');
@@ -56,6 +61,12 @@ const TravelerHomeScreen = ({ navigation }: any) => {
   const scrollViewRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
 
+  // Request Alert Modal state
+  const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const [pendingRequestData, setPendingRequestData] = useState<RequestAlertData | null>(null);
+  // Ref to always read latest modal visibility without stale closures
+  const requestModalVisibleRef = useRef(false);
+
   const fetchUnreadCount = async () => {
     if (!token) return;
     try {
@@ -76,10 +87,149 @@ const TravelerHomeScreen = ({ navigation }: any) => {
     }
   };
 
+  const formatImageUrl = (url?: string) => {
+    if (!url) return undefined;
+    if (url.startsWith('http')) return url;
+    // Prepend BASE_URL and fix slashes for mobile compatibility
+    return `${BASE_URL}/${url.replace(/\\/g, '/')}`;
+  };
+
+  const fetchPendingRequests = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await deliveryService.getPendingMatches(token);
+      // The backend returns a direct array, or sometimes wrapped in matches/pendingMatches
+      const matches = Array.isArray(data) ? data : (data?.matches || data?.pendingMatches || []);
+      
+      if (matches.length > 0 && !requestModalVisibleRef.current) {
+        const match = matches[0];
+        // Ensure we handle both nested parcel and flat structure
+        const parcel = match.parcel || match;
+        
+        console.log('📦 Mapping Parcel Data:', {
+          name: parcel.name,
+          images: parcel.imageUrls,
+          mappedPhoto: formatImageUrl(parcel.imageUrls?.[0] || parcel.photoUrl || parcel.image)
+        });
+
+        const formattedPhotos = (parcel.imageUrls || []).map((url: string) => formatImageUrl(url)).filter(Boolean);
+        // Fallback for single photo fields
+        if (formattedPhotos.length === 0 && (parcel.photoUrl || parcel.image)) {
+          const fb = formatImageUrl(parcel.photoUrl || parcel.image);
+          if (fb) formattedPhotos.push(fb);
+        }
+
+        setPendingRequestData({
+          matchId: match.id || match._id,
+          parcelPhotos: formattedPhotos,
+          parcelTitle: parcel.name || parcel.title || 'New Delivery Request',
+          parcelWeight: parcel.weight ? `${parcel.weight} kg` : undefined,
+          fromLocation: parcel.fromLocation || match.fromLocation,
+          toLocation: parcel.toLocation || match.toLocation,
+          senderName: match.sender?.name || parcel.senderName || 'DropMate User',
+          offerPrice: match.offerPrice?.toString() || parcel.price?.toString() || parcel.offerPrice?.toString(),
+        });
+        requestModalVisibleRef.current = true;
+        setRequestModalVisible(true);
+      }
+    } catch (error: any) {
+      console.log('fetchPendingRequests error:', error?.message || error);
+    }
+  }, [token]);
+
+  const handleAcceptRequest = useCallback(async (matchId: string) => {
+    if (!token) return;
+    try {
+      await deliveryService.acceptMatch(token, matchId);
+      requestModalVisibleRef.current = false;
+      setRequestModalVisible(false);
+      setPendingRequestData(null);
+      Toast.show({
+        type: 'success',
+        text1: '✅ Request Accepted!',
+        text2: 'The sender has been notified. Good luck!',
+        visibilityTime: 4000,
+        topOffset: 50,
+      });
+      fetchUnreadCount();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.message || 'Failed to accept request. Try again.',
+        visibilityTime: 4000,
+        topOffset: 50,
+      });
+      throw error;
+    }
+  }, [token]);
+
+  const handleDeclineRequest = useCallback(async (matchId: string, reason: string) => {
+    if (!token) return;
+    try {
+      await deliveryService.rejectMatchWithReason(token, matchId, reason);
+      requestModalVisibleRef.current = false;
+      setRequestModalVisible(false);
+      setPendingRequestData(null);
+      Toast.show({
+        type: 'info',
+        text1: 'Request Declined',
+        text2: 'The sender has been notified.',
+        visibilityTime: 4000,
+        topOffset: 50,
+      });
+      fetchUnreadCount();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.message || 'Failed to decline request. Try again.',
+        visibilityTime: 4000,
+        topOffset: 50,
+      });
+      throw error;
+    }
+  }, [token]);
+
+  const handleExpireRequest = useCallback(async (matchId: string) => {
+    if (!token) return;
+    try {
+      await deliveryService.expireMatch(token, matchId);
+      requestModalVisibleRef.current = false;
+      setRequestModalVisible(false);
+      setPendingRequestData(null);
+      Toast.show({
+        type: 'info',
+        text1: '⏰ Request Expired',
+        text2: 'You did not respond in time. The sender has been notified.',
+        visibilityTime: 5000,
+        topOffset: 50,
+      });
+    } catch (error: any) {
+      console.log('Expire match error:', error);
+      requestModalVisibleRef.current = false;
+      setRequestModalVisible(false);
+    }
+  }, [token]);
+
+  // ✅ FIX: Register FCM foreground listener so modal shows even when app is open
+  useEffect(() => {
+    // When a DELIVERY_REQUEST FCM arrives in foreground, fetch & show modal
+    setDeliveryRequestListener(() => {
+      fetchPendingRequests();
+    });
+
+    return () => {
+      // Cleanup listener when screen unmounts
+      setDeliveryRequestListener(null);
+    };
+  }, [fetchPendingRequests]);
+
   useFocusEffect(
     useCallback(() => {
       fetchUserProfile();
       fetchUnreadCount();
+      fetchPendingRequests();
     }, [token])
   );
 
@@ -419,6 +569,16 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
         <View style={{ height: 100 }} /> 
       </ScrollView>
+
+      {/* Request Alert Modal */}
+      <RequestAlertModal
+        visible={requestModalVisible}
+        data={pendingRequestData}
+        onAccept={handleAcceptRequest}
+        onDecline={handleDeclineRequest}
+        onExpire={handleExpireRequest}
+      />
+
     </SafeAreaView>
   );
 };
