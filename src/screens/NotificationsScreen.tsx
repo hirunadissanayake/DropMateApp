@@ -289,7 +289,7 @@ const NotificationsScreen = () => {
                                 </Text>
                                 {!item.isRead && <View style={styles.unreadDot} />}
                               </View>
-                              <Text style={styles.itemBody} numberOfLines={2}>
+                              <Text style={styles.itemBody}>
                                 {item.body}
                               </Text>
                               <View style={styles.footerRow}>
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   listContainer: {
     paddingHorizontal: 20,

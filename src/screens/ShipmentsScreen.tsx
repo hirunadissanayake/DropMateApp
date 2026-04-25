@@ -267,8 +267,8 @@ const ShipmentsScreen = () => {
         </View>
       </View>
 
-      {/* PENDING: Cancel only */}
-      {item.status.toUpperCase() === 'PENDING' && (
+      {/* PENDING + not yet requested: Cancel only */}
+      {item.status.toUpperCase() === 'PENDING' && !item.isRequested && (
         <View style={styles.actionRow}>
           <TouchableOpacity
             style={[styles.actionBtnBase, styles.cancelBtnSmall, { flex: 1 }]}
