@@ -12,10 +12,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useEffect } from 'react';
 import { socketService } from './src/services/socketService';
+import { initSound } from './src/services/soundService';
 
 const App = () => {
   useEffect(() => {
     socketService.connect();
+    initSound();
     return () => socketService.disconnect();
   }, []);
 

@@ -255,7 +255,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             </Svg>
             {announcementUnread > 0 && (
               <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{announcementUnread > 9 ? '9+' : announcementUnread}</Text>
+                <Text style={styles.notifBadgeText}>{announcementUnread > 99 ? '99+' : announcementUnread}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -271,7 +271,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             </Svg>
             {unreadCount > 0 && (
               <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>

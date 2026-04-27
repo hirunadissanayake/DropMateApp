@@ -28,6 +28,10 @@ import RequestAlertModal, {
 import Toast from 'react-native-toast-message';
 import {setDeliveryRequestListener} from '../services/fcmService';
 import {BASE_URL} from '../utils/endPoints';
+import {
+  playAlertSound as playGlobalSound,
+  stopAlertSound as stopGlobalSound,
+} from '../services/soundService';
 
 const {width} = Dimensions.get('window');
 
@@ -64,14 +68,22 @@ const TravelerHomeScreen = ({navigation}: any) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', () => {});
-    return () => subscription.remove();
+
+
+  const playAlertSound = useCallback(() => {
+    playGlobalSound();
   }, []);
 
-  const playAlertSound = useCallback(() => {}, []);
+  const stopAlertSound = useCallback(() => {
+    stopGlobalSound();
+  }, []);
 
-  const stopAlertSound = useCallback(() => {}, []);
+  // Safety: Stop sound if component unmounts for any reason (logout, navigation, etc)
+  useEffect(() => {
+    return () => {
+      stopGlobalSound();
+    };
+  }, []);
   const scrollViewRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
 
@@ -346,12 +358,24 @@ const TravelerHomeScreen = ({navigation}: any) => {
     };
   }, [token, fetchPendingRequests]);
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App has come to foreground - check for requests IMMEDIATELY
+        console.log('🔄 App foregrounded - checking for pending requests...');
+        fetchPendingRequests();
+        fetchUnreadCount();
+      }
+    });
+    return () => subscription.remove();
+  }, [fetchPendingRequests, fetchUnreadCount]);
+
   useFocusEffect(
     useCallback(() => {
       fetchUserProfile();
       fetchUnreadCount();
       fetchPendingRequests();
-    }, [token]),
+    }, [token, fetchPendingRequests, fetchUnreadCount]),
   );
 
   useEffect(() => {
@@ -455,7 +479,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
             {announcementUnread > 0 && (
               <View style={styles.notifBadge}>
                 <Text style={styles.notifBadgeText}>
-                  {announcementUnread > 9 ? '9+' : announcementUnread}
+                  {announcementUnread > 99 ? '99+' : announcementUnread}
                 </Text>
               </View>
             )}
