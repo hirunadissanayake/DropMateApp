@@ -232,14 +232,14 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             )}
           </View>
           <View style={{ flexShrink: 1 }}>
-            <Text style={styles.greetingText}>{getGreeting()},</Text>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Text style={styles.userName} numberOfLines={1}>{user?.name || 'Guest'}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              <Text style={styles.greetingText}>{getGreeting()},</Text>
               <View style={styles.modeIndicator}>
                 <View style={styles.activeDot} />
-                <Text style={styles.modeText}>Customer Mode</Text>
+                <Text style={styles.modeText}>Customer</Text>
               </View>
             </View>
+            <Text style={styles.userName} numberOfLines={1}>{user?.name || 'Guest'}</Text>
           </View>
         </TouchableOpacity>
 
@@ -653,7 +653,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
-    marginLeft: 8,
     borderWidth: 1,
     borderColor: '#D1FAE5',
   },

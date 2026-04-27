@@ -445,16 +445,16 @@ const TravelerHomeScreen = ({navigation}: any) => {
             )}
           </View>
           <View style={styles.greetingTextContainer}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Text style={styles.userNameText} numberOfLines={1}>
-                Hi, {userName}
-              </Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              <Text style={styles.greetingText}>{getGreeting()}</Text>
               <View style={styles.modeIndicator}>
                 <View style={styles.activeDot} />
-                <Text style={styles.modeText}>Traveler Mode</Text>
+                <Text style={styles.modeText}>Traveler</Text>
               </View>
             </View>
-            <Text style={styles.greetingText}>{getGreeting()}</Text>
+            <Text style={styles.userNameText} numberOfLines={1}>
+              Hi, {userName}
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -922,7 +922,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
-    marginLeft: 8,
     borderWidth: 1,
     borderColor: '#D1FAE5',
   },
