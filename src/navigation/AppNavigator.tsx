@@ -36,6 +36,8 @@ import WalletScreen from '../screens/WalletScreen';
 import BankDetailsScreen from '../screens/BankDetailsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import AnnouncementsScreen from '../screens/AnnouncementsScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import SupportChatScreen from '../screens/SupportChatScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -65,16 +67,25 @@ export type RootStackParamList = {
   BankDetails: undefined;
   Notifications: undefined;
   Announcements: undefined;
+  HelpCenter: undefined;
+  SupportChat: undefined;
 };
 
 
 
 import { navigationRef } from './navigationRef';
+import { socketService } from '../services/socketService';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator = () => {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+
+  useEffect(() => {
+    if (token && user?.id) {
+      socketService.connect(user.id);
+    }
+  }, [token, user?.id]);
 
   useEffect(() => {
     const setupFCM = async () => {
@@ -215,6 +226,14 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="Announcements" 
           component={AnnouncementsScreen} 
+        />
+        <Stack.Screen 
+          name="HelpCenter" 
+          component={HelpCenterScreen} 
+        />
+        <Stack.Screen 
+          name="SupportChat" 
+          component={SupportChatScreen} 
         />
       </Stack.Navigator>
 

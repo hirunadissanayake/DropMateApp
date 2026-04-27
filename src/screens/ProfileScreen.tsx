@@ -346,7 +346,11 @@ const ProfileScreen = () => {
             label="Account Security" 
             onPress={() => navigation.navigate('ChangePassword')}
           />
-          <SettingsItem icon="help" label="Help Center" />
+          <SettingsItem 
+            icon="help" 
+            label="Help Center" 
+            onPress={() => navigation.navigate('HelpCenter')}
+          />
           
           <TouchableOpacity 
             style={styles.logoutBtn}
