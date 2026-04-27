@@ -35,6 +35,7 @@ import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
 import WalletScreen from '../screens/WalletScreen';
 import BankDetailsScreen from '../screens/BankDetailsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import AnnouncementsScreen from '../screens/AnnouncementsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -63,6 +64,7 @@ export type RootStackParamList = {
   Wallet: undefined;
   BankDetails: undefined;
   Notifications: undefined;
+  Announcements: undefined;
 };
 
 
@@ -209,6 +211,10 @@ export const AppNavigator = () => {
         <Stack.Screen 
           name="Notifications" 
           component={NotificationsScreen} 
+        />
+        <Stack.Screen 
+          name="Announcements" 
+          component={AnnouncementsScreen} 
         />
       </Stack.Navigator>
 

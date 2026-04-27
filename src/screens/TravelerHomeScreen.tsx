@@ -58,9 +58,13 @@ const banners = [
 const extendedBanners = [...banners, { ...banners[0], id: 'clone-1' }];
 
 
+import { useAnnouncementStore } from '../store/announcementStore';
+
 const TravelerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
+  const { unreadCount: announcementUnread } = useAnnouncementStore();
   const [refreshing, setRefreshing] = useState(false);
+  // ... rest of state
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   
@@ -463,21 +467,39 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           </View>
         </TouchableOpacity>
         
-        <TouchableOpacity 
-          style={styles.notificationBtn} 
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Notifications')}
-        >
-          <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
-          {unreadCount > 0 && (
-            <View style={styles.notifBadge}>
-              <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity 
+            style={styles.notificationBtn} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Announcements')}
+          >
+            <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+              <Path d="M12 8v4" /><Path d="M12 16h.01" />
+            </Svg>
+            {announcementUnread > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{announcementUnread > 9 ? '9+' : announcementUnread}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.notificationBtn} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="#052017" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+            {unreadCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
       </View>
 
@@ -741,6 +763,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     backgroundColor: '#FAFAFA',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   userInfoRow: {
     flex: 1,

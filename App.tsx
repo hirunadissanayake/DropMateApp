@@ -10,7 +10,14 @@ const queryClient = new QueryClient();
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useEffect } from 'react';
+import { socketService } from './src/services/socketService';
+
 const App = () => {
+  useEffect(() => {
+    socketService.connect();
+    return () => socketService.disconnect();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
