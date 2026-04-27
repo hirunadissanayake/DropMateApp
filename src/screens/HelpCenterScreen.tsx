@@ -102,9 +102,10 @@ const Icon = ({ name, size = 24, color = "#000", style }: any) => {
       <Path d="M18 15l-6-6-6 6" />
     </Svg>
   );
-  if (name === 'chatbubble-ellipses') return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
-      <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-7.6 8.38 8.38 0 0 1 3.8.9L21 4.5l-3.6 3.6z" />
+  if (name === 'headset') return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <Path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z" />
+      <Path d="M21 16v2a4 4 0 0 1-4 4h-5" />
     </Svg>
   );
   return null;
@@ -155,42 +156,60 @@ const HelpCenterScreen = () => {
         {/* FAQ Sections */}
         <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
         
-        {FAQS.map((category, catIdx) => (
-          <View key={catIdx} style={styles.categoryContainer}>
-            <View style={styles.categoryHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-                <Icon name={category.icon as any} size={20} color="#006C52" />
-              </View>
-              <Text style={styles.categoryName}>{category.category}</Text>
-            </View>
+        {(() => {
+          const filteredFAQS = FAQS.map(category => {
+            const filteredQuestions = category.questions.filter(item => 
+              item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              item.a.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            return { ...category, questions: filteredQuestions };
+          }).filter(category => category.questions.length > 0);
 
-            {category.questions.map((item, qIdx) => {
-              const id = `${catIdx}-${qIdx}`;
-              const isExpanded = expandedIndex === id;
-              
-              return (
-                <TouchableOpacity 
-                  key={qIdx} 
-                  style={[styles.faqItem, isExpanded && styles.faqItemExpanded]}
-                  onPress={() => toggleExpand(id)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.questionRow}>
-                    <Text style={styles.questionText}>{item.q}</Text>
-                    <Icon 
-                      name={isExpanded ? "chevron-up" : "chevron-down"} 
-                      size={18} 
-                      color="#666" 
-                    />
-                  </View>
-                  {isExpanded && (
-                    <Text style={styles.answerText}>{item.a}</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+          if (filteredFAQS.length === 0) {
+            return (
+              <View style={{ alignItems: 'center', marginVertical: 30 }}>
+                <Text style={{ color: '#666', fontFamily: Typography.medium, fontSize: 16 }}>No results found for "{searchQuery}"</Text>
+              </View>
+            );
+          }
+
+          return filteredFAQS.map((category, catIdx) => (
+            <View key={catIdx} style={styles.categoryContainer}>
+              <View style={styles.categoryHeader}>
+                <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
+                  <Icon name={category.icon as any} size={20} color="#006C52" />
+                </View>
+                <Text style={styles.categoryName}>{category.category}</Text>
+              </View>
+
+              {category.questions.map((item, qIdx) => {
+                const id = `${catIdx}-${qIdx}`;
+                const isExpanded = expandedIndex === id;
+                
+                return (
+                  <TouchableOpacity 
+                    key={qIdx} 
+                    style={[styles.faqItem, isExpanded && styles.faqItemExpanded]}
+                    onPress={() => toggleExpand(id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.questionRow}>
+                      <Text style={styles.questionText}>{item.q}</Text>
+                      <Icon 
+                        name={isExpanded ? "chevron-up" : "chevron-down"} 
+                        size={18} 
+                        color="#666" 
+                      />
+                    </View>
+                    {isExpanded && (
+                      <Text style={styles.answerText}>{item.a}</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ));
+        })()}
 
         {/* Contact Support Section */}
         <View style={styles.contactCard}>
@@ -207,7 +226,7 @@ const HelpCenterScreen = () => {
               colors={['#006C52', '#004A38']}
               style={styles.chatButtonGradient}
             >
-              <Icon name="chatbubble-ellipses" size={20} color="#FFF" />
+              <Icon name="headset" size={20} color="#FFF" />
               <Text style={styles.chatButtonText}>Chat with Support</Text>
             </LinearGradient>
           </TouchableOpacity>
