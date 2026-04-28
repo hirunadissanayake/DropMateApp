@@ -16,19 +16,41 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
+import { useAuthStore } from '../store/authStore';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const FAQS = [
+const COMMON_FAQS = [
   {
-    category: 'Delivery',
+    category: 'Account',
+    icon: 'person-outline',
+    questions: [
+      {
+        q: 'How do I change my phone number?',
+        a: 'For security reasons, phone number changes must be handled by our support team. Please use the chat feature below.',
+      },
+      {
+        q: 'Is my data secure?',
+        a: 'Yes, DropMate uses industry-standard encryption and security protocols to protect your personal information.',
+      },
+    ],
+  },
+];
+
+const CUSTOMER_FAQS = [
+  {
+    category: 'Sending Parcels',
     icon: 'cube-outline',
     questions: [
       {
+        q: 'How do I send a parcel?',
+        a: 'Tap the "Find Travelers" button on the home screen and choose a traveler that fits your schedule.',
+      },
+      {
         q: 'How do I track my parcel?',
-        a: 'You can track your parcel from the "My Shipments" section. Select your active shipment to see its real-time status.',
+        a: 'You can track your parcel from the "Shipments" section. Select your active shipment to see its real-time status.',
       },
       {
         q: 'What if my traveler is late?',
@@ -41,25 +63,52 @@ const FAQS = [
     icon: 'card-outline',
     questions: [
       {
-        q: 'When do I get paid as a traveler?',
-        a: 'Travelers are paid once the parcel is marked as "Delivered" and the customer confirms receipt. Funds will appear in your wallet.',
-      },
-      {
         q: 'Is my payment secure?',
         a: 'Yes, DropMate uses encrypted payment gateways and holds funds in escrow until the delivery is successfully completed.',
+      },
+      {
+        q: 'Can I get a refund?',
+        a: 'Refunds are available if a traveler fails to pick up or deliver your parcel. Contact support for assistance.',
+      },
+    ],
+  },
+  ...COMMON_FAQS,
+];
+
+const TRAVELER_FAQS = [
+  {
+    category: 'Delivering Parcels',
+    icon: 'cube-outline',
+    questions: [
+      {
+        q: 'How do I accept a delivery request?',
+        a: 'When a customer requests a delivery, a popup modal will appear on your screen. You have 15 minutes to accept or decline the request, if no action is taken, it will be automatically rejected.',
+      },
+      {
+        q: 'What if the receiver is not available?',
+        a: 'If the receiver cannot be reached, contact the customer. If they still dont respond, contact DropMate support for next steps.',
+      },
+      {
+        q: 'Are there weight limits?',
+        a: 'Yes, weight limits are based on your vehicle type and the capacity you specified during registration.',
       },
     ],
   },
   {
-    category: 'Account',
-    icon: 'person-outline',
+    category: 'Earnings',
+    icon: 'card-outline',
     questions: [
       {
-        q: 'How do I change my phone number?',
-        a: 'For security reasons, phone number changes must be handled by our support team. Please use the chat feature below.',
+        q: 'When do I get paid?',
+        a: 'Travelers are paid once the parcel is marked as "Delivered" and the customer confirms receipt. Funds will appear in your wallet.',
+      },
+      {
+        q: 'How do I withdraw my earnings?',
+        a: 'You can withdraw your earnings from the "My Earnings" section by linking a valid bank account.',
       },
     ],
   },
+  ...COMMON_FAQS,
 ];
 
 const Icon = ({ name, size = 24, color = "#000", style }: any) => {
@@ -114,8 +163,11 @@ const Icon = ({ name, size = 24, color = "#000", style }: any) => {
 
 const HelpCenterScreen = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIndex, setExpandedIndex] = useState<string | null>(null);
+
+  const activeFAQS = user?.roleActive === 'TRAVELER' ? TRAVELER_FAQS : CUSTOMER_FAQS;
 
   const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -157,7 +209,7 @@ const HelpCenterScreen = () => {
         <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
         
         {(() => {
-          const filteredFAQS = FAQS.map(category => {
+          const filteredFAQS = activeFAQS.map(category => {
             const filteredQuestions = category.questions.filter(item => 
               item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
               item.a.toLowerCase().includes(searchQuery.toLowerCase())
