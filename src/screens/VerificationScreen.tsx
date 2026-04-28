@@ -31,6 +31,7 @@ import ScreenHeader from '../components/common/ScreenHeader';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 
 import { useRegistrationStore } from '../store/registrationStore';
+import { useAuthStore } from '../store/authStore';
 import * as authService from '../services/authService';
 import { ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -157,6 +158,8 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
 
 
+  const { user: loggedInUser, token, setUser } = useAuthStore();
+
   const isFormValid = 
     !!data.selfie && 
     !!data.nicFront && 
@@ -167,27 +170,53 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
     setLoading(true);
     try {
-      const registrationData = {
-        ...data,
-      };
-      
-      const response = await authService.requestOtp(registrationData);
-      console.log('Registration success:', response);
-      Toast.show({
-        type: 'success',
-        text1: response?.message || 'Registration Successful',
-        text2: 'Please verify your OTP.'
-      });
-      navigation.navigate('VerifyOTP', { phoneNumber: data.phone });
+      if (token && loggedInUser) {
+        // Logged in user - Resubmitting verification
+        const resubmitData = {
+          role: role,
+          selfie: data.selfie,
+          nicFront: data.nicFront,
+          nicBack: data.nicBack,
+          name: data.fullName,
+          nicNumber: data.nicNumber,
+          permanentAddress: data.permanentAddress,
+          city: data.city,
+        };
+        
+        const response = await authService.requestNewRole(token, resubmitData);
+        
+        if (response.user) {
+          setUser(response.user);
+        }
+
+        Toast.show({
+          type: 'success',
+          text1: 'Resubmitted Successfully',
+          text2: 'Your updated data has been sent for review.'
+        });
+        navigation.goBack();
+      } else {
+        // New user - Standard signup flow
+        const registrationData = {
+          ...data,
+        };
+        
+        const response = await authService.requestOtp(registrationData);
+        Toast.show({
+          type: 'success',
+          text1: response?.message || 'Registration Successful',
+          text2: 'Please verify your OTP.'
+        });
+        navigation.navigate('VerifyOTP', { phoneNumber: data.phone });
+      }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Submit error:', error);
       Toast.show({
         type: 'error',
-        text1: 'Registration Failed',
+        text1: 'Submission Failed',
         text2: error.message || 'Something went wrong. Please try again.'
       });
     } finally {
-
       setLoading(false);
     }
   };

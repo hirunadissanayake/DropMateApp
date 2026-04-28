@@ -20,6 +20,7 @@ interface User {
   isTravelerRequested: boolean;
   isCustomerApproved: boolean;
   isTravelerApproved: boolean;
+  rejectionReason: string | null;
   roleActive: 'CUSTOMER' | 'TRAVELER' | null;
   rating: number;
   trustScore: number;

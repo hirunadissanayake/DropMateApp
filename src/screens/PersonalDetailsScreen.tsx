@@ -10,7 +10,10 @@ import {
   Image,
   ScrollView,
   Modal,
+  TextInput,
 } from 'react-native';
+import { useEffect } from 'react';
+import { useRegistrationStore } from '../store/registrationStore';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useAuthStore } from '../store/authStore';
@@ -23,13 +26,46 @@ const { width } = Dimensions.get('window');
 
 const PersonalDetailsScreen = () => {
   const navigation = useNavigation();
-  const { user } = useAuthStore();
+  const { user: authUser } = useAuthStore();
+  const { updateData: updateRegistrationData } = useRegistrationStore();
+  const [user, setLocalUser] = useState(authUser);
+  const [isEditing, setIsEditing] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const role = user?.roleActive;
-  const isVerified = role === 'TRAVELER' ? user?.isTravelerApproved : user?.isCustomerApproved;
-  const isPending = role === 'TRAVELER' ? (user?.isTravelerRequested && !user?.isTravelerApproved) : (user?.isCustomerRequested && !user?.isCustomerApproved);
-  const isDualVerified = user?.isTravelerApproved && user?.isCustomerApproved;
+  const role = authUser?.roleActive;
+  const isVerified = role === 'TRAVELER' ? authUser?.isTravelerApproved : authUser?.isCustomerApproved;
+  const isPending = role === 'TRAVELER' ? (authUser?.isTravelerRequested && !authUser?.isTravelerApproved) : (authUser?.isCustomerRequested && !authUser?.isCustomerApproved);
+  const isDualVerified = authUser?.isTravelerApproved && authUser?.isCustomerApproved;
+  
+  const isRejected = !isVerified && !isPending && !!authUser?.rejectionReason;
+
+  useEffect(() => {
+    if (isRejected) {
+        updateRegistrationData({
+            fullName: user?.name ?? undefined,
+            email: user?.email ?? undefined,
+            nicNumber: user?.nicNumber ?? undefined,
+            permanentAddress: user?.permanentAddress ?? undefined,
+            city: user?.city ?? undefined,
+            phone: user?.phone ?? undefined
+        });
+    }
+  }, [isRejected]);
+
+  const handleUpdateField = (field: string, value: string) => {
+      setLocalUser(prev => prev ? { ...prev, [field]: value } : null);
+      
+      const storeFieldMap: any = {
+          name: 'fullName',
+          nicNumber: 'nicNumber',
+          permanentAddress: 'permanentAddress',
+          city: 'city'
+      };
+      
+      if (storeFieldMap[field]) {
+          updateRegistrationData({ [storeFieldMap[field]]: value });
+      }
+  };
 
 
   return (
@@ -58,38 +94,99 @@ const PersonalDetailsScreen = () => {
       >
         <View style={styles.contentPadding}>
             {/* Status Card */}
-            <View style={[styles.statusCard, { borderColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
-                <View style={[styles.statusIconBox, { backgroundColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
-                    {isVerified ? (
-                        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5">
-                            <Path d="M20 6L9 17l-5-5" />
-                        </Svg>
-                    ) : (
-                        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#854D0E" strokeWidth="2.5">
-                            <Circle cx="12" cy="12" r="10" />
-                            <Path d="M12 8v4" />
-                            <Path d="M12 16h.01" />
-                        </Svg>
-                    )}
+            {!isRejected ? (
+                <View style={[styles.statusCard, { borderColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
+                    <View style={[styles.statusIconBox, { backgroundColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
+                        {isVerified ? (
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5">
+                                <Path d="M20 6L9 17l-5-5" />
+                            </Svg>
+                        ) : (
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#854D0E" strokeWidth="2.5">
+                                <Circle cx="12" cy="12" r="10" />
+                                <Path d="M12 8v4" />
+                                <Path d="M12 16h.01" />
+                            </Svg>
+                        )}
+                    </View>
+                    <View>
+                        <Text style={styles.statusLabel}>Account Status</Text>
+                        <Text style={[styles.statusValue, { color: isDualVerified ? '#166534' : isVerified ? '#006C52' : '#854D0E' }]}>
+                            {isDualVerified ? 'Fully Verified (Dual Role)' : isVerified ? 'Verified Account' : isPending ? 'Pending Verification' : 'Verification Required'}
+                        </Text>
+                    </View>
                 </View>
-                <View>
-                    <Text style={styles.statusLabel}>Account Status</Text>
-                    <Text style={[styles.statusValue, { color: isDualVerified ? '#166534' : isVerified ? '#006C52' : '#854D0E' }]}>
-                        {isDualVerified ? 'Fully Verified (Dual Role)' : isVerified ? 'Verified Account' : isPending ? 'Pending Verification' : 'Verification Required'}
-                    </Text>
+            ) : (
+                <View style={[styles.statusCard, { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2', flexDirection: 'column', alignItems: 'flex-start' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                        <View style={[styles.statusIconBox, { backgroundColor: '#FEE2E2' }]}>
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" strokeWidth="2.5">
+                                <Path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </Svg>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.statusLabel, { color: '#991B1B' }]}>Verification Rejected</Text>
+                            <Text style={[styles.statusValue, { color: '#B91C1C' }]}>Action Required</Text>
+                        </View>
+                        <TouchableOpacity 
+                            style={styles.editToggleBtn}
+                            onPress={() => setIsEditing(!isEditing)}
+                        >
+                            <Text style={styles.editToggleText}>{isEditing ? 'Done' : 'Edit Info'}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.rejectionBox}>
+                        <Text style={styles.rejectionReasonTitle}>REASON FOR REJECTION:</Text>
+                        <Text style={styles.rejectionReasonText}>"{user?.rejectionReason}"</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                        style={styles.resubmitBtn}
+                        onPress={() => (navigation as any).navigate('Verification', { role: user?.roleActive || 'TRAVELER' })}
+                    >
+                        <Text style={styles.resubmitText}>Fix Documents & Resubmit</Text>
+                        <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3">
+                            <Path d="M5 12h14M12 5l7 7-7 7" />
+                        </Svg>
+                    </TouchableOpacity>
                 </View>
-            </View>
+            )}
 
 
             {/* Information Grid */}
             <View style={styles.cardSection}>
                 <Text style={styles.sectionTitle}>Identity Information</Text>
                 <View style={styles.infoList}>
-                    <InfoRow label="Full Name" value={user?.name} icon="user" />
+                    <InfoRow 
+                        label="Full Name" 
+                        value={user?.name} 
+                        icon="user" 
+                        editable={isEditing}
+                        onChangeText={(t: string) => handleUpdateField('name', t)}
+                    />
                     <InfoRow label="Email Address" value={user?.email} icon="mail" />
-                    <InfoRow label="NIC Number" value={user?.nicNumber} icon="credit-card" />
-                    <InfoRow label="Permanent Address" value={user?.permanentAddress} icon="map-pin" />
-                    <InfoRow label="City" value={user?.city} icon="map-pin" />
+                    <InfoRow 
+                        label="NIC Number" 
+                        value={user?.nicNumber} 
+                        icon="credit-card" 
+                        editable={isEditing}
+                        onChangeText={(t: string) => handleUpdateField('nicNumber', t)}
+                    />
+                    <InfoRow 
+                        label="Permanent Address" 
+                        value={user?.permanentAddress} 
+                        icon="map-pin" 
+                        editable={isEditing}
+                        onChangeText={(t: string) => handleUpdateField('permanentAddress', t)}
+                    />
+                    <InfoRow 
+                        label="City" 
+                        value={user?.city} 
+                        icon="map-pin" 
+                        editable={isEditing}
+                        onChangeText={(t: string) => handleUpdateField('city', t)}
+                    />
                     <InfoRow label="Phone Number" value={user?.phone} icon="phone" />
                 </View>
             </View>
@@ -136,14 +233,23 @@ const PersonalDetailsScreen = () => {
   );
 };
 
-const InfoRow = ({ label, value, icon }: any) => (
+const InfoRow = ({ label, value, icon, editable, onChangeText }: any) => (
     <View style={styles.infoRow}>
         <View style={styles.infoIconBox}>
             {renderIcon(icon)}
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
             <Text style={styles.infoLabelText}>{label}</Text>
-            <Text style={styles.infoValueText}>{value || 'Not provided'}</Text>
+            {editable ? (
+                <TextInput 
+                    style={[styles.infoValueText, styles.editableInput]}
+                    value={value}
+                    onChangeText={onChangeText}
+                    autoCapitalize="words"
+                />
+            ) : (
+                <Text style={styles.infoValueText}>{value || 'Not provided'}</Text>
+            )}
         </View>
     </View>
 );
@@ -342,6 +448,72 @@ const styles = StyleSheet.create({
   modalImage: {
       width: width,
       height: width * 1.5,
+  },
+  rejectionBox: {
+      width: '100%',
+      padding: 16,
+      backgroundColor: '#FEF2F2',
+      borderRadius: 16,
+      marginBottom: 20,
+      borderLeftWidth: 4,
+      borderLeftColor: '#EF4444',
+  },
+  rejectionReasonTitle: {
+      fontSize: 9,
+      fontFamily: Typography.bold,
+      color: '#991B1B',
+      letterSpacing: 0.5,
+      marginBottom: 6,
+  },
+  rejectionReasonText: {
+      fontSize: 14,
+      color: '#B91C1C',
+      fontFamily: Typography.bold,
+      lineHeight: 20,
+      fontStyle: 'italic',
+  },
+  resubmitBtn: {
+      width: '100%',
+      height: 56,
+      backgroundColor: '#EF4444',
+      borderRadius: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      shadowColor: '#EF4444',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 15,
+      elevation: 6,
+  },
+  resubmitText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontFamily: Typography.extraBold,
+  },
+  editToggleBtn: {
+      backgroundColor: 'rgba(185, 28, 28, 0.1)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(185, 28, 28, 0.2)',
+  },
+  editToggleText: {
+      fontSize: 12,
+      color: '#B91C1C',
+      fontFamily: Typography.bold,
+  },
+  editableInput: {
+      backgroundColor: '#F1F5F9',
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      marginTop: 4,
+      borderWidth: 1,
+      borderColor: '#CBD5E1',
+      color: '#0F172A',
   },
 });
 

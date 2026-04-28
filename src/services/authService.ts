@@ -177,6 +177,10 @@ export const requestNewRole = async (token: string, data: any) => {
 
   // Append text fields
   formData.append('role', data.role);
+  if (data.name) formData.append('name', data.name);
+  if (data.nicNumber) formData.append('nicNumber', data.nicNumber);
+  if (data.permanentAddress) formData.append('permanentAddress', data.permanentAddress);
+  if (data.city) formData.append('city', data.city);
   if (data.weightCapacity) formData.append('weightCapacity', data.weightCapacity);
   if (data.vehicleType) formData.append('vehicleType', data.vehicleType);
 
