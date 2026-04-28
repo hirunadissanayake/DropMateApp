@@ -58,6 +58,10 @@ const LoginScreen = ({ navigation }: any) => {
         const fullUser = await authService.getMe(response.token);
         setAuth(response.token, fullUser);
         
+        if (fullUser.isBlocked) {
+          return; // AppNavigator will switch to BlockedScreen
+        }
+        
         const routeName = fullUser.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
         
         Toast.show({

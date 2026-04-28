@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { BASE_URL } from '../utils/endPoints';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useSupportStore } from '../store/supportStore';
+import { useAuthStore } from '../store/authStore';
 import Toast from 'react-native-toast-message';
 
 class SocketService {
@@ -61,6 +62,11 @@ class SocketService {
 
     this.socket.on('support_history', (history: any[]) => {
       useSupportStore.getState().setMessages(history);
+    });
+    
+    this.socket.on('user_status_updated', (updatedUser: any) => {
+      useAuthStore.getState().setUser(updatedUser);
+      console.log('User status updated via socket:', updatedUser.isBlocked);
     });
 
     this.socket.on('global_message_updated', (updatedMessage: any) => {

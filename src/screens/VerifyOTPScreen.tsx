@@ -84,6 +84,7 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
         // For registration, we might get a token and user after OTP
         if (response.token && response.user) {
           setAuth(response.token, response.user);
+          if (response.user.isBlocked) return;
         }
         clearRegistrationData();
         navigation.navigate('VerificationSuccess');
@@ -91,6 +92,7 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
         let routeName = 'CustomerHome';
         if (response.token && response.user) {
           setAuth(response.token, response.user);
+          if (response.user.isBlocked) return;
           if (response.user.roleActive === 'TRAVELER') {
             routeName = 'TravelerHome';
           }
@@ -103,7 +105,6 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
         navigation.navigate('ResetPassword', { resetToken: response.resetToken, phoneNumber });
       }
     } catch (error: any) {
-
       console.error('OTP Verification error:', error);
       Toast.show({
         type: 'error',

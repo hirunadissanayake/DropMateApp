@@ -14,6 +14,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import SignupScreen from '../screens/SignupScreen';
 import VerificationScreen from '../screens/VerificationScreen';
+import BlockedScreen from '../screens/BlockedScreen';
 import VerificationSuccessScreen from '../screens/VerificationSuccessScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOTPScreen from '../screens/VerifyOTPScreen';
@@ -69,6 +70,7 @@ export type RootStackParamList = {
   Announcements: undefined;
   HelpCenter: undefined;
   SupportChat: undefined;
+  Blocked: undefined;
 };
 
 
@@ -123,118 +125,137 @@ export const AppNavigator = () => {
           fullScreenGestureEnabled: true,
           gestureEnabled: true,
         }} 
-        initialRouteName="Splash"
+        initialRouteName={user?.isBlocked ? "Blocked" : "Splash"}
       >
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ animation: 'fade_from_bottom' }} 
-        />
-        <Stack.Screen 
-          name="RoleSelection" 
-          component={RoleSelectionScreen} 
-        />
-        <Stack.Screen 
-          name="Signup" 
-          component={SignupScreen} 
-        />
-        <Stack.Screen 
-          name="Verification" 
-          component={VerificationScreen} 
-        />
-        <Stack.Screen 
-          name="VerificationSuccess" 
-          component={VerificationSuccessScreen} 
-        />
-        <Stack.Screen 
-          name="ForgotPassword" 
-          component={ForgotPasswordScreen} 
-        />
-        <Stack.Screen 
-          name="VerifyOTP" 
-          component={VerifyOTPScreen} 
-        />
-        <Stack.Screen 
-          name="ResetPassword" 
-          component={ResetPasswordScreen} 
-        />
-        <Stack.Screen 
-          name="CustomerHome" 
-          component={CustomerTabNavigator} 
-        />
-        <Stack.Screen 
-          name="TravelerHome" 
-          component={TravelerTabNavigator} 
-        />
-        <Stack.Screen 
-          name="PersonalDetails" 
-          component={PersonalDetailsScreen} 
-        />
-        <Stack.Screen 
-          name="VehicleDetails" 
-          component={VehicleDetailsScreen} 
-        />
-        <Stack.Screen 
-          name="ChangePassword" 
-          component={ChangePasswordScreen} 
-        />
-        <Stack.Screen 
-          name="RequestRole" 
-          component={RequestRoleScreen} 
-        />
-        <Stack.Screen 
-          name="CreateParcel" 
-          component={CreateParcelScreen} 
-        />
-        <Stack.Screen 
-          name="ParcelDetails" 
-          component={ParcelDetailsScreen} 
-        />
-        <Stack.Screen 
-          name="CreateTrip" 
-          component={CreateTripScreen} 
-        />
-        <Stack.Screen 
-          name="TripDetails" 
-          component={TripDetailsScreen} 
-        />
-        <Stack.Screen 
-          name="Requests" 
-          component={RequestsScreen} 
-        />
-        <Stack.Screen 
-          name="Payment" 
-          component={PaymentScreen} 
-        />
-        <Stack.Screen 
-          name="TravelerEarnings" 
-          component={TravelerEarningsScreen} 
-        />
-        <Stack.Screen 
-          name="Wallet" 
-          component={WalletScreen} 
-        />
-        <Stack.Screen 
-          name="BankDetails" 
-          component={BankDetailsScreen} 
-        />
-        <Stack.Screen 
-          name="Notifications" 
-          component={NotificationsScreen} 
-        />
-        <Stack.Screen 
-          name="Announcements" 
-          component={AnnouncementsScreen} 
-        />
-        <Stack.Screen 
-          name="HelpCenter" 
-          component={HelpCenterScreen} 
-        />
-        <Stack.Screen 
-          name="SupportChat" 
-          component={SupportChatScreen} 
-        />
+        {user?.isBlocked ? (
+          <>
+            <Stack.Screen 
+                name="Blocked" 
+                component={BlockedScreen} 
+                options={{ 
+                animation: 'fade',
+                gestureEnabled: false 
+                }}
+            />
+            <Stack.Screen 
+                name="SupportChat" 
+                component={SupportChatScreen} 
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen 
+              name="Login" 
+              component={LoginScreen} 
+              options={{ animation: 'fade_from_bottom' }} 
+            />
+            <Stack.Screen 
+              name="RoleSelection" 
+              component={RoleSelectionScreen} 
+            />
+            <Stack.Screen 
+              name="Signup" 
+              component={SignupScreen} 
+            />
+            <Stack.Screen 
+              name="Verification" 
+              component={VerificationScreen} 
+            />
+            <Stack.Screen 
+              name="VerificationSuccess" 
+              component={VerificationSuccessScreen} 
+            />
+            <Stack.Screen 
+              name="ForgotPassword" 
+              component={ForgotPasswordScreen} 
+            />
+            <Stack.Screen 
+              name="VerifyOTP" 
+              component={VerifyOTPScreen} 
+            />
+            <Stack.Screen 
+              name="ResetPassword" 
+              component={ResetPasswordScreen} 
+            />
+            <Stack.Screen 
+              name="CustomerHome" 
+              component={CustomerTabNavigator} 
+            />
+            <Stack.Screen 
+              name="TravelerHome" 
+              component={TravelerTabNavigator} 
+            />
+            <Stack.Screen 
+              name="PersonalDetails" 
+              component={PersonalDetailsScreen} 
+            />
+            <Stack.Screen 
+              name="VehicleDetails" 
+              component={VehicleDetailsScreen} 
+            />
+            <Stack.Screen 
+              name="ChangePassword" 
+              component={ChangePasswordScreen} 
+            />
+            <Stack.Screen 
+              name="RequestRole" 
+              component={RequestRoleScreen} 
+            />
+            <Stack.Screen 
+              name="CreateParcel" 
+              component={CreateParcelScreen} 
+            />
+            <Stack.Screen 
+              name="ParcelDetails" 
+              component={ParcelDetailsScreen} 
+            />
+            <Stack.Screen 
+              name="CreateTrip" 
+              component={CreateTripScreen} 
+            />
+            <Stack.Screen 
+              name="TripDetails" 
+              component={TripDetailsScreen} 
+            />
+            <Stack.Screen 
+              name="Requests" 
+              component={RequestsScreen} 
+            />
+            <Stack.Screen 
+              name="Payment" 
+              component={PaymentScreen} 
+            />
+            <Stack.Screen 
+              name="TravelerEarnings" 
+              component={TravelerEarningsScreen} 
+            />
+            <Stack.Screen 
+              name="Wallet" 
+              component={WalletScreen} 
+            />
+            <Stack.Screen 
+              name="BankDetails" 
+              component={BankDetailsScreen} 
+            />
+            <Stack.Screen 
+              name="Notifications" 
+              component={NotificationsScreen} 
+            />
+            <Stack.Screen 
+              name="Announcements" 
+              component={AnnouncementsScreen} 
+            />
+            <Stack.Screen 
+              name="HelpCenter" 
+              component={HelpCenterScreen} 
+            />
+            <Stack.Screen 
+              name="SupportChat" 
+              component={SupportChatScreen} 
+            />
+          </>
+        )}
       </Stack.Navigator>
 
 
