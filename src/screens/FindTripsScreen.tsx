@@ -161,7 +161,9 @@ const FindTripsScreen = () => {
               </View>
             </View>
             <View style={styles.capacityIndicator}>
-              <Text style={styles.capacityWeight}>{item.capacityKg} kg</Text>
+              <Text style={styles.capacityWeight}>
+                {item.usedCapacity > 0 ? `${item.capacityKg - item.usedCapacity}/${item.capacityKg}` : item.capacityKg} kg
+              </Text>
               <Text style={styles.capacityStatus}>Available</Text>
             </View>
           </View>
@@ -731,7 +733,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   routeCityName: {
-    fontSize: 18,
+    fontSize: 15,
     color: '#0F172A',
     fontFamily: Typography.bold,
     marginTop: -2,

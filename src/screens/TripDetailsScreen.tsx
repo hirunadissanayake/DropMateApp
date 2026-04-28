@@ -13,6 +13,7 @@ import {
   TextInput,
   RefreshControl,
   Linking,
+  Image,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -293,7 +294,7 @@ const TripDetailsScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar
-        barStyle="light-content"
+        barStyle="dark-content"
         backgroundColor="transparent"
         translucent
       />
@@ -303,56 +304,31 @@ const TripDetailsScreen = () => {
         </View>
       ) : !trip ? null : (
         <>
-          <View style={styles.premiumHeader}>
-        <LinearGradient
-          colors={['#004D3A', '#006C52', '#008C69']}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 1}}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <Svg
-          width="200"
-          height="200"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(255,255,255,0.03)"
-          strokeWidth="0.5"
-          style={styles.bgGraphic1}>
-          <Circle cx="12" cy="12" r="10" />
-          <Circle cx="12" cy="12" r="6" />
-          <Circle cx="12" cy="12" r="2" />
-        </Svg>
-
-        <SafeAreaView style={styles.headerSafeArea}>
-          <View style={styles.headerTop}>
-            <BackButton onPress={() => navigation.goBack()} color="#FFFFFF" />
-            <Text style={styles.headerTitle}>Trip Details</Text>
-            <View style={{width: 44}} />
+          <View style={styles.modernHeader}>
+            <SafeAreaView style={styles.headerSafeArea}>
+              <View style={styles.headerTop}>
+                <BackButton onPress={() => navigation.goBack()} color="#0F172A" />
+                <View style={styles.headerProfile}>
+                  <View style={styles.avatarMini}>
+                    {trip.traveler?.selfieUrl ? (
+                      <Image source={{ uri: trip.traveler.selfieUrl }} style={styles.avatarImgMini} />
+                    ) : (
+                      <Text style={styles.avatarLetterMini}>
+                        {(trip.traveler?.name || 'T').charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                  </View>
+                  <View>
+                    <Text style={styles.travelerNameLabel}>
+                      TRAVELER • #{trip.id.substring(0, 8).toUpperCase()}
+                    </Text>
+                    <Text style={styles.travelerNameValue}>{trip.traveler?.name || 'Traveler'}</Text>
+                  </View>
+                </View>
+                <View style={{ width: 40 }} />
+              </View>
+            </SafeAreaView>
           </View>
-
-          <View style={styles.tripMetaRow}>
-            <View>
-              <Text style={styles.tripIdLabel}>TRIP REFERENCE</Text>
-              <Text style={styles.tripIdValue}>
-                #{trip.id.substring(0, 8).toUpperCase()}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statusPill,
-                {backgroundColor: trip.isExpired ? '#E2E8F0' : getStatusBg(trip.status)},
-              ]}>
-              <Text
-                style={[
-                  styles.statusText,
-                  {color: trip.isExpired ? '#475569' : getStatusColor(trip.status)},
-                ]}>
-                {trip.isExpired ? 'EXPIRED' : trip.status}
-              </Text>
-            </View>
-          </View>
-        </SafeAreaView>
-      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -361,103 +337,64 @@ const TripDetailsScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#006C52']} />
         }>
         
-        {/* Action Button for Customers */}
-        {user?.roleActive === 'CUSTOMER' && trip.travelerId !== user.id && trip.status === 'ACTIVE' && (
-          <TouchableOpacity 
-            style={[
-              styles.requestButton,
-              (requestingMatch || allRequested) && { opacity: 0.7 }
-            ]}
-            onPress={handleRequestPress}
-            disabled={requestingMatch || allRequested}
-          >
-            <LinearGradient
-              colors={(requestingMatch || allRequested) ? ['#94A3B8', '#64748B'] : ['#006C52', '#004D3A']}
-              style={styles.requestGradient}
-            >
-              {requestingMatch ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={styles.requestButtonText}>
-                  {allRequested ? 'Already Requested' : 'Request this Traveler'}
-                </Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-        <View style={styles.travelerProfileSection}>
-          <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLetterLarge}>{(trip.traveler?.name || 'T').charAt(0).toUpperCase()}</Text>
-          </View>
-          <View>
-            <Text style={styles.travelerNameLabel}>TRAVELER</Text>
-            <Text style={styles.travelerNameValue}>{trip.traveler?.name || 'Anonymous Traveler'}</Text>
-          </View>
-        </View>
+        
 
-        <View style={styles.floatingRouteCard}>
-          <Text style={styles.sectionLabel}>YOUR TRAVEL ROUTE</Text>
-          <View style={styles.routeBox}>
-            <View style={styles.routeVisualCol}>
-              <View style={styles.routeDotStart}>
-                <View style={styles.routeDotInner} />
-              </View>
-              <View style={styles.routeDashedLine} />
-              <View style={styles.routePinEnd}>
-                <Svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="#DC2626"
-                  stroke="#DC2626"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
-                </Svg>
-              </View>
-            </View>
-            <View style={styles.routeTextCol}>
-              <View style={[styles.routeLocationBox, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.locSubtitle}>PICKUP LOCATION</Text>
-                  <Text style={styles.locTitle}>{trip.fromLocation}</Text>
-                </View>
-                {!!trip.pickupUrl && (
-                  <TouchableOpacity 
-                    style={styles.mapSmallBtn}
-                    onPress={() => Linking.openURL(trip.pickupUrl)}
-                  >
-                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <Circle cx="12" cy="10" r="3" />
-                    </Svg>
-                    <Text style={styles.mapBtnText}>Map</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              
-              <View style={[styles.routeLocationBox, { marginTop: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.locSubtitle}>DROPOFF DESTINATION</Text>
-                  <Text style={styles.locTitle}>{trip.toLocation}</Text>
-                </View>
-                {!!trip.dropoffUrl && (
-                  <TouchableOpacity 
-                    style={styles.mapSmallBtn}
-                    onPress={() => Linking.openURL(trip.dropoffUrl)}
-                  >
-                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <Circle cx="12" cy="10" r="3" />
-                    </Svg>
-                    <Text style={styles.mapBtnText}>Map</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </View>
+        <View style={styles.itineraryCard}>
+           <Text style={styles.sectionLabelPremium}>TRAVEL ITINERARY</Text>
+           
+           <View style={styles.itineraryLineRow}>
+             <View style={styles.itiVisual}>
+               <View style={styles.itiDot} />
+               <View style={styles.itiDashedLine} />
+               <View style={styles.itiPin}>
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="#EF4444">
+                    <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <Circle cx="12" cy="10" r="3" fill="white" />
+                  </Svg>
+               </View>
+             </View>
+             
+             <View style={styles.itiContent}>
+               <View style={styles.itiPoint}>
+                 <View style={styles.itiPointHeader}>
+                   <Text style={styles.itiPointLabel}>PICKUP</Text>
+                    {!!trip.pickupUrl && (
+                    <TouchableOpacity onPress={() => Linking.openURL(trip.pickupUrl)} style={styles.itiMapBtn}>
+                      <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+                        <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <Circle cx="12" cy="10" r="3" />
+                      </Svg>
+                      <Text style={[styles.itiMapText, { color: '#006C52' }]}>View Map</Text>
+                    </TouchableOpacity>
+                   )}
+                 </View>
+                 <Text style={styles.itiCity}>{trip.fromLocation}</Text>
+                 <Text style={styles.itiDate}>{dayjs(trip.travelDate).format('dddd, MMMM DD')}</Text>
+               </View>
+
+               <View style={[styles.itiPoint, { marginTop: 30 }]}>
+                 <View style={styles.itiPointHeader}>
+                   <Text style={[styles.itiPointLabel, { color: '#EF4444' }]}>DESTINATION</Text>
+                    {!!trip.dropoffUrl && (
+                    <TouchableOpacity onPress={() => Linking.openURL(trip.dropoffUrl)} style={styles.itiMapBtn}>
+                      <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
+                        <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <Circle cx="12" cy="10" r="3" />
+                      </Svg>
+                      <Text style={[styles.itiMapText, { color: '#EF4444' }]}>View Map</Text>
+                    </TouchableOpacity>
+                   )}
+                 </View>
+                 <Text style={styles.itiCity}>{trip.toLocation}</Text>
+                 <View style={styles.itiFooter}>
+                   <View style={styles.itiVehicleBadge}>
+                     <Text style={styles.itiVehicleText}>{trip.vehicleType || 'Car'}</Text>
+                   </View>
+                   <Text style={styles.itiTimeText}>{trip.travelTime || 'Flexible Time'}</Text>
+                 </View>
+               </View>
+             </View>
+           </View>
         </View>
 
         {!!trip.exactLocation && (
@@ -661,10 +598,32 @@ const TripDetailsScreen = () => {
           </View>
         )}
 
-        {!!trip.note && (
-          <View style={[styles.infoBlock, styles.noteCard]}>
-            <Text style={styles.sectionLabel}>SPECIAL NOTE</Text>
-            <Text style={styles.noteText}>"{trip.note}"</Text>
+        {user?.id !== trip.travelerId && (
+          <View style={styles.premiumActionFooter}>
+           
+             <TouchableOpacity 
+                style={[
+                  styles.premiumBookBtn,
+                  (requestingMatch || allRequested) && styles.premiumBookBtnDisabled
+                ]}
+                onPress={handleRequestPress}
+                disabled={requestingMatch || allRequested}
+              >
+                {requestingMatch ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <Text style={styles.premiumBookBtnText}>
+                      {allRequested ? 'Requested' : 'Request Now'}
+                    </Text>
+                    {!allRequested && (
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                        <Path d="M9 18l6-6-6-6" />
+                      </Svg>
+                    )}
+                  </>
+                )}
+             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -820,204 +779,247 @@ const TripDetailsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#F1F5F9'},
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
-  premiumHeader: {
-    height: 200,
-    width: '100%',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  bgGraphic1: {
-    position: 'absolute',
-    right: -60,
-    top: -20,
-    transform: [{scale: 1.5}],
+  modernHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+    zIndex: 10,
   },
   headerSafeArea: {
-    flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight,
+    paddingTop: Platform.OS === 'ios' ? 10 : 50,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
-  headerTitle: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
-  },
-  tripMetaRow: {
+  headerProfile: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingHorizontal: 28,
-    marginTop: 30,
+    alignItems: 'center',
+    gap: 12,
   },
-  tripIdLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 0.3,
-    marginBottom: 4,
-    fontFamily: Typography.regular,
-  },
-  tripIdValue: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
-  },
-  statusPill: {paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20},
-  statusText: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
-  },
-
-  scrollContent: {paddingBottom: 40, paddingHorizontal: 20},
-  floatingRouteCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    marginTop: 20,
-    shadowColor: '#006C52',
-    shadowOffset: {width: 0, height: 10},
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
-    marginBottom: 20,
-  },
-
-  sectionLabel: {
-    fontSize: 10,
-    color: '#64748B',
-    letterSpacing: 0.4,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
-  },
-  routeBox: {flexDirection: 'row'},
-  routeVisualCol: {width: 20, alignItems: 'center', paddingVertical: 6},
-  routeDotStart: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#ECFDF5',
+  avatarMini: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#10B981',
-  },
-  routeDotInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#059669',
-  },
-  routeDashedLine: {
-    width: 1,
-    height: 40,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderStyle: 'dashed',
+    overflow: 'hidden',
+  },
+  avatarImgMini: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarLetterMini: {
+    fontSize: 18,
+    color: '#006C52',
+    fontFamily: Typography.extraBold,
+  },
+  travelerNameLabel: {
+    fontSize: 9,
+    fontFamily: Typography.extraBold,
+    color: '#94A3B8',
+    letterSpacing: 1,
+    marginBottom: -2,
+  },
+  travelerNameValue: {
+    fontSize: 16,
+    color: '#0F172A',
+    fontFamily: Typography.extraBold,
+  },
+  scrollContent: {
+    paddingBottom: 120, // Space for floating footer
+  },
+  itineraryCard: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    marginTop: 20, 
+    borderRadius: 24,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  sectionLabelPremium: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontFamily: Typography.extraBold,
+    letterSpacing: 2,
+    marginBottom: 24,
+  },
+  itineraryLineRow: {
+    flexDirection: 'row',
+  },
+  itiVisual: {
+    width: 20,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  itiDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2.5,
+    borderColor: '#006C52',
+    backgroundColor: '#FFF',
+  },
+  itiDashedLine: {
+    flex: 1,
+    width: 1,
+    backgroundColor: '#E2E8F0',
     marginVertical: 4,
   },
-  routePinEnd: {
-    width: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  itiPin: {
+    marginTop: 0,
   },
-
-  routeTextCol: {flex: 1, marginLeft: 16},
-  routeLocationBox: {},
-  locSubtitle: {
-    fontSize: 10,
-    color: '#94A3B8',
-    marginBottom: 4,
-    fontFamily: Typography.medium,
+  itiContent: {
+    flex: 1,
+    paddingLeft: 20,
   },
-  locTitle: {
-    fontSize: 18,
-    color: '#1E293B',
-    fontFamily: Typography.bold,
+  itiPoint: {
+    flex: 1,
   },
-
-  statsRow: {
+  itiPointHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  itiPointLabel: {
+    fontSize: 10,
+    color: '#006C52',
+    fontFamily: Typography.extraBold,
+    letterSpacing: 0.5,
+  },
+  itiMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  itiMapText: {
+    fontSize: 9,
+    color: '#64748B',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+  },
+  itiCity: {
+    fontSize: 15,
+    color: '#0F172A',
+    fontFamily: Typography.extraBold,
+  },
+  itiDate: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+    marginTop: 2,
+  },
+  itiFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
+    marginTop: 6,
+  },
+  itiVehicleBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  itiVehicleText: {
+    fontSize: 10,
+    color: '#475569',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+  },
+  itiTimeText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 20,
   },
   statCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   statIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EFF6FF',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F0FDF4',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   statLabel: {
     fontSize: 9,
+    fontFamily: Typography.extraBold,
     color: '#94A3B8',
     letterSpacing: 1,
-    marginBottom: 4,
-    fontFamily: Typography.bold,
+    marginBottom: 2,
   },
   statValue: {
-    textAlign: 'center',
-  },
-  mapSmallBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#DCFBEB',
-    gap: 4,
-  },
-  mapBtnText: {
-    fontSize: 12,
-    color: '#006C52',
+    fontSize: 14,
+    color: '#0F172A',
     fontFamily: Typography.bold,
   },
-
+  statValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statEditBtn: {
+    padding: 2,
+  },
   infoBlock: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
+    marginHorizontal: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  sectionLabel: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontFamily: Typography.extraBold,
+    letterSpacing: 1,
+    marginBottom: 16,
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   progressText: {
     fontSize: 13,
@@ -1026,9 +1028,8 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 8,
-    borderRadius: 4,
     backgroundColor: '#F1F5F9',
-    marginVertical: 12,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -1036,107 +1037,128 @@ const styles = StyleSheet.create({
     backgroundColor: '#006C52',
     borderRadius: 4,
   },
-  availText: {fontSize: 12, color: '#64748B', fontFamily: Typography.regular},
-
-  emptyState: {paddingVertical: 20, alignItems: 'center'},
+  availText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 10,
+    fontFamily: Typography.medium,
+  },
+  parcelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  borderBottom: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  parcelIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  parcelInfo: {
+    flex: 1,
+  },
+  parcelName: {
+    fontSize: 15,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  parcelMeta: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: Typography.regular,
+  },
+  parcelArrow: {
+    marginLeft: 10,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
   emptyParcelsText: {
     fontSize: 13,
     color: '#94A3B8',
     textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 20,
-    fontFamily: Typography.medium,
+    marginTop: 10,
+    fontFamily: Typography.regular,
   },
-
-  parcelRow: {flexDirection: 'row', alignItems: 'center', paddingVertical: 16},
-  borderBottom: {borderBottomWidth: 1, borderBottomColor: '#F8FAFC'},
-  parcelIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#ECFDF5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  parcelInfo: {flex: 1},
-  parcelName: {
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    marginBottom: 4,
-  },
-  parcelMeta: {fontSize: 13, color: '#64748B', fontFamily: Typography.regular},
-  parcelArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F8FAFC',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   meetingPointCard: {
     backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-    borderWidth: 1,
   },
   meetingPointText: {
     fontSize: 15,
     color: '#0F172A',
-    lineHeight: 24,
     fontFamily: Typography.bold,
+    lineHeight: 22,
   },
-
-  noteCard: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#A7F3D0',
-    borderWidth: 1,
-    borderStyle: 'dashed',
+  premiumActionFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 10,
   },
-  noteText: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#065F46',
-    lineHeight: 24,
-    fontFamily: Typography.medium,
+  footerPriceCol: {
+    flex: 1,
   },
-  requestButton: {
-    marginTop: 20,
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 6,
-    marginBottom: 20,
+  footerPriceLbl: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontFamily: Typography.extraBold,
+    textTransform: 'uppercase',
   },
-  requestGradient: {
-    paddingVertical: 18,
+  footerPriceVal: {
+    fontSize: 18,
+    color: '#006C52',
+    fontFamily: Typography.extraBold,
+  },
+  premiumBookBtn: {
+    flex: 1.5,
+    backgroundColor: '#006C52',
+    height: 54,
+    borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
-  requestButtonText: {
+  premiumBookBtnDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  premiumBookBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
-    fontFamily: Typography.bold,
-    letterSpacing: 0.5,
+    fontFamily: Typography.extraBold,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    maxHeight: '80%',
+    padding: 24,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1145,25 +1167,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     color: '#0F172A',
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
   },
   modalSubtitle: {
     fontSize: 14,
     color: '#64748B',
-    marginBottom: 20,
+    marginBottom: 24,
     fontFamily: Typography.regular,
-  },
-  parcelList: {
-    paddingBottom: 20,
   },
   parcelSelectItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
+    padding: 16,
     borderRadius: 20,
-    padding: 18,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1174,19 +1193,21 @@ const styles = StyleSheet.create({
   parcelItemName: {
     fontSize: 16,
     color: '#0F172A',
-    marginBottom: 4,
     fontFamily: Typography.bold,
   },
   parcelItemRoute: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748B',
-    marginBottom: 2,
-    fontFamily: Typography.regular,
+    marginTop: 2,
   },
   parcelItemWeight: {
     fontSize: 12,
     color: '#006C52',
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
+    marginTop: 2,
+  },
+  parcelList: {
+    paddingBottom: 20,
   },
   modalEmpty: {
     padding: 40,
@@ -1199,49 +1220,35 @@ const styles = StyleSheet.create({
   },
   modalLoading: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  statValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statEditBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#DCFBEB',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   inputWrapper: {
-    marginBottom: 24,
+    marginTop: 10,
   },
   inputLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#94A3B8',
-    marginBottom: 12,
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   capacityInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    marginBottom: 12,
+    gap: 20,
+    marginBottom: 20,
   },
   stepBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
-    fontFamily: Typography.bold,
   },
   stepBtnText: {
     fontSize: 24,
@@ -1249,88 +1256,53 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
   },
   capacityDisplay: {
-    flex: 1,
-    height: 50,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 20,
+    height: 60,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    minWidth: 120,
   },
   capacityInput: {
-    flex: 1,
-    fontSize: 20,
+    fontSize: 24,
     color: '#006C52',
-    textAlign: 'center',
+    fontFamily: Typography.extraBold,
     padding: 0,
-    fontFamily: Typography.bold,
+    textAlign: 'center',
   },
   kgLabel: {
     fontSize: 16,
     color: '#64748B',
-    marginLeft: 4,
     fontFamily: Typography.bold,
+    marginLeft: 4,
   },
   inputHint: {
     fontSize: 11,
     color: '#94A3B8',
     textAlign: 'center',
-    fontStyle: 'italic',
     fontFamily: Typography.regular,
+    marginTop: 10,
   },
   updateBtn: {
+    marginTop: 24,
     borderRadius: 16,
     overflow: 'hidden',
   },
   updateGradient: {
-    paddingVertical: 16,
+    height: 56,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   updateBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
   },
   disabledUpdateBtn: {
-    opacity: 0.7,
-  },
-  travelerProfileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    gap: 16,
-    marginBottom: 1,
-  },
-  avatarLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: '#DCFBEB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  avatarLetterLarge: {
-    fontSize: 24,
-    color: '#006C52',
-    fontFamily: Typography.bold,
-  },
-  travelerNameLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-    letterSpacing: 1,
-    marginBottom: 2,
-    fontFamily: Typography.bold,
-  },
-  travelerNameValue: {
-    fontSize: 20,
-    color: '#0F172A',
-    letterSpacing: -0.5,
-    fontFamily: Typography.bold,
+    opacity: 0.6,
   },
 });
 
