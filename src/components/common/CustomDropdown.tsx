@@ -8,8 +8,9 @@ import {
   FlatList,
   TouchableWithoutFeedback,
   Platform,
+  TextInput,
 } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
@@ -31,10 +32,21 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   disabled = false,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredOptions = options.filter(option => 
+    option.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleSelect = (option: string) => {
     onSelect(option);
     setIsVisible(false);
+    setSearchQuery('');
+  };
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setSearchQuery('');
   };
 
   const renderOptionIcon = (option: string, active: boolean) => {
@@ -123,9 +135,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         visible={isVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setIsVisible(false)}
+        onRequestClose={handleClose}
       >
-        <TouchableWithoutFeedback onPress={() => setIsVisible(false)}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.dragHandle} />
@@ -136,7 +148,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   <Text style={styles.modalSubtitle}>Please choose one from the list below</Text>
                 </View>
                 <TouchableOpacity 
-                  onPress={() => setIsVisible(false)}
+                  onPress={handleClose}
                   style={styles.closeBtn}
                 >
                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -144,9 +156,33 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   </Svg>
                 </TouchableOpacity>
               </View>
+
+              <View style={styles.searchContainer}>
+                <View style={styles.searchBox}>
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <Circle cx="11" cy="11" r="8" />
+                    <Line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </Svg>
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search options..."
+                    placeholderTextColor="#94A3B8"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCorrect={false}
+                  />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M18 6L6 18M6 6L18 18" />
+                      </Svg>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
               
               <FlatList
-                data={options}
+                data={filteredOptions}
                 keyExtractor={(item) => item}
                 renderItem={({ item }) => (
                   <TouchableOpacity
@@ -180,6 +216,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No matches found for "{searchQuery}"</Text>
+                  </View>
+                }
               />
             </View>
           </View>
@@ -376,6 +417,41 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#059669',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  searchBox: {
+    height: 48,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 15,
+    color: '#0F172A',
+    fontFamily: Typography.medium,
+    padding: 0,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontFamily: Typography.medium,
+    textAlign: 'center',
   },
 });
 
