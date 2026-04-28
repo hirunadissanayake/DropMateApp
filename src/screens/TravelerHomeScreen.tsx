@@ -685,9 +685,6 @@ const TravelerHomeScreen = ({navigation}: any) => {
         <View style={styles.dashboardSection}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeader}>Traveler Dashboard</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View all</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.gridContainer}>
@@ -760,9 +757,6 @@ const TravelerHomeScreen = ({navigation}: any) => {
         <View style={styles.tipsSection}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeader}>Traveler Tips</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View all</Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView
