@@ -12,6 +12,7 @@ import {
   StatusBar,
   TextInput,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -418,13 +419,42 @@ const TripDetailsScreen = () => {
               </View>
             </View>
             <View style={styles.routeTextCol}>
-              <View style={styles.routeLocationBox}>
-                <Text style={styles.locSubtitle}>PICKUP LOCATION</Text>
-                <Text style={styles.locTitle}>{trip.fromLocation}</Text>
+              <View style={[styles.routeLocationBox, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locSubtitle}>PICKUP LOCATION</Text>
+                  <Text style={styles.locTitle}>{trip.fromLocation}</Text>
+                </View>
+                {!!trip.pickupUrl && (
+                  <TouchableOpacity 
+                    style={styles.mapSmallBtn}
+                    onPress={() => Linking.openURL(trip.pickupUrl)}
+                  >
+                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <Circle cx="12" cy="10" r="3" />
+                    </Svg>
+                    <Text style={styles.mapBtnText}>Map</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              <View style={[styles.routeLocationBox, {marginTop: 24}]}>
-                <Text style={styles.locSubtitle}>DROPOFF DESTINATION</Text>
-                <Text style={styles.locTitle}>{trip.toLocation}</Text>
+              
+              <View style={[styles.routeLocationBox, { marginTop: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locSubtitle}>DROPOFF DESTINATION</Text>
+                  <Text style={styles.locTitle}>{trip.toLocation}</Text>
+                </View>
+                {!!trip.dropoffUrl && (
+                  <TouchableOpacity 
+                    style={styles.mapSmallBtn}
+                    onPress={() => Linking.openURL(trip.dropoffUrl)}
+                  >
+                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <Circle cx="12" cy="10" r="3" />
+                    </Svg>
+                    <Text style={styles.mapBtnText}>Map</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </View>
@@ -954,10 +984,23 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
   },
   statValue: {
-    fontSize: 13,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
     textAlign: 'center',
+  },
+  mapSmallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#DCFBEB',
+    gap: 4,
+  },
+  mapBtnText: {
+    fontSize: 12,
+    color: '#006C52',
+    fontFamily: Typography.bold,
   },
 
   infoBlock: {

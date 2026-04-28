@@ -45,6 +45,8 @@ const CreateTripScreen = () => {
   const [travelDate, setTravelDate] = useState('');
   const [capacityKg, setCapacityKg] = useState('');
   const [travelTime, setTravelTime] = useState('');
+  const [pickupUrl, setPickupUrl] = useState('');
+  const [dropoffUrl, setDropoffUrl] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -160,6 +162,8 @@ const CreateTripScreen = () => {
         travelDate,
         capacityKg: parseFloat(capacityKg),
         travelTime: travelTime || null,
+        pickupUrl: pickupUrl || '',
+        dropoffUrl: dropoffUrl || '',
         note: note || '',
         status: 'ACTIVE'
       };
@@ -273,10 +277,40 @@ const CreateTripScreen = () => {
             </View>
 
             <View style={styles.contentCard}>
-              <Text style={styles.fieldLabel}>EXACT LOCATION</Text>
+              <Text style={styles.fieldLabel}>EXACT MEETING POINTS (GOOGLE MAPS LINKS)</Text>
+              
+              <View style={styles.inputWrapper}>
+                <Text style={styles.innerLabel}>Pickup GPS Link</Text>
+                <TextInput
+                  style={styles.minimalInput}
+                  placeholder="Paste Google Maps URL here"
+                  placeholderTextColor="#94A3B8"
+                  value={pickupUrl}
+                  onChangeText={setPickupUrl}
+                />
+              </View>
+
+              <View style={[styles.inputWrapper, { marginTop: 16 }]}>
+                <Text style={styles.innerLabel}>Drop-off GPS Link</Text>
+                <TextInput
+                  style={styles.minimalInput}
+                  placeholder="Paste Google Maps URL here"
+                  placeholderTextColor="#94A3B8"
+                  value={dropoffUrl}
+                  onChangeText={setDropoffUrl}
+                />
+              </View>
+
+              <Text style={{ fontSize: 13, color: '#64748B', fontFamily: Typography.regular, marginTop: 12, lineHeight: 18 }}>
+                Open Google Maps, long-press your location, click "Share," and paste the link here so customers can find you easily.
+              </Text>
+            </View>
+
+            <View style={styles.contentCard}>
+              <Text style={styles.fieldLabel}>LOCATION INSTRUCTIONS</Text>
               <TextInput
                 style={[styles.minimalInput, errors.exactLocation ? { borderColor: '#DC2626' } : null]}
-                placeholder="Where exactly?"
+                placeholder="Where Your Pickup exactly? (e.g. Near main gate)"
                 placeholderTextColor="#94A3B8"
                 value={exactLocation}
                 onChangeText={(val) => {
@@ -285,9 +319,6 @@ const CreateTripScreen = () => {
                 }}
               />
               <ErrorMessage message={errors.exactLocation} />
-              <Text style={{ fontSize: 13, color: '#64748B', fontFamily: Typography.regular, marginTop: 8, lineHeight: 18 }}>
-                Tell the customer exactly where you will be (e.g., which bus stand, railway station, or landmark).
-              </Text>
             </View>
 
             
@@ -490,7 +521,16 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: Typography.medium,
   },
-
+  inputWrapper: {
+    marginBottom: 4,
+  },
+  innerLabel: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontFamily: Typography.bold,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
   minimalTextArea: {
     minHeight: 100,
     backgroundColor: '#F8FAFC',
