@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -122,70 +123,102 @@ const FindTripsScreen = () => {
   };
 
   const renderTripItem = ({ item }: { item: any }) => {
+    const isFull = item.isFull;
+    const rating = item.traveler?.rating || 0;
+    
     return (
       <TouchableOpacity 
-        style={[styles.tripCard, item.isFull && styles.disabledCard]}
-        onPress={() => !item.isFull && navigation.navigate('TripDetails', { tripId: item.id })}
-        activeOpacity={item.isFull ? 1 : 0.9}
-        disabled={item.isFull}
+        style={[styles.premiumTicket, isFull && styles.disabledTicket]}
+        onPress={() => !isFull && navigation.navigate('TripDetails', { tripId: item.id })}
+        activeOpacity={isFull ? 1 : 0.85}
+        disabled={isFull}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.travelerInfo}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarLetter}>{item.traveler?.name?.charAt(0).toUpperCase()}</Text>
+        <View style={styles.ticketMainBody}>
+          <View style={styles.travelerHeader}>
+            <View style={styles.travelerProfile}>
+              <View style={styles.avatarContainer}>
+                {item.traveler?.selfieUrl ? (
+                  <Image source={{ uri: item.traveler.selfieUrl }} style={styles.premiumAvatarImg} />
+                ) : (
+                  <View style={styles.initialsAvatar}>
+                    <Text style={styles.initialsText}>{item.traveler?.name?.charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+                <View style={styles.premiumVerifiedBadge}>
+                  <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4">
+                    <Path d="M20 6L9 17l-5-5" />
+                  </Svg>
+                </View>
+              </View>
+              <View>
+                <Text style={styles.travelerNameText}>{item.traveler?.name}</Text>
+                {/* <View style={styles.ratingBadge}>
+                  <Svg width="10" height="10" viewBox="0 0 24 24" fill="#F59E0B">
+                    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+                  </Svg>
+                  <Text style={styles.ratingNumber}>{rating.toFixed(1)}</Text>
+                </View> */}
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.travelerName} numberOfLines={1}>{item.traveler?.name}</Text>
+            <View style={styles.capacityIndicator}>
+              <Text style={styles.capacityWeight}>{item.capacityKg} kg</Text>
+              <Text style={styles.capacityStatus}>Available</Text>
             </View>
           </View>
-          <View style={styles.badgeContainer}>
-            {item.isRequested && (
-              <View style={styles.requestedBadge}>
-                <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="4">
-                  <Path d="M20 6L9 17l-5-5" />
-                </Svg>
-                <Text style={styles.requestedText}>Requested</Text>
+
+          <View style={styles.routeSection}>
+            <View style={styles.routePoint}>
+              <View style={styles.routeIconCol}>
+                <View style={styles.startRing} />
+                <View style={styles.routeConnector} />
               </View>
-            )}
-            {item.isFull && (
-              <View style={styles.fullBadge}>
-                <Text style={styles.fullBadgeText}>Full</Text>
+              <View style={styles.routeInfoCol}>
+                <Text style={styles.routeLabel}>PICKUP</Text>
+                <Text style={styles.routeCityName}>{item.fromLocation}</Text>
               </View>
-            )}
-            <View style={styles.capacityBadge}>
-              <Text style={styles.capacityText}>{item.capacityKg ?? 0} kg max</Text>
+              <View style={styles.dateCol}>
+                <Text style={styles.routeDateText}>{dayjs(item.travelDate).format('MMM DD')}</Text>
+              </View>
             </View>
+
+            <View style={styles.routePoint}>
+              <View style={styles.routeIconCol}>
+                <View style={styles.endPin}>
+                   <Svg width="14" height="14" viewBox="0 0 24 24" fill="#EF4444">
+                    <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <Circle cx="12" cy="10" r="3" fill="white" />
+                  </Svg>
+                </View>
+              </View>
+              <View style={styles.routeInfoCol}>
+                <Text style={styles.routeLabelDest}>DESTINATION</Text>
+                <Text style={styles.routeCityName}>{item.toLocation}</Text>
+              </View>
+              <View style={styles.dateCol}>
+                <View style={styles.vehicleTagMini}>
+                  <Text style={styles.vehicleTagText}>{item.vehicleType || 'Car'}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.ticketFooter}>
+            <Text style={styles.arrivalInfo}>Departs: <Text style={styles.arrivalValue}>{item.travelTime || 'Flexible'}</Text></Text>
+            <TouchableOpacity 
+              style={styles.bookActionBtn}
+              onPress={() => navigation.navigate('TripDetails', { tripId: item.id })}
+            >
+              <Text style={styles.bookActionText}>View Details</Text>
+              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                <Path d="M9 18l6-6-6-6" />
+              </Svg>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.routeContainer}>
-          <View style={styles.routeRow}>
-            <View style={styles.dot} />
-            <Text style={styles.locationText} numberOfLines={1}>{item.fromLocation}</Text>
-          </View>
-          <View style={styles.line} />
-          <View style={styles.routeRow}>
-            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5">
-              <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <Circle cx="12" cy="10" r="3" />
-            </Svg>
-            <Text style={styles.locationText} numberOfLines={1}>{item.toLocation}</Text>
-          </View>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <View style={styles.dateInfo}>
-            <Text style={styles.dateText}>
-              {dayjs(item.travelDate).format('ddd, MMM DD')} • {item.travelTime || 'Flexible'}
-            </Text>
-          </View>
-          <View style={[styles.viewBtn, item.isFull && styles.disabledBtn]}>
-            <Text style={styles.viewBtnText}>{item.isFull ? 'No Space' : 'View Details'}</Text>
-          </View>
-        </View>
-        {item.isFull && (
-          <Text style={styles.fullNote}>This traveler has reached their weight limit for this trip.</Text>
-        )}
+        {/* Notches for Ticket Effect */}
+        <View style={styles.ticketNotchLeft} />
+        <View style={styles.ticketNotchRight} />
       </TouchableOpacity>
     );
   };
@@ -547,11 +580,239 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center',
   },
-  disabledCard: {
-    opacity: 0.6,
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
+  premiumTicket: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 4,
+    overflow: 'visible', // Ensure notches are visible
   },
+  disabledTicket: {
+    opacity: 0.6,
+  },
+  ticketMainBody: {
+    padding: 16,
+  },
+  travelerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  travelerProfile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumAvatarImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  initialsAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#006C52',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initialsText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontFamily: Typography.bold,
+  },
+  premiumVerifiedBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  travelerNameText: {
+    fontSize: 16,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 2,
+  },
+  ratingNumber: {
+    fontSize: 11,
+    color: '#D97706',
+    fontFamily: Typography.bold,
+  },
+  capacityIndicator: {
+    alignItems: 'flex-end',
+  },
+  capacityWeight: {
+    fontSize: 18,
+    color: '#006C52',
+    fontFamily: Typography.extraBold,
+  },
+  capacityStatus: {
+    fontSize: 10,
+    color: '#64748B',
+    fontFamily: Typography.medium,
+    textTransform: 'uppercase',
+  },
+  routeSection: {
+    paddingLeft: 4,
+    gap: 0,
+  },
+  routePoint: {
+    flexDirection: 'row',
+    minHeight: 50,
+  },
+  routeIconCol: {
+    width: 30,
+    alignItems: 'center',
+  },
+  startRing: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2.5,
+    borderColor: '#006C52',
+    backgroundColor: '#FFF',
+    marginTop: 4,
+  },
+  routeConnector: {
+    flex: 1,
+    width: 2,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 4,
+  },
+  endPin: {
+    marginTop: 2,
+  },
+  routeInfoCol: {
+    flex: 1,
+    paddingLeft: 12,
+    justifyContent: 'center',
+  },
+  routeLabel: {
+    fontSize: 9,
+    color: '#94A3B8',
+    fontFamily: Typography.bold,
+    letterSpacing: 0.5,
+  },
+  routeLabelDest: {
+    fontSize: 9,
+    color: '#EF4444',
+    fontFamily: Typography.bold,
+    letterSpacing: 0.5,
+  },
+  routeCityName: {
+    fontSize: 18,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+    marginTop: -2,
+  },
+  dateCol: {
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  routeDateText: {
+    fontSize: 12,
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  vehicleTagMini: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  vehicleTagText: {
+    fontSize: 10,
+    color: '#475569',
+    fontFamily: Typography.bold,
+    textTransform: 'uppercase',
+  },
+  ticketFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    borderStyle: 'dashed',
+  },
+  arrivalInfo: {
+    fontSize: 13,
+    color: '#64748B',
+    fontFamily: Typography.regular,
+  },
+  arrivalValue: {
+    color: '#0F172A',
+    fontFamily: Typography.bold,
+  },
+  bookActionBtn: {
+    backgroundColor: '#006C52',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 8,
+  },
+  bookActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: Typography.bold,
+  },
+  ticketNotchLeft: {
+    position: 'absolute',
+    left: -10,
+    top: '65%',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC', // Background color of the screen
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  ticketNotchRight: {
+    position: 'absolute',
+    right: -10,
+    top: '65%',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC', // Background color of the screen
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+
   fullBadge: {
     backgroundColor: '#64748B',
     paddingHorizontal: 8,
