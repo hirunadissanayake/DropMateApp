@@ -19,6 +19,7 @@ import { Typography } from '../constants/Typography';
 import { socketService } from '../services/socketService';
 import { useSupportStore } from '../store/supportStore';
 import { useAuthStore } from '../store/authStore';
+import BackButton from '../components/common/BackButton';
 
 const formatTime = (dateStr: string) => {
   if (!dateStr) return '';
@@ -132,12 +133,11 @@ const SupportChatScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <BackButton 
           onPress={() => navigation.goBack()}
           style={styles.backButton}
-        >
-          <Icon name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
+          color="#006C52"
+        />
         
         <View style={styles.headerInfo}>
           <View style={styles.avatarContainer}>
@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
     borderRadius: 12,
-    backgroundColor: '#F0F0F0',
     marginRight: 15,
   },
   headerInfo: {

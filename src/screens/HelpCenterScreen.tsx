@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
+import BackButton from '../components/common/BackButton';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -124,12 +125,11 @@ const HelpCenterScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <BackButton
           onPress={() => navigation.goBack()}
           style={styles.backButton}
-        >
-          <Icon name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
+          color="#006C52"
+        />
         <Text style={styles.headerTitle}>Help Center</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -252,9 +252,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   backButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,

@@ -692,7 +692,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
 
           <View style={styles.gridContainer}>
             {/* Available Routes */}
-            <TouchableOpacity style={styles.gridCard} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => navigation.navigate('HelpCenter')} style={styles.gridCard} activeOpacity={0.8}>
               <View style={styles.gridIconHeader}>
                 <View style={styles.gridIconBox}>
                   <Svg

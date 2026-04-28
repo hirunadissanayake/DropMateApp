@@ -19,6 +19,7 @@ import CustomInput from '../components/common/CustomInput';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
 import { Typography } from '../constants/Typography';
+import BackButton from '../components/common/BackButton';
 
 const getStrengthScore = (pass: string) => {
   let score = 0;
@@ -106,14 +107,11 @@ const ChangePasswordScreen = ({ navigation }: any) => {
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backBtn}
+          <BackButton 
             onPress={() => navigation.goBack()}
-          >
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M15 18l-6-6 6-6" />
-            </Svg>
-          </TouchableOpacity>
+            style={styles.backBtn}
+            color="#006C52"
+          />
           <Text style={styles.headerTitle}>Change Password</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -222,10 +220,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8FAFC',
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -23,6 +23,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
 import { Typography } from '../constants/Typography';
+import BackButton from '../components/common/BackButton';
 
 const { width } = Dimensions.get('window');
 const BRAND_GREEN = '#00875A';
@@ -146,14 +147,11 @@ const TravelerProfileScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         {/* Header Bar */}
         <View style={styles.headerBar}>
-          <TouchableOpacity 
-            style={styles.backBtn}
+          <BackButton 
             onPress={() => navigation.goBack()}
-          >
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M15 18l-6-6 6-6" />
-            </Svg>
-          </TouchableOpacity>
+            style={styles.backBtn}
+            color='#006C52'
+          />
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -387,6 +385,11 @@ const TravelerProfileScreen = () => {
               label="Account Security" 
               onPress={() => navigation.navigate('ChangePassword')}
             />
+            <SettingsItem 
+              icon="headset" 
+              label="Help Center" 
+              onPress={() => navigation.navigate('HelpCenter')}
+            />
             
             <TouchableOpacity 
               style={styles.logoutBtn}
@@ -422,6 +425,7 @@ const renderIcon = (name: string) => {
     const color = BRAND_GREEN;
     if (name === 'bell') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><Path d="M13.73 21a2 2 0 0 1-3.46 0"/></Svg>;
     if (name === 'lock') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><Path d="M7 11V7a5 5 0 0 1 10 0v4"/></Svg>;
+    if (name === 'headset') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><Path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z" /><Path d="M21 16v2a4 4 0 0 1-4 4h-5" /></Svg>;
     return null;
 };
 
@@ -443,10 +447,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -543,6 +544,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#64748B',
+    fontFamily: Typography.regular,
   },
   badgeRow: {
     flexDirection: 'row',

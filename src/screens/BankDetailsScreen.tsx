@@ -197,7 +197,11 @@ const BankDetailsScreen = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <BackButton 
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+            color="#006C52"
+          />
           <Text style={styles.headerTitle}>Bank Accounts</Text>
           <TouchableOpacity 
             style={styles.addHeaderBtn}
@@ -413,6 +417,11 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   headerTitle: { fontSize: 20, fontFamily: Typography.bold, color: '#0F172A' },
+  backBtn: {
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   addHeaderBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
   sectionDesc: { 

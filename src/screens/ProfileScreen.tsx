@@ -23,6 +23,7 @@ import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../constants/Typography';
+import BackButton from '../components/common/BackButton';
 
 const { width } = Dimensions.get('window');
 
@@ -140,14 +141,11 @@ const ProfileScreen = () => {
 
       <SafeAreaView edges={['top']} style={styles.headerNav}>
         <View style={styles.navRow}>
-          <TouchableOpacity 
-            style={styles.backBtn}
+          <BackButton 
             onPress={() => navigation.goBack()}
-          >
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M15 18l-6-6 6-6" />
-            </Svg>
-          </TouchableOpacity>
+            style={styles.backBtn}
+            color="#006C52"
+          />
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={{ width: 40 }} />
         </View>
@@ -415,10 +413,7 @@ const styles = StyleSheet.create({
     height: 56,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8FAFC',
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },

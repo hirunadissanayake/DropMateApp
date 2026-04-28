@@ -20,6 +20,7 @@ import CustomDropdown from '../components/common/CustomDropdown';
 import Toast from 'react-native-toast-message';
 import * as authService from '../services/authService';
 import { Typography } from '../constants/Typography';
+import BackButton from '../components/common/BackButton';
 
 const BRAND_GREEN = '#00875A';
 
@@ -127,14 +128,11 @@ const VehicleDetailsScreen = () => {
 
       <SafeAreaView edges={['top']} style={styles.headerNav}>
         <View style={styles.navRow}>
-          <TouchableOpacity 
-            style={styles.backBtn}
+          <BackButton 
             onPress={() => navigation.goBack()}
-          >
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M15 18l-6-6 6-6" />
-            </Svg>
-          </TouchableOpacity>
+            style={styles.backBtn}
+            color={BRAND_GREEN}
+          />
           <Text style={styles.headerTitle}>Vehicle & Capacity</Text>
           <View style={styles.headerAction}>
               {hasChanges && (
