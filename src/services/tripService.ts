@@ -80,9 +80,10 @@ export const getTripDetails = async (token: string, id: string) => {
     throw error.response?.data || error;
   }
 };
-export const getActiveTrips = async (token: string) => {
+export const getActiveTrips = async (token: string, params?: { page?: number, limit?: number, fromLocation?: string, toLocation?: string }) => {
   try {
     const response = await axios.get(ENDPOINTS.TRIPS.ACTIVE, {
+      params,
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

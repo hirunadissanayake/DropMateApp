@@ -119,9 +119,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
       return;
     }
     try {
-      const data = await tripService.getActiveTrips(token);
+      const response = await tripService.getActiveTrips(token);
       // Just take the first 5 for recommendation
-      setRecommendedTrips(data.slice(0, 5));
+      setRecommendedTrips(response.trips?.slice(0, 5) || []);
     } catch (error) {
       console.error('Fetch recommended trips error:', error);
     } finally {
@@ -177,8 +177,8 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         setActiveParcels(active);
         
         // Fetch trips
-        const tData = await tripService.getActiveTrips(token);
-        setRecommendedTrips(tData.slice(0, 5));
+        const tripResponse = await tripService.getActiveTrips(token);
+        setRecommendedTrips(tripResponse.trips?.slice(0, 5) || []);
       }
       fetchUnreadCount();
     } catch (error) {

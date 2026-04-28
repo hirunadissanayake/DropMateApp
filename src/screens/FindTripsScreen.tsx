@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
 import { Typography } from '../constants/Typography';
+import CustomDropdown from '../components/common/CustomDropdown';
 
 const { width } = Dimensions.get('window');
 
@@ -28,32 +29,96 @@ const FindTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { token, user } = useAuthStore();
   const [trips, setTrips] = useState<any[]>([]);
+  const [fromLocation, setFromLocation] = useState('');
+  const [toLocation, setToLocation] = useState('');
+  const [availableFrom, setAvailableFrom] = useState<string[]>([]);
+  const [availableTo, setAvailableTo] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const fetchTrips = async () => {
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const fetchFilterCities = async () => {
     try {
-      const data = await tripService.getActiveTrips(token!);
-      // Filter out own trips just in case
-      const othersTrips = data.filter((t: any) => t.travelerId !== user?.id);
-      setTrips(othersTrips);
+      const froms = await tripService.getFromLocations(token!);
+      setAvailableFrom(froms);
+      
+      const tos = await tripService.getToLocations(token!, fromLocation);
+      setAvailableTo(tos);
+    } catch (error) {
+      console.error('Fetch filter cities error:', error);
+    }
+  };
+
+  const fetchTrips = async (pageNum = 1, isRefreshing = false) => {
+    if (pageNum > 1) setLoadingMore(true);
+    
+    try {
+      const response = await tripService.getActiveTrips(token!, {
+        page: pageNum,
+        limit: 10,
+        fromLocation: fromLocation || undefined,
+        toLocation: toLocation || undefined
+      });
+
+      const newTrips = response.trips;
+      
+      if (pageNum === 1) {
+        setTrips(newTrips);
+      } else {
+        setTrips(prev => [...prev, ...newTrips]);
+      }
+      
+      setTotalPages(response.totalPages);
+      setPage(pageNum);
     } catch (error) {
       console.error('Fetch active trips error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchTrips();
+      fetchFilterCities();
+      fetchTrips(1);
     }, [token])
   );
 
+  useEffect(() => {
+    fetchTrips(1);
+    // Refresh 'To' list when 'From' changes to show valid routes
+    const refreshTos = async () => {
+      try {
+        const tos = await tripService.getToLocations(token!, fromLocation);
+        setAvailableTo(tos);
+      } catch (e) {}
+    };
+    refreshTos();
+  }, [fromLocation]);
+
+  useEffect(() => {
+    fetchTrips(1);
+  }, [toLocation]);
+
   const onRefresh = () => {
     setRefreshing(true);
-    fetchTrips();
+    fetchTrips(1, true);
+    fetchFilterCities();
+  };
+
+  const handleLoadMore = () => {
+    if (!loadingMore && page < totalPages) {
+      fetchTrips(page + 1);
+    }
+  };
+
+  const swapLocations = () => {
+    const temp = fromLocation;
+    setFromLocation(toLocation);
+    setToLocation(temp);
   };
 
   const renderTripItem = ({ item }: { item: any }) => {
@@ -137,6 +202,40 @@ const FindTripsScreen = () => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Find Travelers</Text>
           <Text style={styles.headerSubtitle}>Discover trips headed your way</Text>
+
+          <View style={styles.searchHeaderCard}>
+            <View style={styles.searchInputsCol}>
+              <CustomDropdown
+                options={availableFrom}
+                selectedOption={fromLocation}
+                onSelect={setFromLocation}
+                placeholder="From"
+              />
+              <View style={styles.searchDivider}>
+                <View style={styles.dividerLine} />
+                <TouchableOpacity style={styles.swapBtn} onPress={swapLocations}>
+                  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <Path d="M7 10l5-5 5 5" />
+                    <Path d="M17 14l-5 5-5-5" />
+                  </Svg>
+                </TouchableOpacity>
+                <View style={styles.dividerLine} />
+              </View>
+              <CustomDropdown
+                options={availableTo}
+                selectedOption={toLocation}
+                onSelect={setToLocation}
+                placeholder="To"
+                disabled={!fromLocation}
+              />
+            </View>
+
+            {(fromLocation || toLocation) && (
+              <TouchableOpacity style={styles.clearAllBtn} onPress={() => { setFromLocation(''); setToLocation(''); }}>
+                <Text style={styles.clearAllText}>Clear Filter</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {loading ? (
@@ -150,6 +249,15 @@ const FindTripsScreen = () => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.footerLoader}>
+                  <ActivityIndicator color="#006C52" />
+                </View>
+              ) : null
+            }
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#006C52']} />
             }
@@ -378,6 +486,55 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontFamily: Typography.bold,
   },
+  searchHeaderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 16,
+    marginTop: 20,
+    shadowColor: '#006C52',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchInputsCol: {
+    gap: 0,
+  },
+  searchDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 30,
+    marginVertical: -5,
+    zIndex: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  swapBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#DCFBEB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 12,
+  },
+  clearAllBtn: {
+    marginTop: 12,
+    alignSelf: 'center',
+  },
+  clearAllText: {
+    fontSize: 12,
+    color: '#006C52',
+    fontFamily: Typography.bold,
+    textDecorationLine: 'underline',
+  },
   emptySubtitle: {
     fontSize: 15,
     color: '#64748B',
@@ -385,6 +542,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     fontFamily: Typography.regular,
     lineHeight: 22,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   disabledCard: {
     opacity: 0.6,
