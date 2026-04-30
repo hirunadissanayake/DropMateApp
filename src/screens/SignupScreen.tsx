@@ -13,14 +13,14 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { Colors } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import BackButton from '../components/common/BackButton';
 import ScreenHeader from '../components/common/ScreenHeader';
 import Toast from 'react-native-toast-message';
-
 import { useRegistrationStore } from '../store/registrationStore';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme, lightTheme } from '../constants/Colors';
 
 const getStrengthScore = (pass: string) => {
   let score = 0;
@@ -38,41 +38,43 @@ interface InputFieldProps {
   icon: (color: string) => React.ReactNode;
   value: string;
   onChangeText: (text: string) => void;
-  onToggleSecure?: () => void;
   maxLength?: number;
   isPassword?: boolean;
   error?: string;
   showStrength?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  theme: AppTheme;
 }
 
-const InputField = ({ 
-  label, 
-  placeholder, 
-  icon, 
-  value, 
-  onChangeText, 
-  isPassword, 
-  maxLength, 
-  error, 
+const InputField = ({
+  label,
+  placeholder,
+  icon,
+  value,
+  onChangeText,
+  isPassword,
+  maxLength,
+  error,
   showStrength,
   autoCapitalize = 'none',
-  keyboardType = 'default'
+  keyboardType = 'default',
+  theme,
 }: Partial<InputFieldProps>) => {
   const [internalSecure, setInternalSecure] = useState(true);
-  
+  const s = makeStyles(theme ?? lightTheme);
+
   return (
-    <View style={styles.inputWrapper}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={[styles.inputContainer, error ? { borderColor: '#D32F2F' } : {}]}>
-        <View style={styles.iconBox}>
-          {icon && icon(Colors.text.tertiary)}
+    <View style={s.inputWrapper}>
+      <Text style={s.inputLabel}>{label}</Text>
+      <View style={[s.inputContainer, error ? { borderColor: '#D32F2F', borderWidth: 1.5 } : {}]}>
+        <View style={s.iconBox}>
+          {icon && icon((theme ?? lightTheme).text.tertiary)}
         </View>
         <TextInput
-          style={styles.textInput}
+          style={s.textInput}
           placeholder={placeholder}
-          placeholderTextColor="rgba(111, 122, 116, 0.5)"
+          placeholderTextColor={(theme ?? lightTheme).text.placeholder}
           value={value}
           onChangeText={onChangeText || (() => {})}
           secureTextEntry={isPassword ? internalSecure : false}
@@ -80,24 +82,23 @@ const InputField = ({
           autoCapitalize={autoCapitalize}
           keyboardType={keyboardType}
         />
-
         {isPassword && (
-          <TouchableOpacity 
-            style={styles.eyeIconBox} 
+          <TouchableOpacity
+            style={s.eyeIconBox}
             onPress={() => setInternalSecure(!internalSecure)}
           >
             <Svg width="22" height="24" viewBox="0 0 24 24" fill="none">
               {!internalSecure ? (
                 <Path
                   d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z"
-                  fill="#6F7A74"
-                  fillOpacity="0.6"
+                  fill={(theme ?? lightTheme).text.tertiary}
+                  fillOpacity="0.8"
                 />
               ) : (
                 <Path
-                  d="M12 7C14.76 7 17 9.24 17 12C17 13.41 16.42 14.67 15.48 15.59L17.5 17.61C19.33 16.22 20.73 14.28 21.58 12C19.91 7.61 15.64 4.5 10.58 4.5C9.05 4.5 7.6 4.8 6.28 5.37L8.08 7.17C8.86 7.06 9.66 7 10.5 7H12ZM2 4.27L4.28 6.55L4.73 7C3.08 8.3 1.78 10 1 12C2.73 16.39 7 19.5 12 19.5C13.88 19.5 15.63 19.06 17.2 18.27L17.72 18.79L20.45 21.52L21.73 20.24L3.27 1.79L2 3.06L2 4.27ZM9.53 11.8L11.78 14.05C11.39 14.16 10.96 14.22 10.5 14.22C9.27 14.22 8.28 13.23 8.28 12C8.28 11.54 8.34 11.11 8.45 10.72L9.53 11.8ZM14.22 12C14.22 10.77 13.23 9.78 12 9.78C11.54 9.78 11.11 9.84 10.72 9.95L9.34 8.57C10.15 8.1 11.04 7.82 12 7.82C14.31 7.82 16.18 9.69 16.18 12C16.18 12.96 15.9 13.85 15.43 14.66L14.05 13.28C14.16 12.89 14.22 12.46 14.22 12Z"
-                  fill="#6F7A74"
-                  fillOpacity="0.6"
+                  d="M12 7C14.76 7 17 9.24 17 12C17 13.41 16.42 14.67 15.48 15.59L17.5 17.61C19.33 16.22 20.73 14.28 21.58 12C19.91 7.61 15.64 4.5 10.58 4.5C9.05 4.5 7.6 4.8 6.28 5.37L8.08 7.17C8.86 7.06 9.66 7 10.5 7H12ZM2 4.27L4.28 6.55L4.73 7C3.08 8.3 1.78 10 1 12C2.73 16.39 7 19.5 12 19.5C13.88 19.5 15.63 19.06 17.2 18.27L17.72 18.79L20.45 21.52L21.73 20.24L3.27 1.79L2 3.06L2 4.27Z"
+                  fill={(theme ?? lightTheme).text.tertiary}
+                  fillOpacity="0.8"
                 />
               )}
             </Svg>
@@ -105,26 +106,28 @@ const InputField = ({
         )}
       </View>
       {showStrength && value && value.length > 0 && (
-        <View style={styles.strengthGrid}>
+        <View style={s.strengthGrid}>
           {[1, 2, 3, 4].map((index) => (
-            <View 
-              key={index} 
+            <View
+              key={index}
               style={[
-                styles.strengthBar, 
-                getStrengthScore(value) >= index && styles.strengthActive
-              ]} 
+                s.strengthBar,
+                getStrengthScore(value) >= index && s.strengthActive,
+              ]}
             />
           ))}
         </View>
       )}
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={s.errorText}>{error}</Text>}
     </View>
   );
 };
 
+// SIGNUP SCREEN
 const SignupScreen = ({ navigation, route }: any) => {
   const { role } = route.params || { role: 'CUSTOMER' };
   const updateRegistrationData = useRegistrationStore((state) => state.updateData);
+  const { theme } = useTheme();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -139,7 +142,7 @@ const SignupScreen = ({ navigation, route }: any) => {
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState<any>({});
 
-  const isFormValid = 
+  const isFormValid =
     formData.fullName.trim() !== '' &&
     formData.email.trim() !== '' &&
     formData.phone.trim() !== '' &&
@@ -154,61 +157,35 @@ const SignupScreen = ({ navigation, route }: any) => {
     const { fullName, email, phone, nicNumber, permanentAddress, city, password, confirmPassword } = formData;
     const newErrors: any = {};
 
-    if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    } else if (/^\d+$/.test(fullName)) {
-      newErrors.fullName = 'Name cannot be only numbers';
-    }
+    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    else if (/^\d+$/.test(fullName)) newErrors.fullName = 'Name cannot be only numbers';
 
     const cleanEmail = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!cleanEmail) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(cleanEmail)) {
-      newErrors.email = 'Enter a valid email address';
-    }
+    if (!cleanEmail) newErrors.email = 'Email is required';
+    else if (!emailRegex.test(cleanEmail)) newErrors.email = 'Enter a valid email address';
 
     const phoneRegex = /^\d{10}$/;
-    if (!phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!phoneRegex.test(phone)) {
-      newErrors.phone = 'Must be exactly 10 digits';
-    }
+    if (!phone.trim()) newErrors.phone = 'Phone number is required';
+    else if (!phoneRegex.test(phone)) newErrors.phone = 'Must be exactly 10 digits';
 
-    if (!nicNumber.trim()) {
-      newErrors.nicNumber = 'NIC number is required';
-    } else if (!/[0-9]/.test(nicNumber)) {
-      newErrors.nicNumber = 'NIC cannot be only letters';
-    }
+    if (!nicNumber.trim()) newErrors.nicNumber = 'NIC number is required';
+    else if (!/[0-9]/.test(nicNumber)) newErrors.nicNumber = 'NIC cannot be only letters';
 
-    if (!permanentAddress.trim()) {
-      newErrors.permanentAddress = 'Permanent address is required';
-    } else if (/^\d+$/.test(permanentAddress.trim())) {
-      newErrors.permanentAddress = 'Permanent address cannot be only numbers';
-    }
-    
-    if (!city.trim()) {
-      newErrors.city = 'City is required';
-    } else if (/^\d+$/.test(city.trim())) {
-      newErrors.city = 'City cannot be only numbers';
-    }
+    if (!permanentAddress.trim()) newErrors.permanentAddress = 'Permanent address is required';
+    else if (/^\d+$/.test(permanentAddress.trim())) newErrors.permanentAddress = 'Address cannot be only numbers';
+
+    if (!city.trim()) newErrors.city = 'City is required';
+    else if (/^\d+$/.test(city.trim())) newErrors.city = 'City cannot be only numbers';
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (!passwordRegex.test(password)) {
-      newErrors.password = 'Requires upper, lower, number, and symbol';
-    }
+    if (!password) newErrors.password = 'Password is required';
+    else if (!passwordRegex.test(password)) newErrors.password = 'Requires upper, lower, number, and symbol';
 
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
+    if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
 
-    if (!agreed) {
-      Toast.show({ type: 'info', text1: 'Terms & Conditions', text2: 'Please accept to proceed.' });
-    }
+    if (!agreed) Toast.show({ type: 'info', text1: 'Terms & Conditions', text2: 'Please accept to proceed.' });
 
     setErrors(newErrors);
 
@@ -223,38 +200,39 @@ const SignupScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const s = makeStyles(theme);
+
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.mainContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-        
+      <View style={s.mainContainer}>
+        <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+
         <LinearGradient
-          colors={['#D1FAE5', '#F0FDF4', '#FFFFFF']}
+          colors={theme.bgGradient as any}
           style={StyleSheet.absoluteFillObject}
         />
 
-        <SafeAreaView style={styles.safeArea}>
-        <ScreenHeader 
-          onBack={() => navigation.goBack()} 
-          currentStep={2} 
-        />
+        <SafeAreaView style={s.safeArea}>
+          <ScreenHeader onBack={() => navigation.goBack()} currentStep={2} />
 
-          <ScrollView 
-            contentContainerStyle={styles.scrollContent}
+          <ScrollView
+            contentContainerStyle={s.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.titleSection}>
-              <Text style={styles.mainTitle}>Create Account</Text>
-              <Text style={styles.subtitle}>
+            <View style={s.titleSection}>
+              <Text style={s.mainTitle}>Create Account</Text>
+              <Text style={s.subtitle}>
                 Join the network of seamless parcel logistics. Let's start with your basic details.
               </Text>
             </View>
 
-            <View style={styles.formCard}>
+            <View style={s.formCard}>
+
               <InputField
+                theme={theme}
                 label="NAME"
                 placeholder="Enter your name"
                 value={formData.fullName}
@@ -270,6 +248,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="EMAIL ADDRESS"
                 placeholder="name@example.com"
                 value={formData.email}
@@ -285,6 +264,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="PHONE NUMBER"
                 placeholder="0771234567"
                 value={formData.phone}
@@ -303,6 +283,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="NIC NUMBER"
                 placeholder="Enter your NIC number"
                 value={formData.nicNumber}
@@ -317,7 +298,8 @@ const SignupScreen = ({ navigation, route }: any) => {
                 )}
               />
 
-               <InputField
+              <InputField
+                theme={theme}
                 label="CITY"
                 placeholder="Enter your city"
                 value={formData.city}
@@ -337,6 +319,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="PERMANENT ADDRESS"
                 placeholder="Enter your permanent address"
                 value={formData.permanentAddress}
@@ -351,6 +334,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="PASSWORD"
                 placeholder="••••••••"
                 isPassword
@@ -366,6 +350,7 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
 
               <InputField
+                theme={theme}
                 label="CONFIRM PASSWORD"
                 placeholder="••••••••"
                 isPassword
@@ -379,24 +364,31 @@ const SignupScreen = ({ navigation, route }: any) => {
                 )}
               />
 
-              <TouchableOpacity 
-                style={styles.termsRow} 
+              {/* Terms checkbox */}
+              <TouchableOpacity
+                style={s.termsRow}
                 activeOpacity={0.7}
                 onPress={() => setAgreed(!agreed)}
               >
-                <View style={[styles.checkbox, agreed && styles.checkboxActive]}>
-                  {agreed && <Svg width="10" height="8" viewBox="0 0 10 8" fill="none"><Path d="M1 4L4 7L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></Svg>}
+                <View style={[s.checkbox, agreed && s.checkboxActive]}>
+                  {agreed && (
+                    <Svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <Path d="M1 4L4 7L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  )}
                 </View>
-                <Text style={styles.termsText}>
-                  I agree to the <Text style={styles.termsBold}>Terms & Conditions</Text> and <Text style={styles.termsBold}>privacy policy</Text> of DropMate.
+                <Text style={s.termsText}>
+                  I agree to the{' '}
+                  <Text style={s.termsBold}>Terms & Conditions</Text> and{' '}
+                  <Text style={s.termsBold}>privacy policy</Text> of DropMate.
                 </Text>
               </TouchableOpacity>
 
-              <PrimaryButton 
-                text="Continue" 
-                onPress={handleSignup} 
+              <PrimaryButton
+                text="Continue"
+                onPress={handleSignup}
                 disabled={!isFormValid}
-                style={styles.signupButton}
+                style={s.signupButton}
                 icon={
                   <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <Path d="M12.175 9H0V7H12.175L6.575 1.4L8 0L16 8L8 16L6.575 14.6L12.175 9Z" fill="white" />
@@ -405,38 +397,40 @@ const SignupScreen = ({ navigation, route }: any) => {
               />
             </View>
 
-            <View style={styles.trustSection}>
-              <View style={styles.trustCard}>
-                <View style={styles.trustIconContainer}>
+            {/* Trust cards */}
+            <View style={s.trustSection}>
+              <View style={s.trustCard}>
+                <View style={s.trustIconContainer}>
                   <Svg width="20" height="24" viewBox="0 0 16 20" fill="none">
-                    <Path d="M8 20C5.68333 19.4167 3.77083 18.0875 2.2625 16.0125C0.754167 13.9375 0 11.6333 0 9.1V3L8 0L16 3V9.1C16 11.6333 15.2458 13.9375 13.7375 16.0125C12.2292 18.0875 10.3167 19.4167 8 20ZM8 17.9C9.73333 17.35 11.1667 16.25 12.3 14.6C13.4333 12.95 14 11.1167 14 9.1V4.375L8 2.125L2 4.375V9.1C2 11.1167 2.56667 12.95 3.7 14.6C4.83333 16.25 6.26667 17.35 8 17.9ZM6.95 13.55L12.6 7.9L11.175 6.475L6.95 10.7L4.85 8.6L3.425 10.025L6.95 13.55Z" fill={Colors.text.brand} />
+                    <Path d="M8 20C5.68333 19.4167 3.77083 18.0875 2.2625 16.0125C0.754167 13.9375 0 11.6333 0 9.1V3L8 0L16 3V9.1C16 11.6333 15.2458 13.9375 13.7375 16.0125C12.2292 18.0875 10.3167 19.4167 8 20ZM8 17.9C9.73333 17.35 11.1667 16.25 12.3 14.6C13.4333 12.95 14 11.1167 14 9.1V4.375L8 2.125L2 4.375V9.1C2 11.1167 2.56667 12.95 3.7 14.6C4.83333 16.25 6.26667 17.35 8 17.9ZM6.95 13.55L12.6 7.9L11.175 6.475L6.95 10.7L4.85 8.6L3.425 10.025L6.95 13.55Z" fill={theme.text.brand} />
                   </Svg>
                 </View>
-                <View style={styles.trustTextContainer}>
-                  <Text style={styles.trustTitle}>Secure Data</Text>
-                  <Text style={styles.trustDesc}>Your personal information is encrypted and protected.</Text>
+                <View style={s.trustTextContainer}>
+                  <Text style={s.trustTitle}>Secure Data</Text>
+                  <Text style={s.trustDesc}>Your personal information is encrypted and protected.</Text>
                 </View>
               </View>
 
-              <View style={styles.trustCard}>
-                <View style={styles.trustIconContainer}>
-                   <Svg width="24" height="24" viewBox="0 0 20 18" fill="none">
-                    <Path d="M9 18V16H17V8.9C17 6.95 16.3208 5.29583 14.9625 3.9375C13.6042 2.57917 11.95 1.9 10 1.9C8.05 1.9 6.39583 2.57917 5.0375 3.9375C3.67917 5.29583 3 6.95 3 8.9V15H2C1.45 15 0.979167 14.8042 0.5875 14.4125C0.195833 14.0208 0 13.55 0 13V11C0 10.65 0.0875 10.3208 0.2625 10.0125C0.4375 9.70417 0.683333 9.45833 1 9.275L1.075 7.95C1.20833 6.81667 1.5375 5.76667 2.0625 4.8C2.5875 3.83333 3.24583 2.99167 4.0375 2.275C4.82917 1.55833 5.7375 1 6.7625 0.6C7.7875 0.2 8.86667 0 10 0C11.1333 0 12.2083 0.2 13.225 0.6C14.2417 1 15.15 1.55417 15.95 2.2625C16.75 2.97083 17.4083 3.80833 17.925 4.775C18.4417 5.74167 18.775 6.79167 18.925 7.925L19 9.225C19.3167 9.375 19.5625 9.6 19.7375 9.9C19.9125 10.2 20 10.5167 20 10.85V13.15C20 13.4833 19.9125 13.8 19.7375 14.1C19.5625 14.4 19.3167 14.625 19 14.775V16C19 16.55 18.8042 17.0208 18.4125 17.4125C18.0208 17.8042 17.55 18 17 18H9Z" fill={Colors.text.brand} />
+              <View style={s.trustCard}>
+                <View style={s.trustIconContainer}>
+                  <Svg width="24" height="24" viewBox="0 0 20 18" fill="none">
+                    <Path d="M9 18V16H17V8.9C17 6.95 16.3208 5.29583 14.9625 3.9375C13.6042 2.57917 11.95 1.9 10 1.9C8.05 1.9 6.39583 2.57917 5.0375 3.9375C3.67917 5.29583 3 6.95 3 8.9V15H2C1.45 15 0.979167 14.8042 0.5875 14.4125C0.195833 14.0208 0 13.55 0 13V11C0 10.65 0.0875 10.3208 0.2625 10.0125C0.4375 9.70417 0.683333 9.45833 1 9.275L1.075 7.95C1.20833 6.81667 1.5375 5.76667 2.0625 4.8C2.5875 3.83333 3.24583 2.99167 4.0375 2.275C4.82917 1.55833 5.7375 1 6.7625 0.6C7.7875 0.2 8.86667 0 10 0C11.1333 0 12.2083 0.2 13.225 0.6C14.2417 1 15.15 1.55417 15.95 2.2625C16.75 2.97083 17.4083 3.80833 17.925 4.775C18.4417 5.74167 18.775 6.79167 18.925 7.925L19 9.225C19.3167 9.375 19.5625 9.6 19.7375 9.9C19.9125 10.2 20 10.5167 20 10.85V13.15C20 13.4833 19.9125 13.8 19.7375 14.1C19.5625 14.4 19.3167 14.625 19 14.775V16C19 16.55 18.8042 17.0208 18.4125 17.4125C18.0208 17.8042 17.55 18 17 18H9Z" fill={theme.text.brand} />
                   </Svg>
                 </View>
-                <View style={styles.trustTextContainer}>
-                  <Text style={styles.trustTitle}>24/7 Support</Text>
-                  <Text style={styles.trustDesc}>Need help? Our concierge team is always available.</Text>
+                <View style={s.trustTextContainer}>
+                  <Text style={s.trustTitle}>24/7 Support</Text>
+                  <Text style={s.trustDesc}>Need help? Our concierge team is always available.</Text>
                 </View>
               </View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
-              style={styles.loginHint}
+              style={s.loginHint}
             >
-              <Text style={styles.loginHintText}>
-                Already have an account? <Text style={styles.loginHintBold}>Sign In</Text>
+              <Text style={s.loginHintText}>
+                Already have an account?{' '}
+                <Text style={s.loginHintBold}>Sign In</Text>
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -446,182 +440,189 @@ const SignupScreen = ({ navigation, route }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 40,
-  },
-  titleSection: {
-    marginBottom: 20,
-  },
-  mainTitle: {
-    fontSize: 32,
-    color: Colors.text.primary,
-    fontFamily: Typography.extraBold,
-    letterSpacing: -1,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.text.secondary,
-    fontFamily: Typography.regular,
-    lineHeight: 24,
-    opacity: 0.8,
-    textAlign: 'center',
-  },
-  formCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#052017',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 32,
-    elevation: 4,
-    marginBottom: 24,
-  },
-  inputWrapper: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 11,
-    color: Colors.text.secondary,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    fontFamily: Typography.bold,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(220, 251, 235, 0.2)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(190, 201, 194, 0.2)',
-    height: 56,
-  },
-  iconBox: {
-    width: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.text.primary,
-    fontFamily: Typography.medium,
-  },
-  eyeIconBox: {
-    padding: 12,
-  },
-  errorText: {
-    color: '#D32F2F',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-    fontFamily: Typography.medium,
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: 12,
-    marginBottom: 32,
-    gap: 12,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#BEC9C2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  checkboxActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  termsText: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.text.brand,
-    fontFamily: Typography.medium,
-    lineHeight: 20,
-  },
-  termsBold: {
-    fontFamily: Typography.bold,
-  },
-  strengthGrid: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 12,
-    paddingHorizontal: 4,
-  },
-  strengthBar: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#CBE9DA',
-  },
-  strengthActive: {
-    backgroundColor: '#00513D',
-  },
-  signupButton: {
-    height: 64,
-  },
-  trustSection: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 40,
-  },
-  trustCard: {
-    flex: 1,
-    backgroundColor: '#D7F5E5',
-    borderRadius: 20,
-    padding: 16,
-    gap: 12,
-  },
-  trustIconContainer: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  trustTextContainer: {
-    gap: 4,
-  },
-  trustTitle: {
-    fontSize: 14,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
-  },
-  trustDesc: {
-    fontSize: 11,
-    color: Colors.text.secondary,
-    lineHeight: 15,
-    fontFamily: Typography.regular,
-  },
-  loginHint: {
-    alignItems: 'center',
-    paddingBottom: 20,
-  },
-  loginHintText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    fontFamily: Typography.medium,
-  },
-  loginHintBold: {
-    color: Colors.primary,
-    fontFamily: Typography.bold,
-  },
-});
+// Dynamic Styles 
+const makeStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    mainContainer: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingTop: 10,
+      paddingBottom: 40,
+    },
+    titleSection: {
+      marginBottom: 20,
+    },
+    mainTitle: {
+      fontSize: 32,
+      color: theme.text.primary,
+      fontFamily: Typography.extraBold,
+      letterSpacing: -1,
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: 16,
+      color: theme.text.secondary,
+      fontFamily: Typography.regular,
+      lineHeight: 24,
+      opacity: 0.8,
+      textAlign: 'center',
+    },
+    formCard: {
+      backgroundColor: theme.card,
+      borderRadius: 24,
+      padding: 24,
+      shadowColor: theme.shadowColor,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: theme.isDark ? 0.4 : 0.06,
+      shadowRadius: 32,
+      elevation: 4,
+      marginBottom: 24,
+      borderWidth: theme.isDark ? 1 : 0,
+      borderColor: theme.border,
+    },
+    inputWrapper: {
+      marginBottom: 20,
+    },
+    inputLabel: {
+      fontSize: 11,
+      color: theme.text.secondary,
+      letterSpacing: 0.5,
+      marginBottom: 8,
+      fontFamily: Typography.bold,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.inputBg,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      height: 56,
+    },
+    iconBox: {
+      width: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    textInput: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.text.primary,
+      fontFamily: Typography.medium,
+    },
+    eyeIconBox: {
+      padding: 12,
+    },
+    errorText: {
+      color: '#EF5350',
+      fontSize: 12,
+      marginTop: 4,
+      marginLeft: 4,
+      fontFamily: Typography.medium,
+    },
+    termsRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginTop: 12,
+      marginBottom: 32,
+      gap: 12,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: theme.text.tertiary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 2,
+    },
+    checkboxActive: {
+      backgroundColor: theme.primary,
+      borderColor: theme.primary,
+    },
+    termsText: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.text.brand,
+      fontFamily: Typography.medium,
+      lineHeight: 20,
+    },
+    termsBold: {
+      fontFamily: Typography.bold,
+    },
+    strengthGrid: {
+      flexDirection: 'row',
+      gap: 6,
+      marginTop: 12,
+      paddingHorizontal: 4,
+    },
+    strengthBar: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.strengthBar,
+    },
+    strengthActive: {
+      backgroundColor: theme.primary,
+    },
+    signupButton: {
+      height: 64,
+    },
+    trustSection: {
+      flexDirection: 'row',
+      gap: 16,
+      marginBottom: 40,
+    },
+    trustCard: {
+      flex: 1,
+      backgroundColor: theme.trustCard,
+      borderRadius: 20,
+      padding: 16,
+      gap: 12,
+      borderWidth: theme.isDark ? 1 : 0,
+      borderColor: theme.border,
+    },
+    trustIconContainer: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+    },
+    trustTextContainer: {
+      gap: 4,
+    },
+    trustTitle: {
+      fontSize: 14,
+      color: theme.text.primary,
+      fontFamily: Typography.bold,
+    },
+    trustDesc: {
+      fontSize: 11,
+      color: theme.text.secondary,
+      lineHeight: 15,
+      fontFamily: Typography.regular,
+    },
+    loginHint: {
+      alignItems: 'center',
+      paddingBottom: 20,
+    },
+    loginHintText: {
+      fontSize: 15,
+      color: theme.text.secondary,
+      fontFamily: Typography.medium,
+    },
+    loginHintBold: {
+      color: theme.primary,
+      fontFamily: Typography.bold,
+    },
+  });
 
 export default SignupScreen;

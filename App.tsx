@@ -1,18 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
-import { toastConfig } from './src/components/common/CustomToast';
-
+import { themedToastConfig } from './src/components/common/CustomToast';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { socketService } from './src/services/socketService';
+import { initSound } from './src/services/soundService';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Centralised React Query client
 const queryClient = new QueryClient();
 
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+const AppContent = () => {
+  const { theme } = useTheme();
+  const config = themedToastConfig(theme);
 
-import { useEffect } from 'react';
-import { socketService } from './src/services/socketService';
-import { initSound } from './src/services/soundService';
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <AppNavigator />
+        <Toast config={config} />
+      </QueryClientProvider>
+    </GestureHandlerRootView>
+  );
+};
 
 const App = () => {
   useEffect(() => {
@@ -22,12 +33,9 @@ const App = () => {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AppNavigator />
-        <Toast config={toastConfig} />
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 };
 

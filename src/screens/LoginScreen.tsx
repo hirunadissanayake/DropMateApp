@@ -11,31 +11,75 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 
 import LinearGradient from 'react-native-linear-gradient';
-
-import { Colors } from '../constants/Colors';
-import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
 import * as authService from '../services/authService';
-import { ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
-import Svg, { Path } from 'react-native-svg';
-
-
+import Svg, { Path, Circle, G } from 'react-native-svg';
+import { useTheme } from '../context/ThemeContext';
+import { Typography } from '../constants/Typography';
 
 const { width } = Dimensions.get('window');
 
+// Sun Icon
+const SunIcon = ({ color }: { color: string }) => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="5" stroke={color} strokeWidth="2" />
+    <Path
+      d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
+// Moon Icon
+const MoonIcon = ({ color }: { color: string }) => (
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// User Icon
+const UserIcon = ({ color }: { color: string }) => (
+  <Svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <Path
+      d="M6.66667 6.66667C5.75 6.66667 4.96528 6.34028 4.3125 5.6875C3.65972 5.03472 3.33333 4.25 3.33333 3.33333C3.33333 2.41667 3.65972 1.63194 4.3125 0.979167C4.96528 0.326389 5.75 0 6.66667 0C7.58333 0 8.36806 0.326389 9.02083 0.979167C9.67361 1.63194 10 2.41667 10 3.33333C10 4.25 9.67361 5.03472 9.02083 5.6875C8.36806 6.34028 7.58333 6.66667 6.66667 6.66667ZM0 13.3333V11C0 10.5278 0.121528 10.0938 0.364583 9.69792C0.607639 9.30208 0.930556 9 1.33333 8.79167C2.19444 8.36111 3.06944 8.03819 3.95833 7.82292C4.84722 7.60764 5.75 7.5 6.66667 7.5C7.58333 7.5 8.48611 7.60764 9.375 7.82292C10.2639 8.03819 11.1389 8.36111 12 8.79167C12.4028 9 12.7257 9.30208 12.9688 9.69792C13.2118 10.0938 13.3333 10.5278 13.3333 11V13.3333H0Z"
+      fill={color}
+    />
+  </Svg>
+);
+
+// Lock Icon
+const LockIcon = ({ color }: { color: string }) => (
+  <Svg width="14" height="18" viewBox="0 0 14 18" fill="none">
+    <Path
+      d="M1.66667 17.5C1.20833 17.5 0.815972 17.3368 0.489583 17.0104C0.163194 16.684 0 16.2917 0 15.8333V7.5C0 7.04167 0.163194 6.64931 0.489583 6.32292C0.815972 5.99653 1.20833 5.83333 1.66667 5.83333H2.5V4.16667C2.5 3.01389 2.90625 2.03125 3.71875 1.21875C4.53125 0.40625 5.51389 0 6.66667 0C7.81944 0 8.80208 0.40625 9.61458 1.21875C10.4271 2.03125 10.8333 3.01389 10.8333 4.16667V5.83333H11.6667C12.125 5.83333 12.5174 5.99653 12.8438 6.32292C13.1701 6.64931 13.3333 7.04167 13.3333 7.5V15.8333C13.3333 16.2917 13.1701 16.684 12.8438 17.0104C12.5174 17.3368 12.125 17.5 11.6667 17.5H1.66667ZM6.66667 13.3333C7.125 13.3333 7.51736 13.1701 7.84375 12.8438C8.17014 12.5174 8.33333 12.125 8.33333 11.6667C8.33333 11.2083 8.17014 10.816 7.84375 10.4896C7.51736 10.1632 7.125 10 6.66667 10C6.20833 10 5.81597 10.1632 5.48958 10.4896C5.16319 10.816 5 11.2083 5 11.6667C5 12.125 5.16319 12.5174 5.48958 12.8438C5.81597 13.1701 6.20833 13.3333 6.66667 13.3333ZM4.16667 5.83333H9.16667V4.16667C9.16667 3.47222 8.92361 2.88194 8.4375 2.39583C7.95139 1.90972 7.36111 1.66667 6.66667 1.66667C5.97222 1.66667 5.38194 1.90972 4.89583 2.39583C4.40972 2.88194 4.16667 3.47222 4.16667 4.16667V5.83333Z"
+      fill={color}
+    />
+  </Svg>
+);
+
+// LOGIN SCREEN
 const LoginScreen = ({ navigation }: any) => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Zustand State Setup
+
   const setAuth = useAuthStore((state) => state.setAuth);
+  const { isDark, theme, toggleTheme } = useTheme();
 
   const handleLogin = async () => {
     const cleanEmail = emailOrPhone.trim();
@@ -43,7 +87,7 @@ const LoginScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'info',
         text1: 'Credentials Required',
-        text2: 'Please enter your email and password to proceed.'
+        text2: 'Please enter your email and password to proceed.',
       });
       return;
     }
@@ -51,62 +95,90 @@ const LoginScreen = ({ navigation }: any) => {
     setIsLoading(true);
     try {
       const response = await authService.login({ email: cleanEmail, password });
-      console.log('Login success:', response);
-      
       if (response.token && response.user) {
-        // Fetch full profile to ensure we have the selfieUrl and other details
         const fullUser = await authService.getMe(response.token);
         setAuth(response.token, fullUser);
-        
-        if (fullUser.isBlocked) {
-          return; // AppNavigator will switch to BlockedScreen
-        }
-        
-        const routeName = fullUser.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
-        
+
+        if (fullUser.isBlocked) return;
+
+        const routeName =
+          fullUser.roleActive === 'TRAVELER' ? 'TravelerHome' : 'CustomerHome';
+
         Toast.show({
           type: 'success',
           text1: 'Login Successful',
-          text2: 'Welcome back to DropMate!'
+          text2: 'Welcome back to DropMate!',
         });
 
-        navigation.reset({
-          index: 0,
-          routes: [{ name: routeName }],
-        });
+        navigation.reset({ index: 0, routes: [{ name: routeName }] });
       } else {
         throw new Error('Invalid response from server');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
-        text2: error.message || 'Invalid email or password.'
+        text2: error.message || 'Invalid email or password.',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const styles = makeStyles(theme);
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      
+      <StatusBar
+        barStyle={theme.statusBar}
+        backgroundColor="transparent"
+        translucent
+      />
+
       {/* Background Gradient */}
       <LinearGradient
-        colors={Colors.bgGradient}
+        colors={theme.bgGradient as any}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
 
-      {/* Decorative Circles at bottom */}
+      {/* Decorative blobs */}
       <View style={styles.decorativeContainer}>
         <View style={styles.circle1} />
         <View style={styles.circle2} />
       </View>
+
+      {/* ── Theme toggle pill ── */}
+      <SafeAreaView style={styles.toggleSafeArea}>
+        <View style={styles.toggleWrapper}>
+          <TouchableOpacity
+            style={styles.togglePill}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+          >
+            {/* track */}
+            <View style={styles.pillTrack}>
+              <View
+                style={[
+                  styles.pillThumb,
+                  isDark && styles.pillThumbDark,
+                ]}
+              />
+            </View>
+            <View style={styles.pillLabel}>
+              {isDark ? (
+                <MoonIcon color={theme.primary} />
+              ) : (
+                <SunIcon color={theme.primary} />
+              )}
+              <Text style={styles.toggleText}>
+                {isDark ? 'Dark' : 'Light'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
@@ -114,87 +186,78 @@ const LoginScreen = ({ navigation }: any) => {
           style={styles.keyboardAvoidingView}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-              
-              {/* Logo Section */}
+
+              {/* Logo */}
               <View style={styles.logoRow}>
                 <Image
                   source={require('../assets/logo.png')}
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-
                 <Text style={styles.brandName}>rop Mate</Text>
               </View>
 
-              {/* Welcome Text */}
+              {/* Headline */}
               <View style={styles.headerTextContainer}>
                 <Text style={styles.welcomeTitle}>Welcome Back</Text>
-                <Text style={styles.welcomeSubtitle}>Log in to manage your deliveries</Text>
+                <Text style={styles.welcomeSubtitle}>
+                  Log in to manage your deliveries
+                </Text>
               </View>
 
-              {/* Form Content */}
-              <View style={styles.formContainer}>
-                
+              {/* Form card */}
+              <View style={styles.formCard}>
+
                 <CustomInput
                   label="EMAIL"
                   placeholder="Enter your email"
                   value={emailOrPhone}
                   onChangeText={(t) => setEmailOrPhone(t.toLowerCase())}
-
-                  icon={
-                    <Svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <Path
-                        d="M6.66667 6.66667C5.75 6.66667 4.96528 6.34028 4.3125 5.6875C3.65972 5.03472 3.33333 4.25 3.33333 3.33333C3.33333 2.41667 3.65972 1.63194 4.3125 0.979167C4.96528 0.326389 5.75 0 6.66667 0C7.58333 0 8.36806 0.326389 9.02083 0.979167C9.67361 1.63194 10 2.41667 10 3.33333C10 4.25 9.67361 5.03472 9.02083 5.6875C8.36806 6.34028 7.58333 6.66667 6.66667 6.66667ZM0 13.3333V11C0 10.5278 0.121528 10.0938 0.364583 9.69792C0.607639 9.30208 0.930556 9 1.33333 8.79167C2.19444 8.36111 3.06944 8.03819 3.95833 7.82292C4.84722 7.60764 5.75 7.5 6.66667 7.5C7.58333 7.5 8.48611 7.60764 9.375 7.82292C10.2639 8.03819 11.1389 8.36111 12 8.79167C12.4028 9 12.7257 9.30208 12.9688 9.69792C13.2118 10.0938 13.3333 10.5278 13.3333 11V13.3333H0Z"
-                        fill={Colors.text.secondary}
-                      />
-                    </Svg>
-                  }
+                  icon={<UserIcon color={theme.text.tertiary} />}
+                  theme={theme}
                 />
 
                 <View style={styles.passwordContainer}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.forgotPasswordButton}
                     onPress={() => navigation.navigate('ForgotPassword')}
                   >
-                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    <Text style={styles.forgotPasswordText}>
+                      Forgot Password?
+                    </Text>
                   </TouchableOpacity>
+
                   <CustomInput
                     label="PASSWORD"
                     placeholder="Enter your password"
                     value={password}
                     onChangeText={setPassword}
                     isPassword={true}
-                    icon={
-                      <Svg width="14" height="18" viewBox="0 0 14 18" fill="none">
-                        <Path
-                          d="M1.66667 17.5C1.20833 17.5 0.815972 17.3368 0.489583 17.0104C0.163194 16.684 0 16.2917 0 15.8333V7.5C0 7.04167 0.163194 6.64931 0.489583 6.32292C0.815972 5.99653 1.20833 5.83333 1.66667 5.83333H2.5V4.16667C2.5 3.01389 2.90625 2.03125 3.71875 1.21875C4.53125 0.40625 5.51389 0 6.66667 0C7.81944 0 8.80208 0.40625 9.61458 1.21875C10.4271 2.03125 10.8333 3.01389 10.8333 4.16667V5.83333H11.6667C12.125 5.83333 12.5174 5.99653 12.8438 6.32292C13.1701 6.64931 13.3333 7.04167 13.3333 7.5V15.8333C13.3333 16.2917 13.1701 16.684 12.8438 17.0104C12.5174 17.3368 12.125 17.5 11.6667 17.5H1.66667ZM6.66667 13.3333C7.125 13.3333 7.51736 13.1701 7.84375 12.8438C8.17014 12.5174 8.33333 12.125 8.33333 11.6667C8.33333 11.2083 8.17014 10.816 7.84375 10.4896C7.51736 10.1632 7.125 10 6.66667 10C6.20833 10 5.81597 10.1632 5.48958 10.4896C5.16319 10.816 5 11.2083 5 11.6667C5 12.125 5.16319 12.5174 5.48958 12.8438C5.81597 13.1701 6.20833 13.3333 6.66667 13.3333ZM4.16667 5.83333H9.16667V4.16667C9.16667 3.47222 8.92361 2.88194 8.4375 2.39583C7.95139 1.90972 7.36111 1.66667 6.66667 1.66667C5.97222 1.66667 5.38194 1.90972 4.89583 2.39583C4.40972 2.88194 4.16667 3.47222 4.16667 4.16667V5.83333Z"
-                          fill={Colors.text.secondary}
-                        />
-                      </Svg>
-                    }
+                    icon={<LockIcon color={theme.text.tertiary} />}
+                    theme={theme}
                   />
                 </View>
 
-                <PrimaryButton 
-                  text="Login" 
-                  onPress={handleLogin} 
+                <PrimaryButton
+                  text="Login"
+                  onPress={handleLogin}
                   loading={isLoading}
                   style={styles.loginButton}
                 />
-
-                
               </View>
 
               {/* Footer */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('RoleSelection')}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('RoleSelection')}
+                >
                   <Text style={styles.createAccountText}>Create Account</Text>
                 </TouchableOpacity>
               </View>
@@ -207,124 +270,198 @@ const LoginScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  safeArea: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  decorativeContainer: {
-    position: 'absolute',
-    bottom: 0,
-    width: width,
-    height: 295,
-    overflow: 'hidden',
-    opacity: 0.4,
-  },
-  circle1: {
-    position: 'absolute',
-    left: -20,
-    top: 29,
-    width: 234,
-    height: 295,
-    borderRadius: 150,
-    backgroundColor: 'rgba(157, 244, 210, 0.2)',
-  },
-  circle2: {
-    position: 'absolute',
-    left: 215,
-    top: 59,
-    width: 195,
-    height: 295,
-    borderRadius: 150,
-    backgroundColor: 'rgba(209, 239, 224, 0.4)',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 40 : 60,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logoImage: {
-    width: 56,
-    height: 56,
-    marginRight: -6,
-  },
-  brandName: {
-    fontSize: 46,
-    color: Colors.text.brand,
-    fontFamily: Typography.bold,
-    letterSpacing: -0.8,
-  },
-  headerTextContainer: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  welcomeTitle: {
-    fontSize: 16,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
-    marginBottom: 4,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: Colors.text.secondary,
-    fontFamily: Typography.regular,
-    textAlign: 'center',
-  },
-  formContainer: {
-    width: '100%',
-    maxWidth: 420,
-  },
-  passwordContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  forgotPasswordButton: {
-    position: 'absolute',
-    right: 4,
-    top: 0,
-    zIndex: 10,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontFamily: Typography.bold,
-  },
-  loginButton: {
-    marginTop: 16,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  footerText: {
-    fontSize: 16,
-    color: Colors.text.secondary,
-    fontFamily: Typography.regular,
-  },
-  createAccountText: {
-    fontSize: 16,
-    color: Colors.primary,
-    fontFamily: Typography.bold,
-  },
-});
+//Dynamic Styles 
+const makeStyles = (theme: ReturnType<typeof import('../context/ThemeContext').useTheme>['theme']) =>
+  StyleSheet.create({
+    mainContainer: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    toggleSafeArea: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      zIndex: 100,
+    },
+    toggleWrapper: {
+      paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 8,
+      paddingRight: 16,
+      alignItems: 'flex-end',
+    },
+    togglePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.toggleBg,
+      borderRadius: 24,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      gap: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    pillTrack: {
+      width: 32,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: theme.isDark ? theme.primary : 'rgba(0,108,82,0.2)',
+      justifyContent: 'center',
+      paddingHorizontal: 2,
+    },
+    pillThumb: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    pillThumbDark: {
+      transform: [{ translateX: 14 }],
+    },
+    pillLabel: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    toggleText: {
+      fontSize: 13,
+      fontFamily: Typography.bold,
+      color: theme.primary,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 40,
+    },
+    decorativeContainer: {
+      position: 'absolute',
+      bottom: 0,
+      width: width,
+      height: 295,
+      overflow: 'hidden',
+      opacity: theme.isDark ? 0.15 : 0.4,
+    },
+    circle1: {
+      position: 'absolute',
+      left: -20,
+      top: 29,
+      width: 234,
+      height: 295,
+      borderRadius: 150,
+      backgroundColor: theme.isDark
+        ? 'rgba(61,217,164,0.15)'
+        : 'rgba(157, 244, 210, 0.2)',
+    },
+    circle2: {
+      position: 'absolute',
+      left: 215,
+      top: 59,
+      width: 195,
+      height: 295,
+      borderRadius: 150,
+      backgroundColor: theme.isDark
+        ? 'rgba(61,217,164,0.08)'
+        : 'rgba(209, 239, 224, 0.4)',
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop:
+        Platform.OS === 'android'
+          ? (StatusBar.currentHeight || 0) + 40
+          : 60,
+    },
+    logoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 48,
+    },
+    logoImage: {
+      width: 56,
+      height: 56,
+      marginRight: -6,
+    },
+    brandName: {
+      fontSize: 46,
+      color: theme.text.brand,
+      fontFamily: Typography.bold,
+      letterSpacing: -0.8,
+    },
+    headerTextContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    welcomeTitle: {
+      fontSize: 16,
+      color: theme.text.primary,
+      fontFamily: Typography.bold,
+      marginBottom: 4,
+    },
+    welcomeSubtitle: {
+      fontSize: 16,
+      color: theme.text.secondary,
+      fontFamily: Typography.regular,
+      textAlign: 'center',
+    },
+    formCard: {
+      width: '100%',
+      maxWidth: 420,
+      backgroundColor: theme.card,
+      borderRadius: 24,
+      padding: 24,
+      shadowColor: theme.shadowColor,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: theme.isDark ? 0.4 : 0.06,
+      shadowRadius: 32,
+      elevation: 4,
+      borderWidth: theme.isDark ? 1 : 0,
+      borderColor: theme.border,
+      marginBottom: 8,
+    },
+    passwordContainer: {
+      position: 'relative',
+      width: '100%',
+    },
+    forgotPasswordButton: {
+      position: 'absolute',
+      right: 4,
+      top: 0,
+      zIndex: 10,
+    },
+    forgotPasswordText: {
+      fontSize: 14,
+      color: theme.primary,
+      fontFamily: Typography.bold,
+    },
+    loginButton: {
+      marginTop: 16,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 28,
+    },
+    footerText: {
+      fontSize: 16,
+      color: theme.text.secondary,
+      fontFamily: Typography.regular,
+    },
+    createAccountText: {
+      fontSize: 16,
+      color: theme.primary,
+      fontFamily: Typography.bold,
+    },
+  });
 
 export default LoginScreen;
