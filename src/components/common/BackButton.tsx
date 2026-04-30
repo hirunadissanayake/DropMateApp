@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, View, Platform, ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../context/ThemeContext';
 
 interface BackButtonProps {
   onPress: () => void;
@@ -9,7 +10,10 @@ interface BackButtonProps {
   color?: string;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ onPress, style, color = '#064E3B' }) => {
+const BackButton: React.FC<BackButtonProps> = ({ onPress, style, color }) => {
+  const { theme } = useTheme();
+  const finalColor = color || theme.text.primary;
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -21,7 +25,7 @@ const BackButton: React.FC<BackButtonProps> = ({ onPress, style, color = '#064E3
         <Svg width="20" height="20" viewBox="0 0 16 16" fill="none">
           <Path
             d="M3.63375 8.55L8.95375 13.87L7.6 15.2L0 7.6L7.6 0L8.95375 1.33L3.63375 6.65H15.2V8.55H3.63375Z"
-            fill={color}
+            fill={finalColor}
           />
         </Svg>
       </View>

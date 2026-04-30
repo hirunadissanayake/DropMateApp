@@ -5,10 +5,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   LayoutAnimation,
   Platform,
   UIManager,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +16,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
+import CustomInput from '../components/common/CustomInput';
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -162,6 +165,8 @@ const Icon = ({ name, size = 24, color = "#000", style }: any) => {
 };
 
 const HelpCenterScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,125 +180,133 @@ const HelpCenterScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <BackButton
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          color="#006C52"
-        />
-        <Text style={styles.headerTitle}>Help Center</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+       <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <BackButton
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            color={theme.primary}
+          />
+          <Text style={styles.headerTitle}>Help Center</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Hero Section */}
-        <LinearGradient
-          colors={['#006C52', '#004A38']}
-          style={styles.heroCard}
-        >
-          <Text style={styles.heroTitle}>How can we help you?</Text>
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#999" />
-            <TextInput
-              style={styles.searchInput}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* Hero Section */}
+          <LinearGradient
+            colors={[theme.primary, theme.primaryDark]}
+            style={styles.heroCard}
+          >
+            <Text style={styles.heroTitle}>How can we help you?</Text>
+            <CustomInput 
               placeholder="Search for topics..."
-              placeholderTextColor="#999"
               value={searchQuery}
               onChangeText={setSearchQuery}
+              icon={<Icon name="search" size={20} color={theme.isDark ? "#FFF" : "#006C52"} />}
+              theme={theme}
+              containerStyle={styles.searchCustomStyle}
+              inputWrapperStyle={styles.searchInputWrapper}
+              inputStyle={styles.searchTextInput}
+              placeholderTextColor={theme.isDark ? "rgba(255,255,255,0.6)" : "#999"}
             />
-          </View>
-        </LinearGradient>
+          </LinearGradient>
 
-        {/* FAQ Sections */}
-        <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-        
-        {(() => {
-          const filteredFAQS = activeFAQS.map(category => {
-            const filteredQuestions = category.questions.filter(item => 
-              item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
-              item.a.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            return { ...category, questions: filteredQuestions };
-          }).filter(category => category.questions.length > 0);
+          {/* FAQ Sections */}
+          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+          
+          {(() => {
+            const filteredFAQS = activeFAQS.map(category => {
+              const filteredQuestions = category.questions.filter(item => 
+                item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                item.a.toLowerCase().includes(searchQuery.toLowerCase())
+              );
+              return { ...category, questions: filteredQuestions };
+            }).filter(category => category.questions.length > 0);
 
-          if (filteredFAQS.length === 0) {
-            return (
-              <View style={{ alignItems: 'center', marginVertical: 30 }}>
-                <Text style={{ color: '#666', fontFamily: Typography.medium, fontSize: 16 }}>No results found for "{searchQuery}"</Text>
-              </View>
-            );
-          }
-
-          return filteredFAQS.map((category, catIdx) => (
-            <View key={catIdx} style={styles.categoryContainer}>
-              <View style={styles.categoryHeader}>
-                <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-                  <Icon name={category.icon as any} size={20} color="#006C52" />
+            if (filteredFAQS.length === 0) {
+              return (
+                <View style={{ alignItems: 'center', marginVertical: 30 }}>
+                  <Text style={{ color: theme.text.tertiary, fontFamily: Typography.medium, fontSize: 16 }}>No results found for "{searchQuery}"</Text>
                 </View>
-                <Text style={styles.categoryName}>{category.category}</Text>
+              );
+            }
+
+            return filteredFAQS.map((category, catIdx) => (
+              <View key={catIdx} style={styles.categoryContainer}>
+                <View style={styles.categoryHeader}>
+                  <View style={[styles.iconBox, { backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#E8F5E9' }]}>
+                    <Icon name={category.icon as any} size={18} color={theme.isDark ? theme.primary : '#006C52'} />
+                  </View>
+                  <Text style={styles.categoryName}>{category.category}</Text>
+                </View>
+
+                {category.questions.map((item, qIdx) => {
+                  const id = `${catIdx}-${qIdx}`;
+                  const isExpanded = expandedIndex === id;
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={qIdx} 
+                      style={[styles.faqItem, isExpanded && styles.faqItemExpanded]}
+                      onPress={() => toggleExpand(id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.questionRow}>
+                        <Text style={styles.questionText}>{item.q}</Text>
+                        <Icon 
+                          name={isExpanded ? "chevron-up" : "chevron-down"} 
+                          size={18} 
+                          color={isExpanded ? theme.primary : theme.text.tertiary} 
+                        />
+                      </View>
+                      {isExpanded && (
+                        <Text style={styles.answerText}>{item.a}</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
+            ));
+          })()}
 
-              {category.questions.map((item, qIdx) => {
-                const id = `${catIdx}-${qIdx}`;
-                const isExpanded = expandedIndex === id;
-                
-                return (
-                  <TouchableOpacity 
-                    key={qIdx} 
-                    style={[styles.faqItem, isExpanded && styles.faqItemExpanded]}
-                    onPress={() => toggleExpand(id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.questionRow}>
-                      <Text style={styles.questionText}>{item.q}</Text>
-                      <Icon 
-                        name={isExpanded ? "chevron-up" : "chevron-down"} 
-                        size={18} 
-                        color="#666" 
-                      />
-                    </View>
-                    {isExpanded && (
-                      <Text style={styles.answerText}>{item.a}</Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+          {/* Contact Support Section */}
+          <View style={styles.contactCard}>
+            <View style={styles.contactInfo}>
+              <Text style={styles.contactTitle}>Still need help?</Text>
+              <Text style={styles.contactSubtitle}>Our support team is available 24/7 to assist you with any issues.</Text>
             </View>
-          ));
-        })()}
-
-        {/* Contact Support Section */}
-        <View style={styles.contactCard}>
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactTitle}>Still need help?</Text>
-            <Text style={styles.contactSubtitle}>Our support team is available 24/7 to assist you with any issues.</Text>
+            
+            <TouchableOpacity 
+              style={styles.chatButton}
+              onPress={() => navigation.navigate('SupportChat')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[theme.primary, theme.primaryDark]}
+                style={styles.chatButtonGradient}
+              >
+                <Icon name="headset" size={20} color="#FFF" />
+                <Text style={[styles.chatButtonText, { backgroundColor: 'transparent' }]}>Chat with Support</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
           
-          <TouchableOpacity 
-            style={styles.chatButton}
-            onPress={() => navigation.navigate('SupportChat')}
-          >
-            <LinearGradient
-              colors={['#006C52', '#004A38']}
-              style={styles.chatButtonGradient}
-            >
-              <Icon name="headset" size={20} color="#FFF" />
-              <Text style={styles.chatButtonText}>Chat with Support</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.background,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -301,7 +314,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#FFF',
   },
   backButton: {
     padding: 4,
@@ -310,81 +322,78 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    color: '#1A1A1A',
+    color: theme.text.primary,
     fontFamily: Typography.extraBold,
   },
   scrollContent: {
     padding: 20,
   },
   heroCard: {
-    padding: 25,
-    borderRadius: 24,
-    marginBottom: 25,
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 8,
+    padding: 28,
+    borderRadius: 28,
+    marginBottom: 30,
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 18,
+    elevation: 10,
   },
   heroTitle: {
-    fontSize: 24,
+    fontSize: 26,
     color: '#FFF',
     marginBottom: 20,
     fontFamily: Typography.bold,
+    letterSpacing: -0.5,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    height: 50,
+  searchCustomStyle: {
+    marginBottom: 0,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
+  searchInputWrapper: {
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.15)' : '#FFF',
+    borderWidth: 0,
+    height: 54,
+  },
+  searchTextInput: {
+    color: theme.isDark ? '#FFF' : '#004A38',
     fontSize: 15,
-    color: '#1A1A1A',
-    fontFamily: Typography.regular,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontFamily: Typography.bold,
-    color: '#1A1A1A',
+    color: theme.text.primary,
     marginBottom: 20,
+    letterSpacing: -0.3,
   },
   categoryContainer: {
-    marginBottom: 25,
+    marginBottom: 30,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   categoryName: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: Typography.bold,
-    color: '#666',
+    color: theme.text.secondary,
   },
   faqItem: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    paddingVertical: 20,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
   },
   faqItemExpanded: {
-    borderColor: '#006C52',
-    backgroundColor: '#F1F8F6',
+    borderBottomColor: theme.primary,
   },
   questionRow: {
     flexDirection: 'row',
@@ -394,43 +403,50 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 15,
     fontFamily: Typography.bold,
-    color: '#1A1A1A',
+    color: theme.text.primary,
     flex: 1,
     marginRight: 15,
+    lineHeight: 20,
   },
   answerText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginTop: 12,
-    fontFamily: Typography.regular,
+    fontSize: 14.5,
+    color: theme.text.secondary,
+    lineHeight: 22,
+    marginTop: 15,
+    fontFamily: Typography.medium,
+    paddingRight: 10,
   },
   contactCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    padding: 25,
-    marginTop: 10,
+    backgroundColor: theme.card,
+    borderRadius: 28,
+    padding: 30,
+    marginTop: 15,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: theme.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
   },
   contactInfo: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   contactTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: Typography.bold,
-    color: '#1A1A1A',
+    color: theme.text.primary,
     marginBottom: 8,
   },
   contactSubtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 14.5,
+    color: theme.text.tertiary,
     textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 10,
-    fontFamily: Typography.regular,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+    fontFamily: Typography.medium,
   },
   chatButton: {
     width: '100%',
@@ -439,13 +455,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 10,
+    paddingVertical: 18,
+    borderRadius: 18,
+    gap: 12,
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   chatButtonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: Typography.bold,
   },
 });

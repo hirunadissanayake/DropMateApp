@@ -28,12 +28,14 @@ import CustomAlert from '../components/common/CustomAlert';
 import CustomCalendar from '../components/common/CustomCalendar';
 import CustomTimePicker from '../components/common/CustomTimePicker';
 import { Typography } from '../constants/Typography';
-
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
-const BRAND_GREEN = '#006C52';
 
 const CreateTripScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const { token } = useAuthStore();
@@ -72,10 +74,8 @@ const CreateTripScreen = () => {
     action: () => {}
   });
 
-  // Picker States
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
 
   useFocusEffect(
     useCallback(() => {
@@ -136,8 +136,25 @@ const CreateTripScreen = () => {
     Boolean(capacityKg) && !isNaN(Number(capacityKg)) && Number(capacityKg) > 0 &&
     Boolean(travelTime);
 
-  const handleSubmit = () => {
-    if (!isFormValid) return;
+  const handlePostPress = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!fromLocation) newErrors.fromLocation = 'Please select a pickup location';
+    if (!toLocation) newErrors.toLocation = 'Please select a destination';
+    if (!vehicleType) newErrors.vehicleType = 'Please select a vehicle type';
+    if (!exactLocation) newErrors.exactLocation = 'Please provide meeting points';
+    if (!travelDate) newErrors.travelDate = 'Please select a travel date';
+    if (!capacityKg || isNaN(Number(capacityKg)) || Number(capacityKg) <= 0) {
+      newErrors.capacityKg = 'Please enter a valid capacity in Kg';
+    }
+    if (!travelTime) newErrors.travelTime = 'Please select a travel time';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      Toast.show({ type: 'error', text1: 'Required Fields', text2: 'Please fill in all mandatory details.' });
+      return;
+    }
+
     setErrors({});
     setAlertConfig({
       title: 'Create Trip',
@@ -185,7 +202,7 @@ const CreateTripScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -201,13 +218,13 @@ const CreateTripScreen = () => {
             <RefreshControl 
               refreshing={refreshing} 
               onRefresh={onRefresh} 
-              colors={[BRAND_GREEN]} 
-              tintColor={BRAND_GREEN}
+              colors={[theme.primary]} 
+              tintColor={theme.primary}
             />
           }
         >
           <LinearGradient
-            colors={['#DCFBEB', '#F0FDF4', '#F8FAFC']}
+            colors={theme.isDark ? ['rgba(16, 185, 129, 0.05)', 'rgba(5, 150, 105, 0.02)', theme.background] : ['#DCFBEB', '#F0FDF4', theme.background]}
             style={styles.backgroundGradient}
           />
 
@@ -226,7 +243,7 @@ const CreateTripScreen = () => {
                   </View>
                   <View style={styles.dashedLine} />
                   <View style={styles.routePinEnd}>
-                    <Svg width="16" height="16" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <Svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
                     </Svg>
@@ -239,9 +256,13 @@ const CreateTripScreen = () => {
                     selectedOption={fromLocation}
                     onSelect={(val) => {
                       setFromLocation(val);
-                      setErrors(prev => ({ ...prev, fromLocation: '' }));
+                      setErrors(prev => {
+                        const { fromLocation, ...rest } = prev;
+                        return rest;
+                      });
                     }}
                     placeholder="From where?"
+                    theme={theme}
                   />
                   <ErrorMessage message={errors.fromLocation} />
                   <View style={{ height: 12 }} />
@@ -251,10 +272,14 @@ const CreateTripScreen = () => {
                     selectedOption={toLocation}
                     onSelect={(val) => {
                       setToLocation(val);
-                      setErrors(prev => ({ ...prev, toLocation: '' }));
+                      setErrors(prev => {
+                        const { toLocation, ...rest } = prev;
+                        return rest;
+                      });
                     }}
                     placeholder={fromLocation ? "To where?" : "Select start location"}
                     disabled={!fromLocation}
+                    theme={theme}
                   />
                   <ErrorMessage message={errors.toLocation} />
                 </View>
@@ -269,22 +294,25 @@ const CreateTripScreen = () => {
                 selectedOption={vehicleType}
                 onSelect={(val) => {
                   setVehicleType(val);
-                  setErrors(prev => ({ ...prev, vehicleType: '' }));
+                  setErrors(prev => {
+                    const { vehicleType, ...rest } = prev;
+                    return rest;
+                  });
                 }}
                 placeholder="Select vehicle type"
+                theme={theme}
               />
               <ErrorMessage message={errors.vehicleType} />
             </View>
 
             <View style={styles.contentCard}>
-              <Text style={styles.fieldLabel}>EXACT MEETING POINTS (GOOGLE MAPS LINKS)</Text>
-              
+              <Text style={styles.fieldLabel}>EXACT MEETING POINTS (GPS LINKS)</Text>
               <View style={styles.inputWrapper}>
                 <Text style={styles.innerLabel}>Pickup GPS Link</Text>
                 <TextInput
                   style={styles.minimalInput}
                   placeholder="Paste Google Maps URL here"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   value={pickupUrl}
                   onChangeText={setPickupUrl}
                 />
@@ -295,43 +323,43 @@ const CreateTripScreen = () => {
                 <TextInput
                   style={styles.minimalInput}
                   placeholder="Paste Google Maps URL here"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   value={dropoffUrl}
                   onChangeText={setDropoffUrl}
                 />
               </View>
-
-              <Text style={{ fontSize: 13, color: '#64748B', fontFamily: Typography.regular, marginTop: 12, lineHeight: 18 }}>
-                Open Google Maps, long-press your location, click "Share," and paste the link here so customers can find you easily.
+              <Text style={styles.helpText}>
+                Open Google Maps, long-press your location, click "Share," and paste the link here.
               </Text>
             </View>
 
             <View style={styles.contentCard}>
               <Text style={styles.fieldLabel}>LOCATION INSTRUCTIONS</Text>
               <TextInput
-                style={[styles.minimalInput, errors.exactLocation ? { borderColor: '#DC2626' } : null]}
-                placeholder="Where Your Pickup exactly? (e.g. Near main gate)"
-                placeholderTextColor="#94A3B8"
+                style={[styles.minimalInput, errors.exactLocation ? { borderColor: '#EF4444' } : null]}
+                placeholder="Where exactly? (e.g. Near School)"
+                placeholderTextColor={theme.text.tertiary}
                 value={exactLocation}
                 onChangeText={(val) => {
                   setExactLocation(val);
-                  setErrors(prev => ({ ...prev, exactLocation: '' }));
+                  setErrors(prev => {
+                    const { exactLocation, ...rest } = prev;
+                    return rest;
+                  });
                 }}
               />
               <ErrorMessage message={errors.exactLocation} />
             </View>
-
-            
 
             <View style={styles.contentCard}>
               <View style={styles.dualFields}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>TRAVEL DATE</Text>
                   <TouchableOpacity 
-                    style={[styles.minimalInput, errors.travelDate ? { borderColor: '#DC2626' } : null]} 
+                    style={[styles.minimalInput, errors.travelDate ? { borderColor: '#EF4444' } : null]} 
                     onPress={() => setShowCalendar(true)}
                   >
-                    <Text style={[styles.inputValue, !travelDate && { color: '#94A3B8' }]}>
+                    <Text style={[styles.inputValue, !travelDate && { color: theme.text.tertiary }]}>
                       {travelDate || 'Select Date'}
                     </Text>
                   </TouchableOpacity>
@@ -342,17 +370,20 @@ const CreateTripScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>CAPACITY (KG)</Text>
                   <TextInput
-                    style={[styles.minimalInput, errors.capacityKg ? { borderColor: '#DC2626' } : null]}
+                    style={[styles.minimalInput, errors.capacityKg ? { borderColor: '#EF4444' } : null]}
                     keyboardType="numeric"
                     placeholder="0.0"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={theme.text.tertiary}
                     value={capacityKg}
                     onChangeText={(val) => {
                       setCapacityKg(val);
                       if (val && (isNaN(Number(val)) || Number(val) <= 0)) {
-                        setErrors(prev => ({ ...prev, capacityKg: 'Enter valid capacity (kg)' }));
+                        setErrors(prev => ({ ...prev, capacityKg: 'Enter valid capacity' }));
                       } else {
-                        setErrors(prev => ({ ...prev, capacityKg: '' }));
+                        setErrors(prev => {
+                          const { capacityKg, ...rest } = prev;
+                          return rest;
+                        });
                       }
                     }}
                   />
@@ -364,23 +395,22 @@ const CreateTripScreen = () => {
             <View style={styles.contentCard}>
               <Text style={styles.fieldLabel}>TRAVEL TIME</Text>
               <TouchableOpacity 
-                style={[styles.minimalInput, errors.travelTime ? { borderColor: '#DC2626' } : null]} 
+                style={[styles.minimalInput, errors.travelTime ? { borderColor: '#EF4444' } : null]} 
                 onPress={() => setShowTimePicker(true)}
               >
-                <Text style={[styles.inputValue, !travelTime && { color: '#94A3B8' }]}>
+                <Text style={[styles.inputValue, !travelTime && { color: theme.text.tertiary }]}>
                   {travelTime || 'Select Time'}
                 </Text>
               </TouchableOpacity>
               <ErrorMessage message={errors.travelTime} />
             </View>
 
-
             <View style={styles.contentCard}>
               <Text style={styles.fieldLabel}>NOTE (OPTIONAL)</Text>
               <TextInput
                 style={[styles.minimalTextArea, { minHeight: 80 }]}
                 placeholder="Any specific details about your trip?"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={theme.text.tertiary}
                 multiline
                 value={note}
                 onChangeText={setNote}
@@ -390,10 +420,10 @@ const CreateTripScreen = () => {
             <TouchableOpacity 
               style={[
                 styles.submitButton, 
-                (!isFormValid || loading) && { opacity: 0.5, shadowOpacity: 0 }
+                loading && { opacity: 0.5 }
               ]} 
-              onPress={handleSubmit}
-              disabled={loading || !isFormValid}
+              onPress={handlePostPress}
+              disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -407,6 +437,7 @@ const CreateTripScreen = () => {
         </ScrollView>
         <CustomCalendar
           visible={showCalendar}
+          theme={theme}
           onClose={() => setShowCalendar(false)}
           selectedDate={travelDate}
           onSelectDate={(val) => {
@@ -417,6 +448,7 @@ const CreateTripScreen = () => {
 
         <CustomTimePicker
           visible={showTimePicker}
+          theme={theme}
           onClose={() => setShowTimePicker(false)}
           selectedTime={travelTime}
           onSelectTime={(val) => {
@@ -425,9 +457,9 @@ const CreateTripScreen = () => {
           }}
         />
 
-
         <CustomAlert
           visible={alertVisible}
+          theme={theme}
           title={alertConfig.title}
           message={alertConfig.message}
           confirmText={alertConfig.confirmText}
@@ -442,10 +474,11 @@ const CreateTripScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+function makeStyles(theme: AppTheme) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.background,
   },
   scrollContent: {
     paddingBottom: 40,
@@ -472,76 +505,84 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroTitle: {
-    fontSize: 32,
-    color: '#0F172A',
+    fontSize: 28,
+    color: theme.text.primary,
     fontFamily: Typography.extraBold,
-    letterSpacing: -1,
+    letterSpacing: -0.5,
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 15,
-    color: '#64748B',
-    fontFamily: Typography.regular,
+    color: theme.text.secondary,
+    fontFamily: Typography.medium,
     lineHeight: 22,
     textAlign: 'center',
   },
   contentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.isDark ? '#000' : theme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0FDF4',
+    borderColor: theme.border,
   },
   fieldLabel: {
     fontSize: 11,
-    color: '#000',
-    fontFamily: Typography.bold,
-    marginBottom: 10,
+    color: theme.text.tertiary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: 0.5,
+    marginBottom: 12,
   },
   minimalInput: {
-    height: 50,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
+    height: 52,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+    borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: '#0F172A',
-    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    fontFamily: Typography.bold,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     justifyContent: 'center',
   },
   inputValue: {
     fontSize: 15,
-    color: '#0F172A',
-    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    fontFamily: Typography.bold,
   },
   inputWrapper: {
     marginBottom: 4,
   },
   innerLabel: {
     fontSize: 10,
-    color: '#94A3B8',
-    fontFamily: Typography.bold,
+    color: theme.text.tertiary,
+    fontFamily: Typography.extraBold,
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   minimalTextArea: {
-    minHeight: 100,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
+    minHeight: 120,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+    borderRadius: 16,
     padding: 16,
-    fontSize: 16,
-    color: '#0F172A',
+    fontSize: 15,
+    color: theme.text.primary,
     fontFamily: Typography.medium,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     textAlignVertical: 'top',
+  },
+  helpText: {
+    fontSize: 12,
+    color: theme.text.tertiary,
+    fontFamily: Typography.medium,
+    marginTop: 12,
+    lineHeight: 18,
   },
   routeTimeline: {
     alignItems: 'center',
@@ -551,7 +592,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -562,13 +603,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: '#10B981',
   },
   dashedLine: {
     width: 1,
     height: 45,
     borderWidth: 0.5,
-    borderColor: '#CBD5E1',
+    borderColor: theme.border,
     borderStyle: 'dashed',
     marginVertical: 4,
   },
@@ -585,29 +626,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   submitButton: {
-    height: 60,
-    backgroundColor: BRAND_GREEN,
+    height: 58,
+    backgroundColor: theme.primary,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
     elevation: 8,
     marginTop: 10,
   },
   submitButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#FFFFFF',
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 12,
+    color: '#EF4444',
+    fontSize: 11,
     marginTop: 6,
+    marginLeft: 4,
     fontFamily: Typography.bold,
   },
 });
+}
+
 
 export default CreateTripScreen;

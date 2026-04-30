@@ -12,7 +12,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
 import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
@@ -20,6 +19,8 @@ import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
 import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const getStrengthScore = (pass: string) => {
   let score = 0;
@@ -32,6 +33,8 @@ const getStrengthScore = (pass: string) => {
 };
 
 const ChangePasswordScreen = ({ navigation }: any) => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -98,19 +101,14 @@ const ChangePasswordScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
-      <LinearGradient
-        colors={Colors.bgGradient}
-        style={StyleSheet.absoluteFillObject}
-      />
-
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <BackButton 
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
-            color="#006C52"
+            color={theme.primary}
           />
           <Text style={styles.headerTitle}>Change Password</Text>
           <View style={{ width: 40 }} />
@@ -128,7 +126,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
             <View style={styles.content}>
               <View style={styles.iconContainer}>
                  <LinearGradient
-                   colors={['#006C52', '#00A884']}
+                   colors={[theme.primary, theme.primaryDark]}
                    style={styles.iconGradient}
                  >
                    <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -143,7 +141,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
               </Text>
 
               <View style={styles.securityHint}>
-                 <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2">
+                 <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : '#065F46'} strokeWidth="2.5">
                    <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                  </Svg>
                  <Text style={styles.securityHintText}>Use 6+ characters with a mix of letters, numbers & symbols.</Text>
@@ -156,6 +154,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
                   value={oldPassword}
                   onChangeText={setOldPassword}
                   isPassword={true}
+                  theme={theme}
                 />
 
                 <CustomInput
@@ -164,6 +163,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
                   value={newPassword}
                   onChangeText={setNewPassword}
                   isPassword={true}
+                  theme={theme}
                 />
 
                 {newPassword.length > 0 && (
@@ -173,7 +173,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
                         key={index} 
                         style={[
                           styles.strengthBar, 
-                          getStrengthScore(newPassword) >= index && styles.strengthActive
+                          getStrengthScore(newPassword) >= index && { backgroundColor: theme.primary }
                         ]} 
                       />
                     ))}
@@ -187,6 +187,7 @@ const ChangePasswordScreen = ({ navigation }: any) => {
                   onChangeText={setConfirmPassword}
                   isPassword={true}
                   containerStyle={{ marginTop: newPassword.length > 0 ? 12 : 0 }}
+                  theme={theme}
                 />
 
                 <PrimaryButton 
@@ -204,10 +205,10 @@ const ChangePasswordScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -225,8 +226,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    color: '#0F172A',
+    fontSize: 20,
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   keyboardAvoidingView: {
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 30,
   },
   content: {
     alignItems: 'center',
@@ -244,24 +245,25 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconGradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   description: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
-    fontFamily: Typography.regular,
+    fontFamily: Typography.medium,
+    paddingHorizontal: 10,
   },
   formContainer: {
     width: '100%',
@@ -272,35 +274,35 @@ const styles = StyleSheet.create({
   },
   strengthGrid: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
     marginTop: -8,
     marginBottom: 20,
     paddingHorizontal: 4,
   },
   strengthBar: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#CBE9DA',
-  },
-  strengthActive: {
-    backgroundColor: '#00513D',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
   },
   securityHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    padding: 12,
-    borderRadius: 12,
-    gap: 8,
-    marginBottom: 24,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+    marginBottom: 32,
     width: '100%',
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(61, 217, 164, 0.2)' : 'rgba(6, 95, 70, 0.1)',
   },
   securityHintText: {
-    fontSize: 12,
-    color: '#065F46',
+    fontSize: 12.5,
+    color: theme.isDark ? theme.primary : '#065F46',
     flex: 1,
-    fontFamily: Typography.medium,
+    fontFamily: Typography.semiBold,
+    lineHeight: 18,
   },
 });
 

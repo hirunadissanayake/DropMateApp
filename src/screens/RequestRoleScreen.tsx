@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { Colors } from '../constants/Colors';
+import { Colors, AppTheme } from '../constants/Colors';
 import PrimaryButton from '../components/common/PrimaryButton';
 import CustomDropdown from '../components/common/CustomDropdown';
 import ScreenHeader from '../components/common/ScreenHeader';
@@ -21,20 +21,18 @@ import { useAuthStore } from '../store/authStore';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
 
 const RequestRoleScreen = ({ navigation }: any) => {
+  const { theme } = useTheme();
   const { user, token, setUser } = useAuthStore();
   
   // Determine target role (the one they DON'T have yet)
-  // If they are CUSTOMER, they want to be TRAVELER.
-  // If they are TRAVELER, they want to be CUSTOMER.
   const targetRole = user?.roleActive === 'CUSTOMER' ? 'TRAVELER' : 'CUSTOMER';
-  
   const [loading, setLoading] = useState(false);
+  const isFormValid = true; 
 
-
-
-  const isFormValid = true; // Always valid to request a role if the button is enabled
+  const styles = makeStyles(theme);
 
   const handleSubmit = async () => {
     if (!token || !isFormValid) return;
@@ -44,8 +42,6 @@ const RequestRoleScreen = ({ navigation }: any) => {
       const requestData: any = {
         role: targetRole,
       };
-      
-
       
       const response = await authService.requestNewRole(token, requestData);
       
@@ -73,21 +69,22 @@ const RequestRoleScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
       <LinearGradient
-        colors={Colors.bgGradient}
+        colors={theme.isDark ? theme.bgGradient : Colors.bgGradient}
         style={StyleSheet.absoluteFillObject}
       />
 
       {/* Decorative Blur Circles */}
-      <View style={[styles.decorCircle, { top: -50, right: -50, backgroundColor: '#D1FAE5', opacity: 0.6 }]} />
-      <View style={[styles.decorCircle, { bottom: 100, left: -80, backgroundColor: '#ECFDF5', opacity: 0.4 }]} />
+      <View style={[styles.decorCircle, { top: -50, right: -50, backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#D1FAE5', opacity: 0.6 }]} />
+      <View style={[styles.decorCircle, { bottom: 100, left: -80, backgroundColor: theme.isDark ? 'rgba(5, 150, 105, 0.05)' : '#ECFDF5', opacity: 0.4 }]} />
 
       <SafeAreaView style={styles.safeArea}>
         <ScreenHeader 
           onBack={() => navigation.goBack()} 
           title={targetRole === 'TRAVELER' ? "Become a Traveler" : "Become a Customer"}
+          theme={theme}
         />
 
         <ScrollView 
@@ -95,9 +92,6 @@ const RequestRoleScreen = ({ navigation }: any) => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.titleSection}>
-            {/* <View style={styles.badge}>
-              <Text style={styles.badgeText}>OPPORTUNITY</Text>
-            </View> */}
             <Text style={styles.mainTitle}>
                 {targetRole === 'TRAVELER' ? 'Start Earning while Traveling' : 'Start Shipping Parcels'}
             </Text>
@@ -110,11 +104,11 @@ const RequestRoleScreen = ({ navigation }: any) => {
 
           <View style={styles.roleCard}>
               <LinearGradient
-                colors={['#FFFFFF', '#F8FAFC']}
+                colors={theme.isDark ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFFFFF', '#F8FAFC']}
                 style={StyleSheet.absoluteFillObject}
               />
               <View style={styles.roleHeader}>
-                  <View style={[styles.iconBox, { backgroundColor: targetRole === 'TRAVELER' ? Colors.primary : '#00513D' }]}>
+                  <View style={[styles.iconBox, { backgroundColor: theme.primary }]}>
                       {targetRole === 'TRAVELER' ? (
                           <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <Path d="M22 10v6M2 10v6M22 10l-10-8-10 8M2 10l10 8 10-8" />
@@ -136,7 +130,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.infoBadge}>
                   <View style={styles.infoIconWrapper}>
-                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="2.5">
+                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                         <Circle cx="12" cy="12" r="10" />
                         <Path d="M12 16V12M12 8H12.01" />
                     </Svg>
@@ -144,8 +138,6 @@ const RequestRoleScreen = ({ navigation }: any) => {
                   <Text style={styles.infoText}>Your existing verification documents will be used.</Text>
               </View>
           </View>
-
-
 
           {targetRole === 'TRAVELER' && (
             <View style={styles.section}>
@@ -157,7 +149,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
               <View style={styles.stepsRow}>
                 <View style={styles.stepItem}>
                   <View style={styles.stepIconBox}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="2">
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
                       <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </Svg>
                   </View>
@@ -166,7 +158,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
                 <View style={styles.stepLine} />
                 <View style={styles.stepItem}>
                   <View style={styles.stepIconBox}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="2">
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
                       <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                       <Circle cx="9" cy="7" r="4" />
                       <Path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -178,7 +170,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
                 <View style={styles.stepLine} />
                 <View style={styles.stepItem}>
                   <View style={styles.stepIconBox}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="2">
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
                       <Circle cx="12" cy="12" r="10" />
                       <Path d="M8 14s1.5 2 4 2 4-2 4-2" />
                       <Path d="M9 9h.01" />
@@ -194,7 +186,7 @@ const RequestRoleScreen = ({ navigation }: any) => {
           {targetRole === 'CUSTOMER' && (
               <View style={styles.confirmationCard}>
                   <View style={styles.confirmIconBox}>
-                    <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="1.5">
+                    <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
                       <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <Path d="M22 4L12 14.01l-3-3" />
                     </Svg>
@@ -212,9 +204,10 @@ const RequestRoleScreen = ({ navigation }: any) => {
               onPress={handleSubmit}
               loading={loading}
               disabled={!isFormValid}
+              theme={theme}
             />
             <View style={styles.disclaimerRow}>
-              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
                 <Circle cx="12" cy="12" r="10" />
                 <Path d="M12 8v4l3 3" />
               </Svg>
@@ -229,8 +222,8 @@ const RequestRoleScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#FFFFFF' },
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
+  mainContainer: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 40 },
   decorCircle: {
@@ -239,48 +232,35 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 125,
   },
-  badge: {
-    backgroundColor: 'rgba(0, 108, 82, 0.08)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    marginBottom: 16,
-  },
-  badgeText: {
-    fontSize: 10,
-    color: Colors.primary,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
   titleSection: { marginBottom: 32 },
   mainTitle: {
-    fontSize: 32,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
+    fontSize: 28,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
     marginBottom: 12,
-    letterSpacing: -1,
+    letterSpacing: -0.5,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: Colors.text.secondary,
-    lineHeight: 24,
-    fontFamily: Typography.regular,
+    fontSize: 15,
+    color: theme.text.secondary,
+    lineHeight: 22,
+    fontFamily: Typography.medium,
     textAlign: 'center',
   },
   roleCard: {
     borderRadius: 28,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.03)',
+    borderColor: theme.border,
     marginBottom: 32,
-    shadowColor: '#006C52',
+    shadowColor: theme.isDark ? '#000' : theme.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 8,
     overflow: 'hidden',
+    backgroundColor: theme.card,
   },
   roleHeader: {
     flexDirection: 'row',
@@ -294,29 +274,24 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   roleLabel: {
-    fontSize: 12,
-    color: Colors.text.tertiary,
+    fontSize: 11,
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   roleValue: {
     fontSize: 20,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
     marginTop: 2,
   },
   statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 100,
@@ -326,11 +301,11 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.primary,
   },
   statusText: {
     fontSize: 11,
-    color: Colors.text.secondary,
+    color: theme.text.secondary,
     fontFamily: Typography.bold,
   },
   infoBadge: {
@@ -339,17 +314,17 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.03)',
+    borderTopColor: theme.border,
   },
   infoIconWrapper: {
-    backgroundColor: 'rgba(0, 108, 82, 0.05)',
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0, 108, 82, 0.05)',
     padding: 4,
     borderRadius: 6,
   },
   infoText: {
-    fontSize: 13,
-    color: Colors.primary,
-    fontFamily: Typography.medium,
+    fontSize: 12,
+    color: theme.primary,
+    fontFamily: Typography.bold,
     flex: 1,
   },
   section: { marginBottom: 32 },
@@ -360,77 +335,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionHeader: {
-    fontSize: 13,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
-    letterSpacing: 0.3,
+    fontSize: 12,
+    color: theme.text.tertiary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: 0.5,
   },
   headerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  detailsCard: {
-    padding: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.04)',
-    gap: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  inputGroup: { gap: 8 },
-  inputLabel: { 
-    fontSize: 13, 
-    fontFamily: Typography.bold, 
-    color: Colors.text.secondary,
-    marginLeft: 4,
-  },
-  inputWithUnit: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    height: 64,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.03)',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 17,
-    color: Colors.text.primary,
-    fontFamily: Typography.bold,
-  },
-  unitBadge: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  unitText: {
-    fontSize: 13,
-    fontFamily: Typography.bold,
-    color: Colors.text.tertiary,
+    backgroundColor: theme.border,
   },
   confirmationCard: {
     padding: 32,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.04)',
+    borderColor: theme.border,
     marginBottom: 32,
     alignItems: 'center',
-    shadowColor: Colors.primary,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.06,
     shadowRadius: 24,
@@ -440,22 +363,22 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0, 108, 82, 0.06)',
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0, 108, 82, 0.06)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   confirmTitle: {
     fontSize: 18,
-    color: Colors.text.primary,
+    color: theme.text.primary,
     marginBottom: 8,
     textAlign: 'center',
-    fontFamily: Typography.bold,
+    fontFamily: Typography.extraBold,
   },
   confirmText: {
-    fontSize: 15,
-    color: Colors.text.secondary,
-    lineHeight: 22,
+    fontSize: 14,
+    color: theme.text.secondary,
+    lineHeight: 20,
     textAlign: 'center',
     fontFamily: Typography.medium,
   },
@@ -470,8 +393,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   disclaimer: {
-    fontSize: 13,
-    color: Colors.text.tertiary,
+    fontSize: 12,
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
   },
   stepsRow: {
@@ -486,17 +409,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 108, 82, 0.05)',
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0, 108, 82, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   stepText: {
-    fontSize: 11,
-    fontFamily: Typography.bold,
-    color: Colors.text.secondary,
+    fontSize: 10,
+    fontFamily: Typography.extraBold,
+    color: theme.text.secondary,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -504,7 +427,7 @@ const styles = StyleSheet.create({
   stepLine: {
     width: 20,
     height: 1,
-    backgroundColor: 'rgba(0, 108, 82, 0.1)',
+    backgroundColor: theme.border,
     marginTop: -20,
   },
 });

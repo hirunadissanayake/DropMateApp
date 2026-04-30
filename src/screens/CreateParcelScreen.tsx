@@ -31,10 +31,14 @@ import CustomDropdown from '../components/common/CustomDropdown';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
 const CreateParcelScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const { token } = useAuthStore();
@@ -136,7 +140,8 @@ const CreateParcelScreen = () => {
         { text: 'Camera', onPress: pickImageFromCamera },
         { text: 'Gallery', onPress: pickImageFromGallery },
         { text: 'Cancel', style: 'cancel' },
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
@@ -217,7 +222,6 @@ const CreateParcelScreen = () => {
 
     const newErrors: Record<string, string> = {};
 
-    // Comprehensive Validations
     if (!parcelName.trim()) {
       newErrors.parcelName = 'Please enter a parcel name';
     } else if (/^\d+$/.test(parcelName.trim())) {
@@ -257,7 +261,6 @@ const CreateParcelScreen = () => {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      // Scroll to top or just stop
       return;
     }
 
@@ -300,7 +303,7 @@ const CreateParcelScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -316,13 +319,13 @@ const CreateParcelScreen = () => {
             <RefreshControl 
               refreshing={refreshing} 
               onRefresh={onRefresh} 
-              colors={['#006C52']} 
-              tintColor={'#006C52'}
+              colors={[theme.primary]} 
+              tintColor={theme.primary}
             />
           }
         >
           <LinearGradient
-            colors={['#DCFBEB', '#F0FDF4', '#F8FAFC']}
+            colors={theme.isDark ? ['rgba(16, 185, 129, 0.05)', 'rgba(5, 150, 105, 0.02)', theme.background] : ['#DCFBEB', '#F0FDF4', theme.background]}
             style={styles.backgroundGradient}
           />
 
@@ -340,7 +343,7 @@ const CreateParcelScreen = () => {
                 <TextInput
                   style={styles.minimalInput}
                   placeholder="Enter parcel name"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   value={parcelName}
                   onChangeText={setParcelName}
                 />
@@ -355,7 +358,7 @@ const CreateParcelScreen = () => {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoContainer}>
                   {images.length < 4 && (
                     <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage} activeOpacity={0.6}>
-                      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <Path d="M12 5V19M5 12H19" />
                       </Svg>
                     </TouchableOpacity>
@@ -385,7 +388,7 @@ const CreateParcelScreen = () => {
                     </View>
                     <View style={styles.dashedLine} />
                     <View style={styles.routePinEnd}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
                       </Svg>
@@ -398,6 +401,7 @@ const CreateParcelScreen = () => {
                       selectedOption={fromLocation}
                       onSelect={(val) => setFromLocation(val)}
                       placeholder="Pickup location"
+                      theme={theme}
                     />
                     <ErrorMessage message={errors.fromLocation} />
                     <View style={{ height: 12 }} />
@@ -408,6 +412,7 @@ const CreateParcelScreen = () => {
                       onSelect={(val) => setToLocation(val)}
                       placeholder={fromLocation ? "Select drop-off" : "First select pickup"}
                       disabled={!fromLocation}
+                      theme={theme}
                     />
                     <ErrorMessage message={errors.toLocation} />
                   </View>
@@ -424,7 +429,7 @@ const CreateParcelScreen = () => {
                     value={weight}
                     onChangeText={setWeight}
                     placeholder="0.0"
-                    placeholderTextColor="#000000"
+                    placeholderTextColor={theme.text.tertiary}
                   />
                   <ErrorMessage message={errors.weight} />
                 </View>
@@ -481,7 +486,7 @@ const CreateParcelScreen = () => {
                 <TextInput
                   style={styles.minimalInput}
                   placeholder="Recipient Name"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   value={recipientName}
                   onChangeText={setRecipientName}
                 />
@@ -491,7 +496,7 @@ const CreateParcelScreen = () => {
                 <TextInput
                   style={styles.minimalInput}
                   placeholder="Phone Number"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   keyboardType="phone-pad"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
@@ -508,7 +513,7 @@ const CreateParcelScreen = () => {
                 <TextInput
                   style={styles.minimalTextArea}
                   placeholder="What is inside the parcel?"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   multiline
                   value={description}
                   onChangeText={setDescription}
@@ -523,7 +528,7 @@ const CreateParcelScreen = () => {
                 <TextInput
                   style={[styles.minimalTextArea, { minHeight: 80 }]}
                   placeholder="Any special handling instructions?"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.tertiary}
                   multiline
                   value={additionalNote}
                   onChangeText={setAdditionalNote}
@@ -539,7 +544,7 @@ const CreateParcelScreen = () => {
                     <Text style={styles.priceLabelCap}>ORDER SUMMARY</Text>
                     <Text style={styles.priceSummaryTitle}>Estimated Cost</Text>
                   </View>
-                  {fetchingPrice && <ActivityIndicator size="small" color="#006C52" />}
+                  {fetchingPrice && <ActivityIndicator size="small" color={theme.primary} />}
                 </View>
                 {priceData && (
                   <View style={styles.priceContent}>
@@ -580,6 +585,7 @@ const CreateParcelScreen = () => {
         {/* Global Confirmation Alert */}
         <CustomAlert
           visible={showAlert}
+          theme={theme}
           title="Create Parcel"
           message="Are you sure you want to create this parcel? Please verify the details before proceeding."
           confirmText="Yes, Create"
@@ -592,13 +598,13 @@ const CreateParcelScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.background,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 0,
   },
   backgroundGradient: {
     position: 'absolute',
@@ -620,71 +626,64 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginTop: 20,
   },
-  miniLabel: {
-    fontSize: 10,
-    color: '#006C52',
-    fontFamily: Typography.bold,
-    letterSpacing: 1.5,
-    marginBottom: 8,
-  },
   heroTitle: {
-    fontSize: 32,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    letterSpacing: -1,
+    fontSize: 28,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: -0.5,
     marginBottom: 8,
     textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.secondary,
     fontFamily: Typography.medium,
     textAlign: 'center',
   },
   contentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
-    shadowColor: '#006C52',
+    shadowColor: theme.isDark ? '#000' : theme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0FDF4',
+    borderColor: theme.border,
   },
   fieldSection: {
     marginBottom: 20,
   },
   fieldLabel: {
     fontSize: 11,
-    color: '#000',
-    fontFamily: Typography.bold,
-    letterSpacing: 0.3,
-    marginBottom: 10,
+    color: theme.text.tertiary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: 0.5,
+    marginBottom: 12,
   },
   minimalInput: {
-    height: 50,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
+    height: 52,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+    borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: '#0F172A',
-    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    fontFamily: Typography.bold,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   minimalTextArea: {
-    minHeight: 100,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
+    minHeight: 120,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+    borderRadius: 16,
     padding: 16,
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.regular,
+    fontSize: 15,
+    color: theme.text.primary,
+    fontFamily: Typography.medium,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     textAlignVertical: 'top',
   },
   labelRow: {
@@ -695,8 +694,8 @@ const styles = StyleSheet.create({
   },
   photoCountText: {
     fontSize: 12,
-    color: '#64748B',
-    fontFamily: Typography.regular,
+    color: theme.text.tertiary,
+    fontFamily: Typography.bold,
   },
   photoContainer: {
     gap: 12,
@@ -704,18 +703,18 @@ const styles = StyleSheet.create({
   uploadButton: {
     width: 80,
     height: 80,
-    borderRadius: 16,
-    backgroundColor: '#F0FDF4',
+    borderRadius: 18,
+    backgroundColor: theme.isDark ? 'rgba(16,185,129,0.05)' : '#F0FDF4',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: '#BBF7D0',
+    borderColor: theme.isDark ? 'rgba(16,185,129,0.2)' : '#BBF7D0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   imageBox: {
     width: 80,
     height: 80,
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -725,26 +724,23 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 6,
+    right: 6,
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   deleteBtnText: {
     color: '#FFF',
     fontSize: 14,
-    fontFamily: Typography.regular,
+    fontFamily: Typography.bold,
+    lineHeight: 18,
   },
   routeHeader: {
     marginBottom: 16,
-  },
-  routeContainer: {
-    flexDirection: 'row',
-    gap: 16,
   },
   routeTimeline: {
     alignItems: 'center',
@@ -754,7 +750,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -765,13 +761,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: '#10B981',
   },
   dashedLine: {
     width: 1,
     height: 45,
     borderWidth: 0.5,
-    borderColor: '#CBD5E1',
+    borderColor: theme.border,
     borderStyle: 'dashed',
     marginVertical: 4,
   },
@@ -786,75 +782,76 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginVertical: 20,
   },
   dualFields: {
     flexDirection: 'row',
   },
   methodText: {
-    fontSize: 14,
-    color: '#0F172A',
-    fontFamily: Typography.medium,
-    lineHeight: 45,
+    fontSize: 15,
+    color: theme.text.primary,
+    fontFamily: Typography.bold,
+    lineHeight: 52,
   },
   paymentMethodContainer: {
-    flexDirection: 'row',
     gap: 12,
+    marginTop: 8,
   },
   paymentOption: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    height: 54,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    alignItems: 'center',
+    borderColor: theme.border,
     justifyContent: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#F8FAFC',
   },
   paymentOptionActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    borderColor: theme.primary,
+    backgroundColor: theme.isDark ? 'rgba(16,185,129,0.05)' : '#F0FDF4',
+    borderWidth: 2,
   },
   paymentOptionText: {
     fontSize: 14,
-    color: '#64748B',
-    fontFamily: Typography.medium,
+    color: theme.text.secondary,
+    fontFamily: Typography.bold,
   },
   paymentOptionTextActive: {
-    color: '#059669',
-    fontFamily: Typography.bold,
+    color: theme.primary,
   },
   paymentInfoText: {
     fontSize: 12,
-    color: '#64748B',
-    fontFamily: Typography.regular,
-    marginTop: 10,
-    fontStyle: 'italic',
+    color: theme.text.tertiary,
+    fontFamily: Typography.medium,
+    marginTop: 12,
+    lineHeight: 18,
   },
   priceCard: {
-    backgroundColor: '#004D3A',
+    backgroundColor: theme.isDark ? 'rgba(16,185,129,0.05)' : '#F8FAFC',
     borderRadius: 24,
     padding: 24,
-    marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   priceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 20,
   },
   priceLabelCap: {
     fontSize: 10,
-    color: '#94A3B8',
-    fontFamily: Typography.regular,
-    letterSpacing: 0.3,
-    marginBottom: 4,
+    color: theme.text.tertiary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: 1,
+    marginBottom: 6,
   },
   priceSummaryTitle: {
     fontSize: 18,
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
   },
   priceContent: {
     gap: 12,
@@ -864,58 +861,59 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   priceItemLabel: {
-    color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: Typography.regular,
+    color: theme.text.secondary,
+    fontFamily: Typography.medium,
   },
   priceItemValue: {
-    color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    fontFamily: Typography.bold,
   },
   totalDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: theme.border,
     marginVertical: 8,
   },
   totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 4,
   },
   totalLabel: {
-    color: '#FFFFFF',
     fontSize: 16,
-    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
   },
   totalValue: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontFamily: Typography.bold,
+    fontSize: 20,
+    color: theme.primary,
+    fontFamily: Typography.extraBold,
   },
   submitButton: {
-    height: 60,
-    backgroundColor: '#006C52',
+    height: 58,
+    backgroundColor: theme.primary,
     borderRadius: 18,
-    alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    alignItems: 'center',
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
   },
   submitButtonText: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
+    color: '#FFF',
+    fontSize: 16,
+    fontFamily: Typography.extraBold,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 12,
+    fontSize: 11,
+    color: '#EF4444',
+    fontFamily: Typography.bold,
     marginTop: 6,
     marginLeft: 4,
-    fontFamily: Typography.medium,
   },
 });
 

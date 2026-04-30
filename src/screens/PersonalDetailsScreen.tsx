@@ -21,10 +21,14 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
 const PersonalDetailsScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation();
   const { user: authUser } = useAuthStore();
   const { updateData: updateRegistrationData } = useRegistrationStore();
@@ -70,18 +74,14 @@ const PersonalDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
-      <LinearGradient
-        colors={['#F8FAFC', '#FFFFFF']}
-        style={StyleSheet.absoluteFillObject}
-      />
-
+      <StatusBar barStyle={theme.statusBar} translucent backgroundColor="transparent" />
+      
       <SafeAreaView edges={['top']} style={styles.headerNav}>
         <View style={styles.navRow}>
           <BackButton 
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
-            color="#006C52"
+            color={theme.primary}
           />
           <Text style={styles.headerTitle}>Personal Details</Text>
           <View style={{ width: 40 }} />
@@ -92,17 +92,28 @@ const PersonalDetailsScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <LinearGradient
+          colors={theme.isDark ? ['rgba(13, 31, 24, 0.8)', theme.background] : ['#F8FAFC', '#FFFFFF']}
+          style={StyleSheet.absoluteFillObject}
+        />
+
         <View style={styles.contentPadding}>
             {/* Status Card */}
             {!isRejected ? (
-                <View style={[styles.statusCard, { borderColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
-                    <View style={[styles.statusIconBox, { backgroundColor: isVerified ? '#DCFCE7' : '#FEF9C3' }]}>
-                        {isVerified ? (
-                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2.5">
-                                <Path d="M20 6L9 17l-5-5" />
+                <View style={[styles.statusCard, { borderColor: isVerified ? (theme.isDark ? 'rgba(16, 185, 129, 0.2)' : '#DCFCE7') : (theme.isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF9C3') }]}>
+                    <View style={[styles.statusIconBox, { backgroundColor: isVerified ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFCE7') : (theme.isDark ? 'rgba(234, 179, 8, 0.1)' : '#FEF9C3') }]}>
+                        {isDualVerified ? (
+                          <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? '#3DD9A4' : '#166534'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <Path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+                            <Path d="m9 12 2 2 4-4" />
+                          </Svg>
+                        ) : isVerified ? (
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? '#3DD9A4' : '#166534'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <Path d="m9 12 2 2 4-4" />
                             </Svg>
                         ) : (
-                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#854D0E" strokeWidth="2.5">
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? '#EAB308' : '#854D0E'} strokeWidth="2.5">
                                 <Circle cx="12" cy="12" r="10" />
                                 <Path d="M12 8v4" />
                                 <Path d="M12 16h.01" />
@@ -111,22 +122,27 @@ const PersonalDetailsScreen = () => {
                     </View>
                     <View>
                         <Text style={styles.statusLabel}>Account Status</Text>
-                        <Text style={[styles.statusValue, { color: isDualVerified ? '#166534' : isVerified ? '#006C52' : '#854D0E' }]}>
+                        <Text style={[styles.statusValue, { color: isDualVerified ? (theme.isDark ? '#3DD9A4' : '#166534') : isVerified ? theme.primary : (theme.isDark ? '#EAB308' : '#854D0E') }]}>
                             {isDualVerified ? 'Fully Verified (Dual Role)' : isVerified ? 'Verified Account' : isPending ? 'Pending Verification' : 'Verification Required'}
                         </Text>
                     </View>
                 </View>
             ) : (
-                <View style={[styles.statusCard, { borderColor: '#FCA5A5', backgroundColor: '#FEF2F2', flexDirection: 'column', alignItems: 'flex-start' }]}>
+                <View style={[styles.statusCard, { 
+                    borderColor: '#FCA5A5', 
+                    backgroundColor: theme.isDark ? 'rgba(254, 242, 242, 0.05)' : '#FEF2F2', 
+                    flexDirection: 'column', 
+                    alignItems: 'flex-start' 
+                }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-                        <View style={[styles.statusIconBox, { backgroundColor: '#FEE2E2' }]}>
-                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B91C1C" strokeWidth="2.5">
+                        <View style={[styles.statusIconBox, { backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2' }]}>
+                            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
                                 <Path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </Svg>
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.statusLabel, { color: '#991B1B' }]}>Verification Rejected</Text>
-                            <Text style={[styles.statusValue, { color: '#B91C1C' }]}>Action Required</Text>
+                            <Text style={[styles.statusLabel, { color: theme.isDark ? '#FCA5A5' : '#991B1B' }]}>Verification Rejected</Text>
+                            <Text style={[styles.statusValue, { color: '#EF4444' }]}>Action Required</Text>
                         </View>
                         <TouchableOpacity 
                             style={styles.editToggleBtn}
@@ -164,14 +180,16 @@ const PersonalDetailsScreen = () => {
                         icon="user" 
                         editable={isEditing}
                         onChangeText={(t: string) => handleUpdateField('name', t)}
+                        theme={theme}
                     />
-                    <InfoRow label="Email Address" value={user?.email} icon="mail" />
+                    <InfoRow label="Email Address" value={user?.email} icon="mail" theme={theme} />
                     <InfoRow 
                         label="NIC Number" 
                         value={user?.nicNumber} 
                         icon="credit-card" 
                         editable={isEditing}
                         onChangeText={(t: string) => handleUpdateField('nicNumber', t)}
+                        theme={theme}
                     />
                     <InfoRow 
                         label="Permanent Address" 
@@ -179,6 +197,7 @@ const PersonalDetailsScreen = () => {
                         icon="map-pin" 
                         editable={isEditing}
                         onChangeText={(t: string) => handleUpdateField('permanentAddress', t)}
+                        theme={theme}
                     />
                     <InfoRow 
                         label="City" 
@@ -186,8 +205,9 @@ const PersonalDetailsScreen = () => {
                         icon="map-pin" 
                         editable={isEditing}
                         onChangeText={(t: string) => handleUpdateField('city', t)}
+                        theme={theme}
                     />
-                    <InfoRow label="Phone Number" value={user?.phone} icon="phone" />
+                    <InfoRow label="Phone Number" value={user?.phone} icon="phone" theme={theme} />
                 </View>
             </View>
 
@@ -199,16 +219,19 @@ const PersonalDetailsScreen = () => {
                         label="Selfie Photo" 
                         uri={user?.selfieUrl} 
                         onPress={() => setPreviewImage(user?.selfieUrl || null)} 
+                        theme={theme}
                     />
                     <DocumentItem 
                         label="NIC Front" 
                         uri={user?.nicFrontUrl} 
                         onPress={() => setPreviewImage(user?.nicFrontUrl || null)} 
+                        theme={theme}
                     />
                     <DocumentItem 
                         label="NIC Back" 
                         uri={user?.nicBackUrl} 
                         onPress={() => setPreviewImage(user?.nicBackUrl || null)} 
+                        theme={theme}
                     />
                 </View>
             </View>
@@ -233,50 +256,57 @@ const PersonalDetailsScreen = () => {
   );
 };
 
-const InfoRow = ({ label, value, icon, editable, onChangeText }: any) => (
-    <View style={styles.infoRow}>
-        <View style={styles.infoIconBox}>
-            {renderIcon(icon)}
+const InfoRow = ({ label, value, icon, editable, onChangeText, theme }: any) => {
+    const s = makeStyles(theme);
+    return (
+        <View style={s.infoRow}>
+            <View style={s.infoIconBox}>
+                {renderIcon(icon, theme)}
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={s.infoLabelText}>{label}</Text>
+                {editable ? (
+                    <TextInput 
+                        style={[s.infoValueText, s.editableInput]}
+                        value={value}
+                        onChangeText={onChangeText}
+                        autoCapitalize="words"
+                        placeholderTextColor={theme.text.placeholder}
+                    />
+                ) : (
+                    <Text style={s.infoValueText}>{value || 'Not provided'}</Text>
+                )}
+            </View>
         </View>
-        <View style={{ flex: 1 }}>
-            <Text style={styles.infoLabelText}>{label}</Text>
-            {editable ? (
-                <TextInput 
-                    style={[styles.infoValueText, styles.editableInput]}
-                    value={value}
-                    onChangeText={onChangeText}
-                    autoCapitalize="words"
-                />
-            ) : (
-                <Text style={styles.infoValueText}>{value || 'Not provided'}</Text>
-            )}
-        </View>
-    </View>
-);
+    );
+};
 
-const DocumentItem = ({ label, uri, onPress }: any) => (
-    <TouchableOpacity style={styles.docBox} onPress={onPress}>
-        <View style={styles.imagePlaceholder}>
-            {uri ? (
-                <Image source={{ uri }} style={styles.docImage} />
-            ) : (
-                <View style={styles.noImage}>
-                    <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2">
-                        <Path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
-                        <Path d="M16 5V1v4z" />
-                        <Circle cx="9" cy="9" r="2" />
-                        <Path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                    </Svg>
-                </View>
-            )}
-        </View>
-        <Text style={styles.docLabelText}>{label}</Text>
-    </TouchableOpacity>
-);
+const DocumentItem = ({ label, uri, onPress, theme }: any) => {
+    const s = makeStyles(theme);
+    return (
+        <TouchableOpacity style={s.docBox} onPress={onPress}>
+            <View style={s.imagePlaceholder}>
+                {uri ? (
+                    <Image source={{ uri }} style={s.docImage} />
+                ) : (
+                    <View style={s.noImage}>
+                        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                            <Path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+                            <Path d="M16 5V1v4z" />
+                            <Circle cx="9" cy="9" r="2" />
+                            <Path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                        </Svg>
+                    </View>
+                )}
+            </View>
+            <Text style={s.docLabelText}>{label}</Text>
+        </TouchableOpacity>
+    );
+};
 
-const renderIcon = (name: string) => {
+const renderIcon = (name: string, theme: AppTheme) => {
     const size = 18;
-    const color = "#64748B";
+    const color = theme.text.tertiary;
     if(name === 'user') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Circle cx="12" cy="7" r="4"/><Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></Svg>
     if(name === 'mail') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="2" y="4" width="20" height="16" rx="2"/><Path d="M22 6l-10 7L2 6"/></Svg>
     if(name === 'credit-card') return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><Rect x="1" y="4" width="22" height="16" rx="2"/><Path d="M1 10h22"/></Svg>
@@ -285,15 +315,15 @@ const renderIcon = (name: string) => {
     return null;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   headerNav: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: theme.border,
   },
   navRow: {
     flexDirection: 'row',
@@ -309,7 +339,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   scrollContent: {
@@ -323,11 +353,16 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       gap: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: theme.card,
       borderRadius: 20,
       padding: 18,
       borderWidth: 1,
       marginBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 10,
+      elevation: 2,
   },
   statusIconBox: {
       width: 48,
@@ -338,20 +373,21 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
       fontSize: 12,
-      color: '#64748B',
+      color: theme.text.tertiary,
       fontFamily: Typography.medium,
       marginBottom: 2,
   },
   statusValue: {
       fontSize: 16,
       fontFamily: Typography.bold,
+      color: theme.text.primary,
   },
   cardSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.02,
@@ -360,7 +396,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    color: '#0F172A',
+    color: theme.text.primary,
     marginBottom: 24,
     fontFamily: Typography.bold,
   },
@@ -376,13 +412,13 @@ const styles = StyleSheet.create({
       width: 38,
       height: 38,
       borderRadius: 12,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: theme.isDark ? theme.inputBg : '#F8FAFC',
       alignItems: 'center',
       justifyContent: 'center',
   },
   infoLabelText: {
       fontSize: 12,
-      color: '#94A3B8',
+      color: theme.text.tertiary,
       fontFamily: Typography.medium,
       textTransform: 'uppercase',
       letterSpacing: 0.3,
@@ -390,7 +426,7 @@ const styles = StyleSheet.create({
   },
   infoValueText: {
       fontSize: 14,
-      color: '#1E293B',
+      color: theme.text.primary,
       fontFamily: Typography.bold,
   },
   docsGrid: {
@@ -407,9 +443,9 @@ const styles = StyleSheet.create({
       width: '100%',
       aspectRatio: 1,
       borderRadius: 16,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: theme.isDark ? theme.inputBg : '#F8FAFC',
       borderWidth: 1,
-      borderColor: '#F1F5F9',
+      borderColor: theme.border,
       overflow: 'hidden',
   },
   docImage: {
@@ -423,7 +459,7 @@ const styles = StyleSheet.create({
   },
   docLabelText: {
       fontSize: 10,
-      color: '#64748B',
+      color: theme.text.secondary,
       fontFamily: Typography.bold,
       textAlign: 'center',
   },
@@ -452,7 +488,7 @@ const styles = StyleSheet.create({
   rejectionBox: {
       width: '100%',
       padding: 16,
-      backgroundColor: '#FEF2F2',
+      backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
       borderRadius: 16,
       marginBottom: 20,
       borderLeftWidth: 4,
@@ -461,13 +497,13 @@ const styles = StyleSheet.create({
   rejectionReasonTitle: {
       fontSize: 9,
       fontFamily: Typography.bold,
-      color: '#991B1B',
+      color: theme.isDark ? '#FCA5A5' : '#991B1B',
       letterSpacing: 0.5,
       marginBottom: 6,
   },
   rejectionReasonText: {
       fontSize: 14,
-      color: '#B91C1C',
+      color: theme.isDark ? '#FCA5A5' : '#B91C1C',
       fontFamily: Typography.bold,
       lineHeight: 20,
       fontStyle: 'italic',
@@ -493,27 +529,27 @@ const styles = StyleSheet.create({
       fontFamily: Typography.extraBold,
   },
   editToggleBtn: {
-      backgroundColor: 'rgba(185, 28, 28, 0.1)',
+      backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(185, 28, 28, 0.1)',
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: 'rgba(185, 28, 28, 0.2)',
+      borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(185, 28, 28, 0.2)',
   },
   editToggleText: {
       fontSize: 12,
-      color: '#B91C1C',
+      color: theme.isDark ? '#FCA5A5' : '#B91C1C',
       fontFamily: Typography.bold,
   },
   editableInput: {
-      backgroundColor: '#F1F5F9',
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
       borderRadius: 8,
       paddingHorizontal: 10,
       paddingVertical: 4,
       marginTop: 4,
       borderWidth: 1,
-      borderColor: '#CBD5E1',
-      color: '#0F172A',
+      borderColor: theme.border,
+      color: theme.text.primary,
   },
 });
 

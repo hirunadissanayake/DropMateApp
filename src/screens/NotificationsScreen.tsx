@@ -9,13 +9,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  Alert,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
-import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
 import * as notificationService from '../services/notificationService';
 import { Notification } from '../services/notificationService';
@@ -24,10 +22,8 @@ import Toast from 'react-native-toast-message';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
 import LinearGradient from 'react-native-linear-gradient';
-
-const BRAND_GREEN = '#00875A';
-const BRAND_DARK = '#004D3A';
-const BRAND_LIGHT = '#E6F5EF';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -103,14 +99,23 @@ const NotificationIcon = ({ type }: { type: string }) => {
       );
     default:
       return (
-        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00875A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3DD9A4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
         </Svg>
       );
   }
 };
 
-const getIconBgColor = (type: string) => {
+const getIconBgColor = (type: string, theme: AppTheme) => {
+  if (theme.isDark) {
+    switch (type) {
+      case 'PROFILE_APPROVED': return 'rgba(16, 185, 129, 0.1)';
+      case 'PROFILE_REJECTED': return 'rgba(239, 68, 68, 0.1)';
+      case 'PARCEL_REQUEST': return 'rgba(59, 130, 246, 0.1)';
+      case 'PAYMENT_RECEIVED': return 'rgba(245, 158, 11, 0.1)';
+      default: return 'rgba(61, 217, 164, 0.1)';
+    }
+  }
   switch (type) {
     case 'PROFILE_APPROVED': return '#ECFDF5';
     case 'PROFILE_REJECTED': return '#FEF2F2';
@@ -121,6 +126,8 @@ const getIconBgColor = (type: string) => {
 };
 
 const NotificationsScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation();
   const { token } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -217,42 +224,50 @@ const NotificationsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={BRAND_GREEN} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <>
-          <LinearGradient colors={[BRAND_GREEN, BRAND_DARK]} style={styles.heroSection}>
-            <SafeAreaView edges={['top']}>
-              <View style={styles.header}>
-                <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-                <Text style={styles.headerTitle}>Notifications</Text>
-                <View style={{ width: 44 }} />
+          <SafeAreaView edges={['top']} style={styles.stickyHeader}>
+            <View style={styles.headerActionRow}>
+              <View style={styles.headerLeft}>
+                <BackButton onPress={() => navigation.goBack()} />
               </View>
-            </SafeAreaView>
-          </LinearGradient>
+              <Text style={styles.headerTitleCenter}>Notifications</Text>
+              <View style={styles.headerRight} />
+            </View>
+          </SafeAreaView>
 
           <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
             }
             contentContainerStyle={notifications.length === 0 ? { flex: 1 } : styles.scrollContent}
           >
-            {notifications.length === 0 ? (
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIconCircle}>
-                    <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
-                        <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
-                    </Svg>
+            <LinearGradient 
+              colors={theme.isDark ? ['rgba(61, 217, 164, 0.05)', 'rgba(61, 217, 164, 0.02)', theme.background] : ['#E6F5EF', '#F0FDF4', theme.background]} 
+              style={styles.backgroundGradient} 
+            />
+
+            <View style={styles.contentPadding}>
+
+
+              {notifications.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyIconCircle}>
+                      <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : "#FFFFFF"} strokeWidth="1.5">
+                          <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                      </Svg>
+                  </View>
+                  <Text style={styles.emptyText}>No notifications yet</Text>
+                  <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
                 </View>
-                <Text style={styles.emptyText}>No notifications yet</Text>
-                <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
-              </View>
-            ) : (
+              ) : (
               <View style={styles.listContainer}>
                 {groupNotifications(notifications).map(([groupName, items], index) => (
                   <View key={groupName} style={styles.groupSection}>
@@ -265,7 +280,7 @@ const NotificationsScreen = () => {
                       )}
                     </View>
                     {items.map((item) => {
-                      const bgColor = getIconBgColor(item.type);
+                      const bgColor = getIconBgColor(item.type, theme);
                       return (
                         <Swipeable
                           key={item.id}
@@ -305,10 +320,12 @@ const NotificationsScreen = () => {
                 ))}
               </View>
             )}
+            </View>
           </ScrollView>
 
           <CustomAlert
             visible={alertVisible}
+            theme={theme}
             title="Delete Notification"
             message="Are you sure you want to delete this notification? This action cannot be undone."
             type="warning"
@@ -322,187 +339,204 @@ const NotificationsScreen = () => {
     </View>
   );
 };
-  
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  heroSection: {
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontFamily: Typography.bold,
-    color: '#FFFFFF',
-  },
-
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-    marginTop: 20,
-  },
-  groupSection: {
-    marginBottom: 24,
-  },
-  groupHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingRight: 4,
-  },
-  groupHeader: {
-    fontSize: 14,
-    fontFamily: Typography.bold,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.1,
-    marginLeft: 4,
-  },
-  groupMarkAllText: {
-    fontSize: 13,
-    color: BRAND_GREEN,
-    fontFamily: Typography.bold,
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    marginBottom: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  unreadCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#00875A30',
-    borderLeftWidth: 4,
-    borderLeftColor: BRAND_GREEN,
-  },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  itemTitle: {
-    fontSize: 15,
-    fontFamily: Typography.bold,
-    color: '#1E293B',
-    flex: 1,
-  },
-  unreadText: {
-    color: '#0F172A',
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: BRAND_GREEN,
-    marginLeft: 8,
-  },
-  itemBody: {
-    fontSize: 13,
-    fontFamily: Typography.medium,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 8,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemTime: {
-    fontSize: 11,
-    fontFamily: Typography.medium,
-    color: '#94A3B8',
-  },
-  newBadge: {
-    backgroundColor: BRAND_LIGHT,
-    color: BRAND_GREEN,
-    fontSize: 10,
-    fontFamily: Typography.bold,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  deleteSwipeAction: {
-    backgroundColor: '#EF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    borderRadius: 20,
-    marginBottom: 6,
-    marginLeft: 10,
-  },
-  deleteIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyIconCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#006C52',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  emptyText: {
-    fontSize: 22,
-    fontFamily: Typography.bold,
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  emptySubText: {
-    fontSize: 15,
-    fontFamily: Typography.medium,
-    color: '#94A3B8',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});
+function makeStyles(theme: AppTheme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
+    stickyHeader: {
+      backgroundColor: 'transparent',
+      zIndex: 100,
+    },
+    headerActionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    headerLeft: {
+      width: 44,
+      alignItems: 'flex-start',
+    },
+    headerRight: {
+      width: 44,
+    },
+    headerTitleCenter: {
+     fontSize: 28,
+      color: theme.text.primary,
+      fontFamily: Typography.extraBold,
+      letterSpacing: -0.5,
+      marginBottom: 10,
+    },
+    backgroundGradient: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 380,
+    },
+    contentPadding: {
+      paddingHorizontal: 20,
+    },
+   
+    scrollContent: {
+      paddingBottom: 60,
+    },
+    listContainer: {
+      marginTop: 8,
+    },
+    groupSection: {
+      marginBottom: 32,
+    },
+    groupHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+      paddingHorizontal: 4,
+    },
+    groupHeader: {
+      fontSize: 12,
+      fontFamily: Typography.extraBold,
+      color: theme.text.tertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+    },
+    groupMarkAllText: {
+      fontSize: 13,
+      color: theme.primary,
+      fontFamily: Typography.bold,
+    },
+    notificationCard: {
+      flexDirection: 'row',
+      padding: 16,
+      backgroundColor: theme.card,
+      borderRadius: 24,
+      marginBottom: 12,
+      shadowColor: theme.isDark ? '#000' : theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    unreadCard: {
+      borderColor: theme.isDark ? 'rgba(61, 217, 164, 0.3)' : 'rgba(0, 135, 90, 0.2)',
+      borderLeftWidth: 5,
+      borderLeftColor: theme.primary,
+    },
+    iconContainer: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    itemTitle: {
+      fontSize: 15,
+      fontFamily: Typography.bold,
+      color: theme.text.primary,
+      flex: 1,
+    },
+    unreadText: {
+      color: theme.text.primary,
+    },
+    unreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.primary,
+      marginLeft: 8,
+    },
+    itemBody: {
+      fontSize: 13,
+      fontFamily: Typography.medium,
+      color: theme.text.secondary,
+      lineHeight: 18,
+      marginBottom: 8,
+    },
+    footerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    itemTime: {
+      fontSize: 11,
+      fontFamily: Typography.bold,
+      color: theme.text.tertiary,
+    },
+    newBadge: {
+      backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.15)' : '#E6F5EF',
+      color: theme.primary,
+      fontSize: 10,
+      fontFamily: Typography.extraBold,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    deleteSwipeAction: {
+      backgroundColor: '#EF4444',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 1,
+      borderRadius: 24,
+      marginBottom: 12,
+      marginLeft: 12,
+    },
+    deleteIconContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%',
+      height: '100%',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+      marginTop: 40,
+    },
+    emptyIconCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : theme.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 32,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 5,
+    },
+    emptyText: {
+      fontSize: 24,
+      fontFamily: Typography.extraBold,
+      color: theme.text.primary,
+      marginBottom: 12,
+    },
+    emptySubText: {
+      fontSize: 15,
+      fontFamily: Typography.medium,
+      color: theme.text.tertiary,
+      textAlign: 'center',
+      lineHeight: 24,
+    },
+  });
+}
 
 export default NotificationsScreen;

@@ -12,11 +12,10 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
+import { AppTheme } from '../../constants/Colors';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const BRAND_GREEN = '#006C52';
-const BRAND_MID   = '#008A68';
-const BRAND_LIGHT = '#DCFBEB';
 const ITEM_H      = 54;          // height of each row in the drum
 const VISIBLE     = 5;           // rows visible at once
 const DRUM_H      = ITEM_H * VISIBLE;
@@ -26,15 +25,16 @@ interface CustomTimePickerProps {
   onClose: () => void;
   onSelectTime: (time: string) => void;
   selectedTime?: string;
+  theme?: AppTheme;
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-const ClockIcon = () => (
+const ClockIcon = ({ theme }: { theme: AppTheme }) => (
   <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="9" stroke={BRAND_GREEN} strokeWidth="2" />
+    <Circle cx="12" cy="12" r="9" stroke={theme.primary} strokeWidth="2" />
     <Path
       d="M12 7v5l3 3"
-      stroke={BRAND_GREEN}
+      stroke={theme.primary}
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -60,12 +60,14 @@ interface DrumProps {
   selected: string;
   onSelect: (v: string) => void;
   pickerVisible: boolean;
+  theme: AppTheme;
 }
 
-const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) => {
+const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible, theme }) => {
   const ref        = useRef<ScrollView>(null);
   const dragging   = useRef(false);
   const selIndex   = data.indexOf(selected);
+  const styles     = drumStyles(theme);
 
   // Scroll to the selected item ONLY when the picker opens
   useEffect(() => {
@@ -77,7 +79,6 @@ const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) 
       }
     }, 60);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickerVisible]);
 
   const resolve = (offsetY: number) => {
@@ -86,13 +87,13 @@ const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) 
   };
 
   return (
-    <View style={drum.wrap}>
+    <View style={styles.wrap}>
       {/* Selector highlight rail */}
-      <View style={drum.selectorRail} pointerEvents="none" />
+      <View style={styles.selectorRail} pointerEvents="none" />
 
       <ScrollView
         ref={ref}
-        style={drum.scroll}
+        style={styles.scroll}
         contentContainerStyle={{ paddingVertical: ITEM_H * 2 }}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_H}
@@ -114,7 +115,7 @@ const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) 
           return (
             <TouchableOpacity
               key={item}
-              style={drum.item}
+              style={styles.item}
               activeOpacity={0.6}
               onPress={() => {
                 onSelect(item);
@@ -122,9 +123,9 @@ const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) 
               }}
             >
               <Text style={[
-                drum.label,
-                edge   && drum.labelEdge,
-                center && drum.labelCenter,
+                styles.label,
+                edge   && styles.labelEdge,
+                center && styles.labelCenter,
               ]}>
                 {item}
               </Text>
@@ -134,13 +135,13 @@ const Drum: React.FC<DrumProps> = ({ data, selected, onSelect, pickerVisible }) 
       </ScrollView>
 
       {/* Fade masks */}
-      <LinearGradient colors={['#fff', 'rgba(255,255,255,0)']} style={drum.fadeTop}    pointerEvents="none" />
-      <LinearGradient colors={['rgba(255,255,255,0)', '#fff']} style={drum.fadeBottom} pointerEvents="none" />
+      <LinearGradient colors={[theme.card, 'transparent']} style={styles.fadeTop}    pointerEvents="none" />
+      <LinearGradient colors={['transparent', theme.card]} style={styles.fadeBottom} pointerEvents="none" />
     </View>
   );
 };
 
-const drum = StyleSheet.create({
+const drumStyles = (theme: AppTheme) => StyleSheet.create({
   wrap: {
     flex: 1,
     height: DRUM_H,
@@ -149,15 +150,15 @@ const drum = StyleSheet.create({
   },
   selectorRail: {
     position: 'absolute',
-    top: ITEM_H * 2,
+    top: ITEM_H * 2 - 2,
     alignSelf: 'center',
-    width: ITEM_H + 4,
+    width: '100%',
     height: ITEM_H + 4,
-    backgroundColor: BRAND_LIGHT,
-    borderRadius: (ITEM_H + 4) / 2, // Perfect circle shape
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFBEB',
+    borderRadius: 12,
     zIndex: 0,
     borderWidth: 1.5,
-    borderColor: '#A7F3D0',
+    borderColor: theme.isDark ? 'rgba(16, 185, 129, 0.2)' : '#A7F3D0',
   },
   scroll: { flex: 1, zIndex: 1 },
   item: {
@@ -167,29 +168,29 @@ const drum = StyleSheet.create({
   },
   label: {
     fontSize: 20,
-    color: '#CBD5E1',
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
   },
   labelEdge: {
-    fontSize: 21,
-    color: '#94A3B8',
+    fontSize: 22,
+    color: theme.text.secondary,
     fontFamily: Typography.semiBold,
   },
   labelCenter: {
-    fontSize: 26,
-    color: BRAND_GREEN,
-    fontFamily: Typography.bold,
+    fontSize: 28,
+    color: theme.primary,
+    fontFamily: Typography.extraBold,
   },
   fadeTop: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: ITEM_H * 2,
+    height: ITEM_H * 1.5,
     zIndex: 5,
   },
   fadeBottom: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    height: ITEM_H * 2,
+    height: ITEM_H * 1.5,
     zIndex: 5,
   },
 });
@@ -200,7 +201,12 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   onClose,
   onSelectTime,
   selectedTime,
+  theme: providedTheme,
 }) => {
+  const { theme: contextTheme } = useTheme();
+  const theme = providedTheme || contextTheme;
+  const s = makeStyles(theme);
+
   const parsed  = parse(selectedTime);
   const [hour,   setHour]   = useState(parsed.hour);
   const [minute, setMinute] = useState(parsed.minute);
@@ -210,7 +216,6 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   const slideAnim    = useRef(new Animated.Value(300)).current;
   const confirmScale = useRef(new Animated.Value(1)).current;
 
-  // Re-parse on open
   useEffect(() => {
     if (visible) {
       const p = parse(selectedTime);
@@ -220,7 +225,6 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     }
   }, [visible, selectedTime]);
 
-  // Sheet animation
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -253,63 +257,50 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <View style={s.overlay}>
-
-        {/* Backdrop */}
         <Animated.View style={[s.backdrop, { opacity: fadeAnim }]}>
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
         </Animated.View>
 
-        {/* Sheet */}
         <Animated.View style={[s.sheet, { transform: [{ translateY: slideAnim }] }]}>
-
           <View style={s.handle} />
 
-          {/* ── Header ── */}
           <View style={s.header}>
             <View style={s.headerIconBadge}>
-              <ClockIcon />
+              <ClockIcon theme={theme} />
             </View>
             <View style={s.headerText}>
               <Text style={s.title}>Set Travel Time</Text>
               <Text style={s.subtitle}>Choose hour, minute & period</Text>
             </View>
-            {/* Live preview badge */}
-            <LinearGradient colors={[BRAND_GREEN, BRAND_MID]} style={s.previewBadge}>
+            <LinearGradient colors={[theme.primary, theme.primaryDark]} style={s.previewBadge}>
               <Text style={s.previewText}>{previewLabel}</Text>
             </LinearGradient>
           </View>
 
-          {/* ── Accent line ── */}
           <LinearGradient
-            colors={[BRAND_GREEN, BRAND_MID, 'transparent']}
+            colors={[theme.primary, 'transparent']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={s.accentLine}
           />
 
-          {/* Drums */}
           <View style={s.drumsRow}>
-            {/* Hour */}
             <View style={s.drumCol}>
               <Text style={s.drumLabel}>HOUR</Text>
-              <Drum data={hours}   selected={hour}   onSelect={setHour}   pickerVisible={visible} />
+              <Drum data={hours}   selected={hour}   onSelect={setHour}   pickerVisible={visible} theme={theme} />
             </View>
 
-            {/* Colon */}
             <View style={s.colonCol}>
               <Text style={s.colon}>:</Text>
             </View>
 
-            {/* Minute */}
             <View style={s.drumCol}>
               <Text style={s.drumLabel}>MIN</Text>
-              <Drum data={minutes} selected={minute} onSelect={setMinute} pickerVisible={visible} />
+              <Drum data={minutes} selected={minute} onSelect={setMinute} pickerVisible={visible} theme={theme} />
             </View>
 
-            {/* Separator */}
             <View style={s.sep} />
 
-            {/* AM / PM */}
             <View style={s.periodCol}>
               <Text style={s.drumLabel}>PERIOD</Text>
               <View style={s.periodWrap}>
@@ -331,11 +322,10 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
             </View>
           </View>
 
-          {/* Footer */}
           <View style={s.footer}>
              <TouchableOpacity style={s.btnCancel} onPress={onClose} activeOpacity={0.7}>
                 <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                  <Path d="M19 12H5M12 19l-7-7 7-7" stroke="#64748B" strokeWidth="2"
+                  <Path d="M19 12H5M12 19l-7-7 7-7" stroke={theme.text.secondary} strokeWidth="2"
                     strokeLinecap="round" strokeLinejoin="round" />
                 </Svg>
                 <Text style={s.btnCancelText}>Back</Text>
@@ -344,7 +334,7 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
             <Animated.View style={[s.btnConfirm, { transform: [{ scale: confirmScale }] }]}>
               <TouchableOpacity style={{ flex: 1 }} onPress={handleConfirmPress} activeOpacity={0.85}>
                 <LinearGradient
-                  colors={[BRAND_GREEN, '#004D3A']}
+                  colors={[theme.primary, theme.primaryDark]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={s.btnGradient}
@@ -358,22 +348,20 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
               </TouchableOpacity>
             </Animated.View>
           </View>
-
         </Animated.View>
       </View>
     </Modal>
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const s = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 36,
     borderTopRightRadius: 36,
     paddingTop: 12,
@@ -381,19 +369,17 @@ const s = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 28,
     elevation: 30,
   },
   handle: {
     width: 40, height: 4,
     borderRadius: 2,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.border,
     alignSelf: 'center',
     marginBottom: 20,
   },
-  
-  // ── Header ──
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -404,7 +390,7 @@ const s = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor: BRAND_LIGHT,
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFBEB',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -413,12 +399,12 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   subtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
     marginTop: 2,
   },
@@ -433,25 +419,21 @@ const s = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.5,
   },
-
-  // ── Accent line ──
   accentLine: {
     height: 2,
     borderRadius: 2,
     marginBottom: 10,
   },
-
-  // Drums row
   drumsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    height: DRUM_H + 32, // Accommodate labels + drum
+    height: DRUM_H + 32,
   },
   drumCol: { flex: 1, alignItems: 'center', height: '100%'},
   drumLabel: {
     fontSize: 10, 
-    color: '#94A3B8', letterSpacing: 1.5,
+    color: theme.text.tertiary, letterSpacing: 1.5,
     marginBottom: 12, fontFamily: Typography.bold,
   },
   colonCol: {
@@ -459,26 +441,24 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   colon: {
-    fontSize: 30, color: '#CBD5E1',
+    fontSize: 30, color: theme.text.tertiary,
     fontWeight: '300', marginHorizontal: 2,
   },
   sep: {
     width: 1,
     height: '60%',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginTop: 28, marginHorizontal: 6,
   },
-
-  // AM / PM
   periodCol: { width: 100, alignItems: 'center', height: '100%' },
   periodWrap: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     borderRadius: 18,
     padding: 4,
     width: '100%',
     borderWidth: 1.5,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     position: 'relative',
     height: 52,
     alignItems: 'center',
@@ -493,25 +473,23 @@ const s = StyleSheet.create({
     zIndex: 1,
   },
   periodActive: {
-    backgroundColor: '#fff',
-    shadowColor: BRAND_GREEN,
+    backgroundColor: theme.isDark ? theme.background : '#fff',
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: BRAND_LIGHT,
+    borderColor: theme.isDark ? 'rgba(16, 185, 129, 0.2)' : '#DCFBEB',
   },
   periodText: {
-    fontSize: 14, color: '#94A3B8',
+    fontSize: 14, color: theme.text.tertiary,
     fontFamily: Typography.bold,
   },
   periodActiveText: {
-    color: BRAND_GREEN, fontSize: 15, 
+    color: theme.primary, fontSize: 15, 
     fontFamily: Typography.bold,
   },
-
-  // Footer
   footer: { flexDirection: 'row', gap: 12, marginTop: 4 },
   btnCancel: {
     flexDirection: 'row',
@@ -520,14 +498,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     height: 56,
     borderRadius: 18,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: theme.border,
   },
   btnCancelText: {
     fontSize: 15, 
-    color: '#64748B', fontFamily: Typography.bold,
+    color: theme.text.secondary, fontFamily: Typography.bold,
   },
   btnConfirm: { flex: 1, height: 56, borderRadius: 18, overflow: 'hidden' },
   btnGradient: { 

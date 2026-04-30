@@ -11,18 +11,17 @@ import {
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
+import { AppTheme } from '../../constants/Colors';
 
 const { height } = Dimensions.get('window');
-
-const GREEN       = '#006C52';
-const GREEN_DARK  = '#004D3A';
-const GREEN_LIGHT = '#DCFBEB';
 
 interface CustomCalendarProps {
   visible: boolean;
   onClose: () => void;
   onSelectDate: (date: string) => void;
   selectedDate?: string;
+  theme?: AppTheme;
 }
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -30,7 +29,12 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   onClose,
   onSelectDate,
   selectedDate,
+  theme: providedTheme,
 }) => {
+  const { theme: contextTheme } = useTheme();
+  const theme = providedTheme || contextTheme;
+  const styles = makeStyles(theme);
+
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
 
@@ -54,8 +58,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     ? {
         [selectedDate]: {
           selected: true,
-          selectedColor: GREEN,
-          selectedTextColor: '#fff',
+          selectedColor: theme.primary,
+          selectedTextColor: '#ffffff',
         },
       }
     : {};
@@ -67,26 +71,26 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
-      <View style={s.overlay}>
+      <View style={styles.overlay}>
         {/* Backdrop */}
-        <Animated.View style={[s.backdrop, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
         </Animated.View>
 
         {/* Sheet */}
-        <Animated.View style={[s.sheet, { transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
           {/* Handle */}
-          <View style={s.handle} />
+          <View style={styles.handle} />
 
           {/* Header */}
-          <View style={s.header}>
-            <Text style={s.headerTitle}>Select Date</Text>
-            <TouchableOpacity style={s.closeBtn} onPress={onClose} activeOpacity={0.7}>
-              <Text style={s.closeBtnText}>✕</Text>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Select Date</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+              <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={s.divider} />
+          <View style={styles.divider} />
 
           {/* Calendar */}
           <Calendar
@@ -96,50 +100,50 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
             minDate={today}
             enableSwipeMonths
             theme={{
-              backgroundColor: '#ffffff',
-              calendarBackground: '#ffffff',
+              backgroundColor: theme.card,
+              calendarBackground: theme.card,
 
               // Month/year header
-              monthTextColor: '#0F172A',
+              monthTextColor: theme.text.primary,
               textMonthFontFamily: Typography.bold,
               textMonthFontSize: 17,
 
               // Arrow buttons
-              arrowColor: GREEN,
+              arrowColor: theme.primary,
 
               // Day-of-week labels
-              textSectionTitleColor: '#94A3B8',
+              textSectionTitleColor: theme.text.tertiary,
               textDayHeaderFontFamily: Typography.bold,
               textDayHeaderFontSize: 12,
 
               // Day numbers
-              dayTextColor: '#0F172A',
+              dayTextColor: theme.text.primary,
               textDayFontFamily: Typography.medium,
               textDayFontSize: 15,
 
               // Today
-              todayTextColor: GREEN,
-              todayBackgroundColor: GREEN_LIGHT,
+              todayTextColor: theme.primary,
+              todayBackgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFBEB',
 
               // Selected
-              selectedDayBackgroundColor: GREEN,
+              selectedDayBackgroundColor: theme.primary,
               selectedDayTextColor: '#ffffff',
 
               // Disabled
-              textDisabledColor: '#CBD5E1',
+              textDisabledColor: theme.border,
 
               // Dot
-              dotColor: GREEN,
+              dotColor: theme.primary,
               selectedDotColor: '#ffffff',
             }}
-            style={s.calendar}
+            style={styles.calendar}
           />
 
-          <View style={s.divider} />
+          <View style={styles.divider} />
 
           {/* Footer */}
-          <TouchableOpacity style={s.cancelBtn} onPress={onClose} activeOpacity={0.7}>
-            <Text style={s.cancelText}>Close</Text>
+          <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
+            <Text style={styles.cancelText}>Close</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -147,24 +151,24 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingBottom: Platform.OS === 'ios' ? 40 : 28,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 20,
     elevation: 20,
   },
@@ -172,7 +176,7 @@ const s = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.border,
     alignSelf: 'center',
     marginTop: 12,
     marginBottom: 20,
@@ -185,25 +189,25 @@ const s = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeBtnText: {
-    fontSize: 13,
-    color: '#64748B',
+    fontSize: 14,
+    color: theme.text.secondary,
     fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginBottom: 4,
   },
   calendar: {
@@ -213,16 +217,16 @@ const s = StyleSheet.create({
   cancelBtn: {
     marginTop: 16,
     height: 52,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   cancelText: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.secondary,
     fontFamily: Typography.bold,
   },
 });

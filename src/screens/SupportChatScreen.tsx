@@ -8,18 +8,19 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Image,
-  ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { socketService } from '../services/socketService';
 import { useSupportStore } from '../store/supportStore';
 import { useAuthStore } from '../store/authStore';
 import BackButton from '../components/common/BackButton';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const formatTime = (dateStr: string) => {
   if (!dateStr) return '';
@@ -28,11 +29,6 @@ const formatTime = (dateStr: string) => {
 };
 
 const Icon = ({ name, size = 24, color = "#000", style, opacity = 1 }: any) => {
-  if (name === 'chevron-back') return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
-      <Path d="M15 18l-6-6 6-6" />
-    </Svg>
-  );
   if (name === 'checkmark-done') return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
       <Path d="M20 6L9 17l-5-5" />
@@ -46,19 +42,9 @@ const Icon = ({ name, size = 24, color = "#000", style, opacity = 1 }: any) => {
       <Path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
     </Svg>
   );
-  if (name === 'call-outline') return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
-      <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </Svg>
-  );
   if (name === 'chatbubbles-outline') return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
       <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </Svg>
-  );
-  if (name === 'add') return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
-      <Path d="M12 5v14M5 12h14" />
     </Svg>
   );
   if (name === 'send') return (
@@ -70,15 +56,16 @@ const Icon = ({ name, size = 24, color = "#000", style, opacity = 1 }: any) => {
 };
 
 const SupportChatScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation<any>();
-  const { messages, setMessages } = useSupportStore();
+  const { messages } = useSupportStore();
   const { user } = useAuthStore();
   const [inputValue, setInputValue] = useState('');
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (user?.id) {
-      // Fetch history when entering chat
       socketService.getSupportHistory(user.id);
     }
   }, [user?.id]);
@@ -109,6 +96,7 @@ const SupportChatScreen = () => {
           styles.messageBubble,
           isMe ? styles.myMessageBubble : styles.theirMessageBubble
         ]}>
+          {!isMe && <Text style={styles.senderName}>{item.senderName || 'Support'}</Text>}
           <Text style={[
             styles.messageText,
             isMe ? styles.myMessageText : styles.theirMessageText
@@ -122,7 +110,7 @@ const SupportChatScreen = () => {
             ]}>
               {formatTime(item.createdAt)}
             </Text>
-            {isMe && <Icon name="checkmark-done" size={14} color="#FFF" style={{ marginLeft: 4 }} opacity={0.5} />}
+            {isMe && <Icon name="checkmark-done" size={12} color="#FFF" style={{ marginLeft: 4 }} opacity={0.6} />}
           </View>
         </View>
       </View>
@@ -130,40 +118,39 @@ const SupportChatScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+       <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      
       {/* Header */}
-      <View style={styles.header}>
-        <BackButton 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          color="#006C52"
-        />
-        
-        <View style={styles.headerInfo}>
-          <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={['#006C52', '#004A38']}
-              style={styles.avatarGradient}
-            >
-              <Icon name="headset" size={20} color="#FFF" />
-            </LinearGradient>
-            <View style={styles.onlineDot} />
-          </View>
-          <View>
-            <Text style={styles.headerTitle}>DropMate Support</Text>
-            <Text style={styles.headerStatus}>Always active</Text>
+      <SafeAreaView style={styles.headerSafeArea} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <BackButton 
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            color={theme.primary}
+          />
+          
+          <View style={styles.headerInfo}>
+            <View style={styles.avatarContainer}>
+              <LinearGradient
+                colors={[theme.primary, theme.primaryDark]}
+                style={styles.avatarGradient}
+              >
+                <Icon name="headset" size={20} color="#FFF" />
+              </LinearGradient>
+              <View style={styles.onlineDot} />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>DropMate Support</Text>
+              <Text style={styles.headerStatus}>Always active</Text>
+            </View>
           </View>
         </View>
-
-        {/* <TouchableOpacity style={styles.callButton}>
-          <Icon name="call-outline" size={22} color="#006C52" />
-        </TouchableOpacity> */}
-      </View>
+      </SafeAreaView>
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <FlatList
           ref={flatListRef}
@@ -173,10 +160,11 @@ const SupportChatScreen = () => {
           contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
-                <Icon name="chatbubbles-outline" size={40} color="#006C52" opacity={0.3} />
+                <Icon name="chatbubbles-outline" size={40} color={theme.primary} opacity={0.4} />
               </View>
               <Text style={styles.emptyTitle}>Start a conversation</Text>
               <Text style={styles.emptySubtitle}>Our support team is here to help you. Send a message to get started.</Text>
@@ -184,55 +172,65 @@ const SupportChatScreen = () => {
           )}
         />
 
-        {/* Input */}
-        <View style={styles.inputWrapper}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message..."
-              placeholderTextColor="#999"
-              value={inputValue}
-              onChangeText={setInputValue}
-              multiline
-            />
+        {/* Input area */}
+        <SafeAreaView edges={['bottom']} style={styles.inputWrapperSafeArea}>
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, { maxHeight: 100 }]}
+                placeholder="Type a message..."
+                placeholderTextColor={theme.text.placeholder}
+                value={inputValue}
+                onChangeText={setInputValue}
+                multiline
+              />
 
-            <TouchableOpacity 
-              style={[styles.sendButton, !inputValue.trim() && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!inputValue.trim()}
-            >
-              <LinearGradient
-                colors={inputValue.trim() ? ['#006C52', '#004A38'] : ['#CCC', '#AAA']}
-                style={styles.sendButtonGradient}
+              <TouchableOpacity 
+                style={[styles.sendButton, !inputValue.trim() && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={!inputValue.trim()}
               >
-                <Icon name="send" size={18} color="#FFF" />
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={inputValue.trim() ? [theme.primary, theme.primaryDark] : [theme.border, theme.border]}
+                  style={styles.sendButtonGradient}
+                >
+                  <Icon name="send" size={18} color="#FFF" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.background,
+  },
+  headerSafeArea: {
+    backgroundColor: theme.card,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingVertical: 12,
   },
   backButton: {
     padding: 8,
     borderRadius: 12,
-    marginRight: 15,
+    marginRight: 10,
   },
   headerInfo: {
     flex: 1,
@@ -246,43 +244,41 @@ const styles = StyleSheet.create({
   avatarGradient: {
     width: 44,
     height: 44,
-    borderRadius: 15,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   onlineDot: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
+    bottom: -1,
+    right: -1,
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#10B981',
     borderWidth: 3,
-    borderColor: '#FFF',
+    borderColor: theme.card,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: Typography.bold,
-    color: '#1A1A1A',
+    color: theme.text.primary,
+    letterSpacing: -0.3,
   },
   headerStatus: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontFamily: Typography.bold,
-  },
-  callButton: {
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: '#E8F5E9',
+    fontSize: 13,
+    color: '#10B981',
+    fontFamily: Typography.semiBold,
+    marginTop: -2,
   },
   messageList: {
     padding: 20,
     paddingBottom: 30,
+    flexGrow: 1,
   },
   messageWrapper: {
-    marginBottom: 15,
-    maxWidth: '80%',
+    marginBottom: 16,
+    maxWidth: '82%',
   },
   myMessageWrapper: {
     alignSelf: 'flex-end',
@@ -291,116 +287,126 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   messageBubble: {
-    padding: 15,
-    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 22,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowRadius: 8,
     elevation: 1,
   },
   myMessageBubble: {
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
     borderBottomRightRadius: 4,
   },
   theirMessageBubble: {
-    backgroundColor: '#FFF',
+    backgroundColor: theme.card,
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: theme.border,
+  },
+  senderName: {
+    fontSize: 11,
+    fontFamily: Typography.bold,
+    color: theme.primary,
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   messageText: {
-    fontSize: 15,
+    fontSize: 15.5,
     fontFamily: Typography.medium,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   myMessageText: {
     color: '#FFF',
   },
   theirMessageText: {
-    color: '#1A1A1A',
+    color: theme.text.primary,
   },
   messageFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: 5,
+    marginTop: 6,
   },
   messageTime: {
-    fontSize: 10,
-    fontFamily: Typography.semiBold,
+    fontSize: 10.5,
+    fontFamily: Typography.medium,
   },
   myMessageTime: {
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.7)',
   },
   theirMessageTime: {
-    color: '#999',
+    color: theme.text.tertiary,
   },
   emptyContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 100,
+    marginTop: '40%',
     paddingHorizontal: 40,
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E8F5E9',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: Typography.bold,
-    color: '#1A1A1A',
-    marginBottom: 10,
+    color: theme.text.primary,
+    marginBottom: 12,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: theme.text.secondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
     fontFamily: Typography.medium,
   },
-  inputWrapper: {
-    padding: 20,
-    backgroundColor: '#FFF',
+  inputWrapperSafeArea: {
+    backgroundColor: theme.card,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.border,
+  },
+  inputWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8F9FA',
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  attachButton: {
-    padding: 8,
+    borderColor: theme.border,
   },
   input: {
     flex: 1,
     paddingHorizontal: 10,
-    maxHeight: 100,
-    fontSize: 15,
-    fontFamily: Typography.semiBold,
-    color: '#1A1A1A',
+    fontSize: 16,
+    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   sendButton: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
   sendButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   sendButtonGradient: {
     width: 44,
     height: 44,
-    borderRadius: 15,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

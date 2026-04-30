@@ -13,8 +13,10 @@ import {
   Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, G, Rect } from 'react-native-svg';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
+import { AppTheme } from '../../constants/Colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +41,7 @@ export interface RequestAlertData {
   toLocation?: string;
   senderName?: string;
   offerPrice?: string;
+  paymentMethod?: string;
   remainingSeconds?: number;
 }
 
@@ -57,6 +60,9 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
   onDecline,
   onExpire,
 }) => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+  
   const [timeLeft, setTimeLeft] = useState(EXPIRY_SECONDS);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
@@ -65,28 +71,26 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
 
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Animations logic
   useEffect(() => {
     if (visible && data) {
-      // Use the remaining time from the server if available
       setTimeLeft(data.remainingSeconds ?? EXPIRY_SECONDS);
       setIsAccepting(false);
       setIsDeclining(false);
-      setShowReasonModal(false);
-      setShowGallery(false);
 
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
-          damping: 25,
-          stiffness: 120,
+          damping: 28,
+          stiffness: 100,
           useNativeDriver: true,
         }),
         Animated.timing(overlayOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 350,
           useNativeDriver: true,
         }),
       ]).start();
@@ -101,6 +105,15 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
           return prev - 1;
         });
       }, 1000);
+
+      // Pulse animation for urgency
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.05, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+
     } else {
       clearInterval(timerRef.current!);
       Animated.parallel([
@@ -115,6 +128,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
           useNativeDriver: true,
         }),
       ]).start();
+      pulseAnim.setValue(1);
     }
     return () => clearInterval(timerRef.current!);
   }, [visible]);
@@ -146,8 +160,8 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
     }
   };
 
-  const timerProgress = timeLeft / EXPIRY_SECONDS;
   const isUrgent = timeLeft <= 60;
+  const progressWidth = (timeLeft / EXPIRY_SECONDS) * 100;
 
   if (!visible && !data) return null;
 
@@ -162,24 +176,30 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-              {/* Header Status */}
-              <View style={styles.bannerRow}>
-                <View style={[styles.timerPill, isUrgent && styles.timerUrgent]}>
-                  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isUrgent ? '#FF4D4D' : '#00C897'} strokeWidth="2.5">
-                    <Circle cx="12" cy="12" r="10" />
-                    <Path d="M12 6v6l4 2" />
-                  </Svg>
-                  <Text style={[styles.timerText, isUrgent && styles.textUrgent]}>{formatTime(timeLeft)}</Text>
-                </View>
-                <View style={styles.typeBadge}>
-                  <Text style={styles.typeBadgeText}>NEW DELIVERY</Text>
-                </View>
-              </View>
+               {/* Premium Banner */}
+               <View style={styles.premiumBanner}>
+                 <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.bannerGradient} start={{x: 0, y: 0}} end={{x: 1, y: 0}}>
+                   <View style={styles.bannerContent}>
+                     <View style={styles.bannerLeft}>
+                        <View style={styles.liveIndicator}>
+                           <View style={styles.liveDot} />
+                           <Text style={styles.liveText}>NEW OPPORTUNITY</Text>
+                        </View>
+                        <Text style={styles.mainTitle}>Parcel Match Found!</Text>
+                     </View>
+                     <Animated.View style={[styles.timerContainer, isUrgent && { transform: [{ scale: pulseAnim }] }]}>
+                        <Text style={[styles.timerLabel, isUrgent && styles.urgentText]}>EXPIRES IN</Text>
+                        <Text style={[styles.timerValue, isUrgent && styles.urgentText]}>{formatTime(timeLeft)}</Text>
+                     </Animated.View>
+                   </View>
+                   {/* Progress bar */}
+                   <View style={styles.progressTrack}>
+                      <View style={[styles.progressBar, { width: `${progressWidth}%`, backgroundColor: isUrgent ? '#F87171' : '#FFF' }]} />
+                   </View>
+                 </LinearGradient>
+               </View>
 
-              <Text style={styles.heading}>New Request!</Text>
-              <Text style={styles.subHeading}>You have a new delivery opportunity. Check the details and respond.</Text>
-
-              {/* Single Image Card (Click to Expand) */}
+              {/* Immersive Image Section */}
               <TouchableOpacity 
                 activeOpacity={0.9} 
                 style={styles.imageSection} 
@@ -188,6 +208,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 {data?.parcelPhotos && data.parcelPhotos.length > 0 ? (
                   <>
                     <Image source={{ uri: data.parcelPhotos[0] }} style={styles.parcelImage} resizeMode="cover" />
+                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.imageOverlay} />
                     {data.parcelPhotos.length > 1 && (
                       <View style={styles.imageCountBadge}>
                         <Text style={styles.imageCountText}>+{data.parcelPhotos.length - 1} more</Text>
@@ -196,15 +217,17 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                   </>
                 ) : (
                   <View style={styles.imagePlaceholder}>
-                    <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
-                      <Path d="M20 12v10H4V12M2 7h20v5H2V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                    <Svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="1.2">
+                      <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                     </Svg>
-                    <Text style={styles.placeholderText}>No Parcel Images</Text>
+                    <Text style={styles.placeholderText}>Package Preview Unavailable</Text>
                   </View>
                 )}
-                <View style={styles.parcelNameOverlay}>
-                  <Text style={styles.parcelNameText} numberOfLines={1}>{data?.parcelTitle || 'Unnamed Parcel'}</Text>
+                
+                <View style={styles.parcelInfoFloating}>
+                   <Text style={styles.parcelTitleText}>{data?.parcelTitle || 'Unnamed Parcel'}</Text>
                 </View>
+
                 {data?.parcelPhotos && data.parcelPhotos.length > 0 && (
                   <View style={styles.expandIcon}>
                     <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
@@ -214,58 +237,71 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 )}
               </TouchableOpacity>
 
-              {/* Details Grid */}
+              {/* Stats Bar */}
               <View style={styles.infoGrid}>
-                <View style={styles.infoBox}>
+                <View style={[styles.infoBox]}>
                   <Text style={styles.infoLabel}>WEIGHT</Text>
-                  <Text style={styles.infoValue}>{data?.parcelWeight || 'N/A'}</Text>
+                  <Text style={[styles.infoValue, { color: theme.primary }]}>{data?.parcelWeight || 'N/A'}</Text>
                 </View>
                 <View style={styles.infoBox}>
-                  <Text style={styles.infoLabel}>EARNINGS</Text>
+                  <Text style={styles.infoLabel}>PAYMENT</Text>
+                  <Text style={styles.infoValue}>{data?.paymentMethod || 'Online'}</Text>
+                </View>
+                <View style={[styles.infoBox, { borderLeftWidth: 1, borderLeftColor: theme.border }]}>
+                  <Text style={styles.infoLabel}>YOU EARN</Text>
                   <Text style={styles.infoPrice}>LKR {data?.offerPrice || '0'}</Text>
                 </View>
               </View>
 
-              {/* Route Design */}
-              <View style={styles.routeCard}>
-                <View style={styles.routeLineContainer}>
-                  <View style={styles.dotStart} />
-                  <View style={styles.dashedLine} />
-                  <View style={styles.dotEnd} />
-                </View>
-                <View style={styles.routeTextContainer}>
-                  <View style={styles.routePoint}>
-                    <Text style={styles.routeLabel}>PICKUP FROM</Text>
-                    <Text style={styles.routeCity}>{data?.fromLocation || 'Unknown'}</Text>
-                  </View>
-                  <View style={[styles.routePoint, { marginTop: 20 }]}>
-                    <Text style={styles.routeLabel}>DROP-OFF TO</Text>
-                    <Text style={styles.routeCity}>{data?.toLocation || 'Unknown'}</Text>
-                  </View>
-                </View>
+              {/* Enhanced Route Visualization */}
+              <View style={styles.routeSection}>
+                 <Text style={styles.sectionLabel}>DELIVERY ROUTE</Text>
+                 <View style={styles.routeCard}>
+                    <View style={styles.routeVisual}>
+                       <View style={styles.nodeTop}>
+                          <View style={styles.pulseRing} />
+                          <View style={styles.nodeInner} />
+                       </View>
+                       <View style={styles.nodeLine} />
+                       <View style={[styles.nodeBottom, { backgroundColor: '#EF4444' }]} />
+                    </View>
+                    <View style={styles.routeDetails}>
+                       <View style={styles.point}>
+                          <Text style={styles.pointLabel}>Pickup</Text>
+                          <Text style={styles.pointValue} numberOfLines={1}>{data?.fromLocation || 'Unknown'}</Text>
+                       </View>
+                       <View style={[styles.point, { marginTop: 20 }]}>
+                          <Text style={styles.pointLabel}>Drop-off</Text>
+                          <Text style={styles.pointValue} numberOfLines={1}>{data?.toLocation || 'Unknown'}</Text>
+                       </View>
+                    </View>
+                 </View>
               </View>
 
-              {/* Sender Profile */}
-              <View style={styles.senderSection}>
-                <View style={styles.avatarPill}>
-                  <Text style={styles.avatarChar}>{data?.senderName?.charAt(0).toUpperCase() || 'U'}</Text>
-                </View>
-                <View style={styles.senderMeta}>
-                  <Text style={styles.senderName}>{data?.senderName || 'DropMate User'}</Text>
-                  <View style={styles.verifiedRow}>
-                    <Svg width="12" height="12" viewBox="0 0 24 24" fill="#006C52">
-                      <Path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-.997-6l7.07-7.071-1.414-1.414-5.656 5.657-2.829-2.829-1.414 1.414L11.003 16z"/>
-                    </Svg>
-                    <Text style={styles.verifiedText}>Verified Sender</Text>
-                  </View>
-                </View>
+              {/* Professional Sender Profile */}
+              <View style={styles.profileCard}>
+                 <View style={styles.avatarPill}>
+                    <Text style={styles.avatarChar}>{data?.senderName?.charAt(0).toUpperCase() || 'U'}</Text>
+                 </View>
+                 <View style={styles.profileMeta}>
+                    <View style={styles.nameRow}>
+                       <Text style={styles.senderName}>{data?.senderName || 'DropMate User'}</Text>
+                       <View style={styles.verifiedBadge}>
+                          <Svg width="12" height="12" viewBox="0 0 24 24" fill="#FFF">
+                            <Path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-.997-6l7.07-7.071-1.414-1.414-5.656 5.657-2.829-2.829-1.414 1.414L11.003 16z"/>
+                          </Svg>
+                       </View>
+                    </View>
+                    <Text style={styles.verifiedText}>Verified Reliable Sender</Text>
+                 </View>
               </View>
 
-              {/* Interaction Buttons */}
+              {/* Premium Actions */}
               <View style={styles.actions}>
                 <TouchableOpacity 
                   style={styles.declineBtn} 
                   onPress={() => setShowReasonModal(true)}
+                  activeOpacity={0.7}
                 >
                   <Text style={styles.declineBtnText}>Decline</Text>
                 </TouchableOpacity>
@@ -274,31 +310,40 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                   style={styles.acceptBtn} 
                   onPress={handleAccept}
                   disabled={isAccepting}
+                  activeOpacity={0.8}
                 >
-                  <LinearGradient colors={['#006C52', '#004D3B']} style={styles.acceptGrad}>
+                  <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.acceptGrad}>
                     {isAccepting ? (
                       <ActivityIndicator size="small" color="#FFF" />
                     ) : (
-                      <Text style={styles.acceptBtnText}>Accept Request</Text>
+                      <>
+                        <Text style={styles.acceptBtnText}>Confirm Delivery</Text>
+                        <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" style={{ marginLeft: 8 }}>
+                           <Path d="M5 12h14M12 5l7 7-7 7" />
+                        </Svg>
+                      </>
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
-              
-              <Text style={styles.expiryNote}>This request will expire in {formatTime(timeLeft)}</Text>
             </ScrollView>
           </Animated.View>
         </Animated.View>
       </Modal>
 
-      {/* Decline Reason Modal */}
+      {/* Modern Reason Selection */}
       <Modal transparent visible={showReasonModal} animationType="fade">
         <View style={styles.reasonOverlay}>
-          <View style={styles.reasonSheet}>
+          <Animated.View style={styles.reasonSheet}>
             <View style={styles.reasonHeader}>
-              <Text style={styles.reasonTitle}>Select a Reason</Text>
-              <TouchableOpacity onPress={() => setShowReasonModal(false)}>
-                <Text style={styles.reasonClose}>Cancel</Text>
+              <View>
+                 <Text style={styles.reasonTitle}>Decline Request</Text>
+                 <Text style={styles.reasonSubtitle}>Tell us why you're skipping this match.</Text>
+              </View>
+              <TouchableOpacity style={styles.closeReasonIcon} onPress={() => setShowReasonModal(false)}>
+                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
+                    <Path d="M18 6L6 18M6 6l12 12" />
+                 </Svg>
               </TouchableOpacity>
             </View>
             
@@ -316,14 +361,14 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
             
             {isDeclining && (
               <View style={styles.loadingOver}>
-                <ActivityIndicator size="large" color="#006C52" />
+                <ActivityIndicator size="large" color={theme.primary} />
               </View>
             )}
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
-      {/* Image Gallery Modal */}
+      {/* Immersive Gallery */}
       <Modal visible={showGallery} transparent animationType="fade">
         <View style={styles.galleryOverlay}>
           <TouchableOpacity 
@@ -357,101 +402,131 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.92)' : 'rgba(15, 23, 42, 0.85)',
     justifyContent: 'flex-end',
   },
   mainSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    maxHeight: height * 0.92,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    backgroundColor: theme.background,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    maxHeight: height * 0.95,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 30,
+    overflow: 'hidden',
   },
   grabberContainer: {
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   grabber: {
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#E2E8F0',
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  bannerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+  premiumBanner: {
+     borderRadius: 24,
+     overflow: 'hidden',
+     marginBottom: 20,
+     elevation: 5,
+     shadowColor: theme.primary,
+     shadowOffset: { width: 0, height: 10 },
+     shadowOpacity: 0.2,
+     shadowRadius: 15,
   },
-  timerPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-    gap: 6,
+  bannerGradient: {
+     padding: 18,
+     paddingTop: 24,
   },
-  timerUrgent: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FEE2E2',
+  bannerContent: {
+     flexDirection: 'row',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+     marginBottom: 15,
   },
-  timerText: {
-    fontFamily: Typography.bold,
-    fontSize: 14,
-    color: '#008F6C',
+  bannerLeft: {
+     flex: 1,
   },
-  textUrgent: {
-    color: '#FF4D4D',
+  liveIndicator: {
+     flexDirection: 'row',
+     alignItems: 'center',
+     marginBottom: 4,
   },
-  typeBadge: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
+  liveDot: {
+     width: 6,
+     height: 6,
+     borderRadius: 3,
+     backgroundColor: '#FFF',
+     marginRight: 6,
   },
-  typeBadgeText: {
-    fontFamily: Typography.bold,
-    fontSize: 10,
-    color: '#64748B',
-    letterSpacing: 0.8,
+  liveText: {
+     fontSize: 10,
+     fontFamily: Typography.extraBold,
+     color: 'rgba(255,255,255,0.85)',
+     letterSpacing: 1.5,
   },
-  heading: {
-    fontFamily: Typography.bold,
-    fontSize: 28,
-    color: '#0F172A',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+  mainTitle: {
+     fontSize: 22,
+     fontFamily: Typography.bold,
+     color: '#FFF',
   },
-  subHeading: {
-    fontFamily: Typography.medium,
-    fontSize: 15,
-    color: '#64748B',
-    lineHeight: 22,
-    marginBottom: 24,
+  timerContainer: {
+     alignItems: 'flex-end',
+     backgroundColor: 'rgba(0,0,0,0.15)',
+     paddingHorizontal: 15,
+     paddingVertical: 10,
+     borderRadius: 18,
+     borderWidth: 1,
+     borderColor: 'rgba(255,255,255,0.1)',
+  },
+  timerLabel: {
+     fontSize: 9,
+     fontFamily: Typography.extraBold,
+     color: 'rgba(255,255,255,0.7)',
+     letterSpacing: 1,
+  },
+  timerValue: {
+     fontSize: 20,
+     fontFamily: Typography.bold,
+     color: '#FFF',
+     marginTop: -2,
+  },
+  urgentText: {
+     color: '#FFD1D1',
+  },
+  progressTrack: {
+     height: 3,
+     width: '100%',
+     backgroundColor: 'rgba(255,255,255,0.15)',
+     borderRadius: 2,
+     overflow: 'hidden',
+  },
+  progressBar: {
+     height: '100%',
+     borderRadius: 2,
   },
   imageSection: {
     width: '100%',
-    height: 220,
+    height: 240,
     borderRadius: 28,
     overflow: 'hidden',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     marginBottom: 20,
-    position: 'relative',
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   parcelImage: {
     width: '100%',
     height: '100%',
+  },
+  imageOverlay: {
+     ...StyleSheet.absoluteFillObject,
   },
   expandIcon: {
     position: 'absolute',
@@ -465,292 +540,358 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     left: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   imageCountText: {
     fontFamily: Typography.bold,
     fontSize: 12,
-    color: '#0F172A',
+    color: '#FFF',
   },
   imagePlaceholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   placeholderText: {
     fontFamily: Typography.medium,
     fontSize: 14,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
+    letterSpacing: -0.2,
   },
-  parcelNameOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  parcelInfoFloating: {
+     position: 'absolute',
+     bottom: 18,
+     left: 20,
+     right: 20,
   },
-  parcelNameText: {
+  parcelCategory: {
+     backgroundColor: 'rgba(255,255,255,0.15)',
+     alignSelf: 'flex-start',
+     paddingHorizontal: 10,
+     paddingVertical: 4,
+     borderRadius: 8,
+     marginBottom: 6,
+     borderWidth: 0.5,
+     borderColor: 'rgba(255,255,255,0.3)',
+  },
+  categoryText: {
+     fontSize: 9,
+     fontFamily: Typography.extraBold,
+     color: '#FFF',
+     letterSpacing: 1,
+  },
+  parcelTitleText: {
     fontFamily: Typography.bold,
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: 22,
+    color: '#FFF',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   infoGrid: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 20,
+    backgroundColor: theme.card,
+    borderRadius: 24,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    marginBottom: 24,
   },
   infoBox: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    padding: 12,
+    borderRadius: 18,
+    alignItems: 'center',
   },
   infoLabel: {
-    fontFamily: Typography.bold,
-    fontSize: 10,
-    color: '#94A3B8',
+    fontFamily: Typography.extraBold,
+    fontSize: 9,
+    color: theme.text.tertiary,
     letterSpacing: 1.2,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   infoValue: {
     fontFamily: Typography.bold,
-    fontSize: 20,
-    color: '#1E293B',
+    fontSize: 17,
+    color: theme.text.primary,
   },
   infoPrice: {
     fontFamily: Typography.bold,
-    fontSize: 20,
-    color: '#006C52',
+    fontSize: 17,
+    color: theme.primary,
+  },
+  routeSection: {
+     marginBottom: 24,
+  },
+  sectionLabel: {
+     fontSize: 11,
+     fontFamily: Typography.extraBold,
+     color: theme.text.tertiary,
+     letterSpacing: 1.5,
+     marginBottom: 12,
+     marginLeft: 4,
   },
   routeCard: {
     flexDirection: 'row',
     padding: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    backgroundColor: theme.card,
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 24,
+    borderColor: theme.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 15,
+    elevation: 3,
   },
-  routeLineContainer: {
+  routeVisual: {
     width: 24,
     alignItems: 'center',
-    paddingTop: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 5,
   },
-  dotStart: {
+  nodeTop: {
+     position: 'relative',
+     alignItems: 'center',
+     justifyContent: 'center',
+  },
+  pulseRing: {
+     position: 'absolute',
+     width: 24,
+     height: 24,
+     borderRadius: 12,
+     backgroundColor: 'rgba(0, 200, 151, 0.2)',
+  },
+  nodeInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
     backgroundColor: '#00C897',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#00C897',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 3,
+    borderColor: theme.card,
   },
-  dashedLine: {
+  nodeLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginVertical: 4,
+    borderRadius: 1,
   },
-  dotEnd: {
+  nodeBottom: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 3,
     backgroundColor: '#EF4444',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderWidth: 3,
+    borderColor: theme.card,
   },
-  routeTextContainer: {
+  routeDetails: {
     flex: 1,
-    marginLeft: 18,
+    marginLeft: 20,
   },
-  routePoint: {},
-  routeLabel: {
+  point: {},
+  pointLabel: {
     fontFamily: Typography.bold,
     fontSize: 10,
-    color: '#94A3B8',
-    letterSpacing: 1.2,
+    color: theme.text.tertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: 4,
   },
-  routeCity: {
+  pointValue: {
     fontFamily: Typography.bold,
     fontSize: 18,
-    color: '#0F172A',
+    color: theme.text.primary,
+    letterSpacing: -0.3,
   },
-  senderSection: {
+  profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    backgroundColor: theme.card,
+    padding: 16,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: theme.border,
     marginBottom: 32,
-    paddingHorizontal: 4,
   },
   avatarPill: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ECFDF5',
+    width: 48,
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1FAE5',
+    borderColor: theme.isDark ? 'rgba(61, 217, 164, 0.2)' : '#DCFCE7',
   },
   avatarChar: {
     fontFamily: Typography.bold,
     fontSize: 22,
-    color: '#006C52',
+    color: theme.primary,
   },
-  senderMeta: {
+  profileMeta: {
     flex: 1,
+    marginLeft: 15,
+  },
+  nameRow: {
+     flexDirection: 'row',
+     alignItems: 'center',
+     gap: 6,
   },
   senderName: {
     fontFamily: Typography.bold,
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.text.primary,
   },
-  verifiedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+  verifiedBadge: {
+     backgroundColor: theme.primary,
+     width: 16,
+     height: 16,
+     borderRadius: 8,
+     alignItems: 'center',
+     justifyContent: 'center',
   },
   verifiedText: {
     fontFamily: Typography.semiBold,
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 13,
+    color: theme.text.tertiary,
+    marginTop: 2,
   },
   actions: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 12,
+    marginBottom: 15,
   },
   declineBtn: {
     flex: 1,
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   declineBtnText: {
     fontFamily: Typography.bold,
     fontSize: 16,
-    color: '#64748B',
+    color: theme.text.secondary,
   },
   acceptBtn: {
-    flex: 1.6,
-    height: 60,
-    borderRadius: 18,
+    flex: 1.8,
+    height: 64,
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 15,
     elevation: 8,
   },
   acceptGrad: {
     flex: 1,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   acceptBtnText: {
     fontFamily: Typography.bold,
     fontSize: 17,
     color: '#FFFFFF',
+    letterSpacing: -0.2,
   },
-  expiryNote: {
+  disclaimerText: {
     textAlign: 'center',
-    fontFamily: Typography.semiBold,
-    fontSize: 13,
-    color: '#94A3B8',
-    marginTop: 20,
+    fontFamily: Typography.medium,
+    fontSize: 11,
+    color: theme.text.tertiary,
+    marginTop: 10,
+    lineHeight: 16,
   },
-  // REASON STYLES
   reasonOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     padding: 24,
   },
   reasonSheet: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 32,
-    padding: 24,
+    backgroundColor: theme.card,
+    borderRadius: 36,
+    padding: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.15,
-    shadowRadius: 30,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.2,
+    shadowRadius: 40,
+    elevation: 20,
   },
   reasonHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    alignItems: 'flex-start',
+    marginBottom: 24,
   },
   reasonTitle: {
     fontFamily: Typography.bold,
-    fontSize: 22,
-    color: '#0F172A',
+    fontSize: 24,
+    color: theme.text.primary,
+    letterSpacing: -0.5,
   },
-  reasonClose: {
-    fontFamily: Typography.bold,
-    fontSize: 15,
-    color: '#64748B',
+  reasonSubtitle: {
+    fontFamily: Typography.medium,
+    fontSize: 14,
+    color: theme.text.tertiary,
+    marginTop: 4,
+  },
+  closeReasonIcon: {
+     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+     padding: 10,
+     borderRadius: 14,
   },
   reasonList: {
-    gap: 10,
+    gap: 12,
   },
   reasonItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    padding: 18,
-    borderRadius: 18,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#F8FAFC',
+    padding: 20,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   reasonItemText: {
-    fontFamily: Typography.semiBold,
+    fontFamily: Typography.bold,
     fontSize: 15,
-    color: '#334155',
+    color: theme.text.secondary,
   },
   loadingOver: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 32,
+    backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // GALLERY STYLES
   galleryOverlay: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#000',
     justifyContent: 'center',
   },
   galleryClose: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 40,
-    right: 24,
+    top: Platform.OS === 'ios' ? 70 : 50,
+    right: 25,
     zIndex: 100,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
+    borderRadius: 15,
   },
   galleryScroll: {
     flex: 1,
@@ -763,18 +904,7 @@ const styles = StyleSheet.create({
   },
   galleryImage: {
     width: width,
-    height: height * 0.7,
-  },
-  galleryFooter: {
-    position: 'absolute',
-    bottom: 50,
-    width: '100%',
-    alignItems: 'center',
-  },
-  galleryFooterText: {
-    fontFamily: Typography.medium,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    height: height * 0.75,
   },
 });
 

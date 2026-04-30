@@ -7,14 +7,16 @@ import {
   Platform,
 } from 'react-native';
 import BackButton from './BackButton';
-import { Colors } from '../../constants/Colors';
+import { Colors, AppTheme } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ScreenHeaderProps {
   onBack: () => void;
   currentStep?: number;
   totalSteps?: number;
   title?: string;
+  theme?: AppTheme;
 }
 
 const ScreenHeader: React.FC<ScreenHeaderProps> = ({
@@ -23,9 +25,12 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   totalSteps = 3,
   title,
 }) => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+
   return (
     <View style={styles.header}>
-      <BackButton onPress={onBack} />
+      <BackButton onPress={onBack} color={theme.text.primary} />
       
       {currentStep !== undefined && (
         <View style={styles.stepIndicator}>
@@ -51,21 +56,19 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = ({
         </View>
       )}
 
-      
-      {/* Spacer to keep step indicator centered */}
       <View style={styles.spacer} />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     height: 60,
-    marginTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 36 : 0,
+    marginTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 12 : 0,
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -75,11 +78,11 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(0, 108, 82, 0.1)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0, 108, 82, 0.1)',
   },
   activeStep: {
     width: 24,
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.primary,
   },
   spacer: {
     width: 44, 
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
 });

@@ -12,7 +12,7 @@ import { Typography } from '../../constants/Typography';
 import Svg, { Path } from 'react-native-svg';
 
 interface CustomInputProps {
-  label: string;
+  label?: string;
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -24,6 +24,9 @@ interface CustomInputProps {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   containerStyle?: ViewStyle;
+  inputWrapperStyle?: ViewStyle;
+  inputStyle?: any;
+  placeholderTextColor?: string;
   maxLength?: number;
   // optional theme — falls back to lightTheme if not provided
   theme?: AppTheme;
@@ -42,6 +45,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
   autoCapitalize = 'none',
   keyboardType = 'default',
   containerStyle,
+  inputWrapperStyle,
+  inputStyle,
+  placeholderTextColor,
   maxLength,
   theme = lightTheme,
 }) => {
@@ -79,14 +85,16 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text
-        style={[
-          styles.label,
-          { color: theme.text.secondary },
-        ]}
-      >
-        {label}
-      </Text>
+      {label && (
+        <Text
+          style={[
+            styles.label,
+            { color: theme.text.secondary },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
       <View
         style={[
           styles.inputWrapper,
@@ -94,13 +102,14 @@ const CustomInput: React.FC<CustomInputProps> = ({
             backgroundColor: theme.inputBg,
             borderColor: theme.border,
           },
+          inputWrapperStyle,
         ]}
       >
         {icon && <View style={styles.iconContainer}>{icon}</View>}
         <TextInput
-          style={[styles.input, { color: theme.text.primary }]}
+          style={[styles.input, { color: theme.text.primary }, inputStyle]}
           placeholder={placeholder}
-          placeholderTextColor={theme.text.placeholder}
+          placeholderTextColor={placeholderTextColor || theme.text.placeholder}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={isActuallySecure}
@@ -149,7 +158,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: Typography.medium,
   },
   rightIconContainer: {

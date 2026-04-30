@@ -32,10 +32,13 @@ import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomAlert from '../components/common/CustomAlert';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
 const ParcelDetailsScreen = () => {
+  const { theme } = useTheme();
   const scrollRef = React.useRef<ScrollView>(null);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ParcelDetails'>>();
@@ -77,6 +80,8 @@ const ParcelDetailsScreen = () => {
     onConfirm: () => {},
   });
 
+  const styles = makeStyles(theme);
+
   useEffect(() => {
     fetchDetails();
   }, [parcelId]);
@@ -101,10 +106,10 @@ const ParcelDetailsScreen = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'PENDING': return '#F59E0B';
-      case 'DELIVERED': return '#059669';
-      case 'CANCELLED': return '#DC2626';
+      case 'DELIVERED': return '#10B981';
+      case 'CANCELLED': return '#EF4444';
       case 'IN_TRANSIT': return '#3B82F6';
-      default: return '#64748B';
+      default: return theme.text.tertiary;
     }
   };
 
@@ -158,11 +163,8 @@ const ParcelDetailsScreen = () => {
     try {
       const response = await deliveryService.requestMatch(token!, { parcelId, tripId });
       setIsTripModalVisible(false);
-      
-      // Update local parcel state to show request sent
       setParcel((prev: any) => ({ ...prev, userMatch: response.match }));
 
-      // Delay slightly to allow the trip modal to close before showing success alert
       setTimeout(() => {
         setAlertConfig({
           visible: true,
@@ -198,7 +200,7 @@ const ParcelDetailsScreen = () => {
         confirmText: 'OK',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
-          fetchDetails(); // Refresh to show matched status and contact info
+          fetchDetails();
         }
       });
     } catch (error: any) {
@@ -225,7 +227,7 @@ const ParcelDetailsScreen = () => {
         type: 'info',
         onConfirm: () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
-          fetchDetails(); // Refresh to update the list
+          fetchDetails();
         }
       });
     } catch (error: any) {
@@ -354,7 +356,7 @@ const ParcelDetailsScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#006C52" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
@@ -363,11 +365,13 @@ const ParcelDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      
       <LinearGradient
-        colors={['#F0FFF8', '#FFFFFF']}
+        colors={theme.isDark ? theme.bgGradient : ['#F0FFF8', '#FFFFFF']}
         style={StyleSheet.absoluteFillObject}
       />
+
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={styles.scrollContent}
@@ -375,8 +379,8 @@ const ParcelDetailsScreen = () => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            colors={['#006C52']} 
-            tintColor="#006C52"
+            colors={[theme.primary]} 
+            tintColor={theme.primary}
           />
         }
       >
@@ -408,7 +412,7 @@ const ParcelDetailsScreen = () => {
               ))
             ) : (
               <View style={styles.noImageContainer}>
-                <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
+                <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="1.5">
                   <Path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" />
                 </Svg>
                 <Text style={styles.noImageText}>No Photos Available</Text>
@@ -417,10 +421,10 @@ const ParcelDetailsScreen = () => {
           </ScrollView>
           
           {/* Back Action */}
-          <View style={[styles.absHeader, { top: insets.top + 10 }]}>
-            <BackButton onPress={() => navigation.goBack()} />
+          <View style={[styles.absHeader, { top: insets.top + (Platform.OS === 'ios' ? 10 : 35) }]}>
+            <BackButton onPress={() => navigation.goBack()} color={theme.text.primary} />
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                 <Path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.34832 22 5.8 22H18.2C18.6517 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" />
                 <Path d="M16 6L12 2L8 6" />
                 <Path d="M12 2V15" />
@@ -428,7 +432,6 @@ const ParcelDetailsScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Slider Buttons */}
           {parcel.imageUrls?.length > 1 && (
             <>
               {activeImage > 0 && (
@@ -466,7 +469,7 @@ const ParcelDetailsScreen = () => {
           <View style={styles.headerInfo}>
             <View>
               <Text style={styles.parcelName}>{parcel.name}</Text>
-              <Text style={styles.parcelId}>ID : #{parcel.id}</Text>
+              <Text style={styles.parcelId}>ID : #{parcel.id.substring(0, 8).toUpperCase()}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(parcel.status)}15` }]}>
               <Text style={[styles.statusText, { color: getStatusColor(parcel.status) }]}>{parcel.status}</Text>
@@ -523,10 +526,7 @@ const ParcelDetailsScreen = () => {
             )}
           </View>
 
-          {/* Action Button for Travelers - REMOVED per user request (Only Customers can initiate) */}
-
-
-          {/* Parcel Details */}
+          {/* Parcel Details Grid */}
           <View style={styles.detailsGrid}>
             <View style={styles.gridItem}>
               <Text style={styles.gridLabel}>WEIGHT</Text>
@@ -558,10 +558,10 @@ const ParcelDetailsScreen = () => {
             </View>
           )}
 
-          {/* Pricing & Payment Section */}
+          {/* Pricing Section */}
           <View style={styles.priceCard}>
             <LinearGradient
-              colors={['#006C52', '#004D3A']}
+              colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#006C52', '#004D3A']}
               style={styles.priceGradient}
             >
               <View style={styles.priceRow}>
@@ -571,7 +571,7 @@ const ParcelDetailsScreen = () => {
                 </View>
                 <View style={styles.paymentBadge}>
                   <Text style={styles.paymentMethodText}>
-                    {parcel.paymentMethod === 'ONLINE' ? 'CARD PAYMENT' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
+                    {parcel.paymentMethod === 'ONLINE' ? 'CARD' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
                   </Text>
                   <Text style={[styles.paymentStatusText, { color: parcel.paymentStatus === 'PAID' ? '#4ADE80' : '#F87171' }]}>
                     {parcel.paymentStatus}
@@ -585,29 +585,26 @@ const ParcelDetailsScreen = () => {
                   <Text style={styles.pSubValue}>LKR {parcel.platformFee?.toLocaleString()}</Text>
                 </View>
                 <View style={styles.pSubRow}>
-                  <Text style={styles.pSubLabel}>Base Delivery Rate</Text>
+                  <Text style={styles.pSubLabel}>Traveler Payout</Text>
                   <Text style={styles.pSubValue}>LKR {parcel.travelerPayout?.toLocaleString()}</Text>
                 </View>
               </View>
             </LinearGradient>
           </View>
 
-          {/* Customer Payment Action */}
+          {/* Customer Online Payment */}
           {user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.paymentMethod === 'ONLINE' && parcel.paymentStatus === 'PENDING' && (
             <View style={styles.actionSection}>
-              <TouchableOpacity 
-                style={styles.primaryActionButton} 
-                onPress={handlePay}
-              >
+              <TouchableOpacity style={styles.primaryActionButton} onPress={handlePay}>
                 <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
-                  <Text style={styles.actionButtonText}>Pay with Card (LKR {parcel.price?.toLocaleString()})</Text>
+                  <Text style={styles.actionButtonText}>Pay Now (LKR {parcel.price?.toLocaleString()})</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              <Text style={styles.paymentWaitText}>The traveler is waiting for your payment to start the pickup.</Text>
+              <Text style={styles.paymentWaitText}>Traveler is waiting for payment confirmation.</Text>
             </View>
           )}
 
-          {/* Delivery Lifecycle Actions */}
+          {/* Traveler Lifecycle Actions */}
           {user?.id === parcel.matchedTrip?.travelerId && (
             <View style={styles.actionSection}>
               {parcel.status === 'MATCHED' && (
@@ -629,80 +626,59 @@ const ParcelDetailsScreen = () => {
                   <Text style={styles.completedText}>Delivered Successfully</Text>
                 </View>
               )}
-              {/* Cash on Pickup warning: show at MATCHED step (before pickup) */}
+              
+              {/* Cash Warnings */}
               {parcel.paymentMethod === 'CASH_ON_PICKUP' && parcel.status === 'MATCHED' && (
                 <View style={styles.cashWarningCard}>
-                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
                      <Circle cx="12" cy="12" r="10" />
                      <Path d="M12 8v4M12 16h.01" />
                    </Svg>
-                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} in cash from the SENDER before picking up the parcel.</Text>
+                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} from Sender.</Text>
                 </View>
               )}
-              {/* Cash on Delivery warning: show at PICKED_UP step (before delivery) */}
               {parcel.paymentMethod === 'CASH_ON_DELIVERY' && parcel.status === 'PICKED_UP' && (
                 <View style={styles.cashWarningCard}>
-                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+                   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
                      <Circle cx="12" cy="12" r="10" />
                      <Path d="M12 8v4M12 16h.01" />
                    </Svg>
-                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} in cash from the RECEIVER before handing over the parcel.</Text>
+                   <Text style={styles.cashWarningText}>Collect LKR {parcel.price?.toLocaleString()} from Receiver.</Text>
                 </View>
               )}
             </View>
           )}
 
-          {/* Incoming Match Requests */}
+          {/* Match Request List */}
           {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user?.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <Text style={styles.sectionLabel}>MATCH REQUESTS ({parcel.matches.filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user?.id)).length})</Text>
-              <Text style={styles.requestsSubtitle}>
-                {user?.id === parcel.senderId ? "Travelers who want to carry your parcel" : "Delivery requests sent to you"}
-              </Text>
+              <Text style={styles.sectionLabel}>MATCH REQUESTS</Text>
               
               {parcel.matches
                 .filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user?.id))
                 .map((match: any) => (
                 <View key={match.id} style={styles.matchRequestItem}>
-                  <View style={styles.requestHeader}>
-                    <View style={styles.travelerInfo}>
-                      <View style={[styles.travelerAvatar, user?.id !== parcel.senderId && { backgroundColor: '#E0E7FF' }]}>
-                        <Text style={[styles.avatarLetter, user?.id !== parcel.senderId && { color: '#4338CA' }]}>
-                          {(user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name)?.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={styles.travelerName}>
-                          {user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name}
-                        </Text>
-                        {/* <Text style={styles.travelerRating}>
-                          {user?.id === parcel.senderId ? "⭐ Traveler" : "👤 Customer Request"}
-                        </Text> */}
-                      </View>
+                  <View style={styles.travelerInfo}>
+                    <View style={styles.travelerAvatar}>
+                      <Text style={styles.avatarLetter}>
+                        {(user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name)?.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.travelerName}>
+                        {user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name}
+                      </Text>
+                      <Text style={styles.tripDateValue}>{dayjs(match.trip?.travelDate).format('MMM DD')} • {match.trip?.travelTime || 'Anytime'}</Text>
                     </View>
                   </View>
                   
-                  <View style={styles.requestTripInfo}>
-                    <Text style={styles.tripDateLabel}>TRAVELING ON</Text>
-                    <Text style={styles.tripDateValue}>{dayjs(match.trip?.travelDate).format('dddd, MMM DD')} at {match.trip?.travelTime || 'Anytime'}</Text>
-                    <View style={styles.tripRouteRow}>
-                       <Text style={styles.tripRouteText}>{match.trip?.fromLocation} → {match.trip?.toLocation}</Text>
-                    </View>
-                  </View>
-
-                  {user?.id !== parcel.senderId && (
+                  {user?.id === parcel.senderId && (
                     <View style={styles.requestActions}>
-                      <TouchableOpacity 
-                        style={[styles.actionButton, styles.rejectBtn]} 
-                        onPress={() => handleRejectMatch(match.id)}
-                      >
+                      <TouchableOpacity style={[styles.actionButton, styles.rejectBtn]} onPress={() => handleRejectMatch(match.id)}>
                         <Text style={styles.rejectBtnText}>Decline</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={[styles.actionButton, styles.acceptBtn]}
-                        onPress={() => handleAcceptMatch(match.id)}
-                      >
-                        <Text style={styles.acceptBtnText}>Accept Request</Text>
+                      <TouchableOpacity style={[styles.actionButton, styles.acceptBtn]} onPress={() => handleAcceptMatch(match.id)}>
+                        <Text style={styles.acceptBtnText}>Accept</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -711,18 +687,12 @@ const ParcelDetailsScreen = () => {
             </View>
           )}
 
-          {/* Matched Traveler Info for Customer */}
-          {user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.matchedTrip && (
-            <View style={[styles.sectionCard, styles.matchedTravelerCard]}>
+          {/* Matched Info Cards */}
+          {(user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.matchedTrip) && (
+            <View style={[styles.sectionCard, styles.matchedCard]}>
               <View style={styles.matchedHeader}>
-                <View style={styles.matchedLabelBadge}>
-                  <Text style={styles.matchedLabelText}>ACCEPTED TRAVELER</Text>
-                </View>
-                <View style={styles.statusBadgeMatched}>
-                  <Text style={styles.statusTextMatched}>Ready for Delivery</Text>
-                </View>
+                <Text style={styles.matchedLabelText}>MATCHED TRAVELER</Text>
               </View>
-              
               <View style={styles.travelerProfileRow}>
                 <View style={styles.largeAvatar}>
                    {parcel.matchedTrip.traveler?.selfieUrl ? (
@@ -731,23 +701,9 @@ const ParcelDetailsScreen = () => {
                      <Text style={styles.largeAvatarLetter}>{parcel.matchedTrip.traveler?.name?.charAt(0).toUpperCase()}</Text>
                    )}
                 </View>
-                <View style={styles.travelerDetails}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.travelerNameLarge}>{parcel.matchedTrip.traveler?.name}</Text>
                   <Text style={styles.travelerContact}>{parcel.matchedTrip.traveler?.phone}</Text>
-                  <View style={styles.contactActions}>
-                    <TouchableOpacity style={styles.contactBtn}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
-                        <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                      </Svg>
-                      <Text style={styles.contactBtnText}>Call</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.contactBtn}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
-                        <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z" />
-                      </Svg>
-                      <Text style={styles.contactBtnText}>Chat</Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
               </View>
             </View>
@@ -755,44 +711,123 @@ const ParcelDetailsScreen = () => {
 
           {/* Matched Customer Info for Traveler */}
           {user?.id === parcel.matchedTrip?.travelerId && parcel.status === 'MATCHED' && (
-            <View style={[styles.sectionCard, styles.matchedCustomerCard]}>
+            <View style={[styles.sectionCard, styles.matchedCard, { borderColor: '#10B981' }]}>
               <View style={styles.matchedHeader}>
-                <View style={[styles.matchedLabelBadge, { backgroundColor: '#10B981' }]}>
-                  <Text style={styles.matchedLabelText}>PARCEL OWNER</Text>
-                </View>
-                <View style={[styles.statusBadgeMatched, { backgroundColor: '#DCFBEB' }]}>
-                  <Text style={[styles.statusTextMatched, { color: '#059669' }]}>Accepted</Text>
-                </View>
+                <Text style={[styles.matchedLabelText, { color: '#10B981' }]}>PARCEL OWNER</Text>
               </View>
-              
               <View style={styles.travelerProfileRow}>
-                <View style={[styles.largeAvatar, { borderColor: '#DCFBEB' }]}>
-                   <Text style={[styles.largeAvatarLetter, { color: '#006C52' }]}>{parcel.sender?.name?.charAt(0).toUpperCase()}</Text>
+                <View style={[styles.largeAvatar, { borderColor: '#10B981' }]}>
+                   <Text style={[styles.largeAvatarLetter, { color: '#10B981' }]}>{parcel.sender?.name?.charAt(0).toUpperCase()}</Text>
                 </View>
-                <View style={styles.travelerDetails}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.travelerNameLarge}>{parcel.sender?.name}</Text>
-                  <Text style={styles.travelerContact}>{parcel.sender?.phone || 'Phone number available'}</Text>
-                  <View style={styles.contactActions}>
-                    <TouchableOpacity style={[styles.contactBtn, { borderColor: '#DCFBEB' }]}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
-                        <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                      </Svg>
-                      <Text style={[styles.contactBtnText, { color: '#006C52' }]}>Call</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.contactBtn, { borderColor: '#DCFBEB' }]}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
-                        <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z" />
-                      </Svg>
-                      <Text style={[styles.contactBtnText, { color: '#006C52' }]}>Chat</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text style={styles.travelerContact}>{parcel.sender?.phone || 'Contact number available'}</Text>
                 </View>
               </View>
             </View>
           )}
+
         </View>
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* OTP MODAL */}
+      <Modal visible={otpModalVisible} transparent animationType="fade" onRequestClose={() => setOtpModalVisible(false)}>
+        <View style={styles.otpOverlay}>
+          <View style={styles.otpContent}>
+            <Text style={styles.otpTitle}>Verify {otpType === 'PICKUP' ? 'Pickup' : 'Delivery'}</Text>
+            <Text style={styles.otpSubtitle}>Enter the 6-digit code provided by the {otpType === 'PICKUP' ? 'sender' : 'receiver'}.</Text>
+            
+            <View style={styles.otpInputContainer}>
+              <TextInput
+                style={styles.otpInput}
+                value={otpCode}
+                onChangeText={setOtpCode}
+                keyboardType="number-pad"
+                maxLength={6}
+                placeholder="000000"
+                placeholderTextColor={theme.text.tertiary}
+              />
+            </View>
+
+            <View style={styles.otpActions}>
+              <TouchableOpacity style={styles.otpCancelBtn} onPress={() => setOtpModalVisible(false)}>
+                <Text style={styles.otpCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.otpConfirmBtn} onPress={handleVerifyOtp} disabled={processingOtp}>
+                {processingOtp ? <ActivityIndicator color="#FFF" /> : <Text style={styles.otpConfirmText}>Verify Code</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <CustomAlert
+        visible={alertConfig.visible}
+        theme={theme}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        confirmText={alertConfig.confirmText}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
+      />
+
+      {/* TRIP SELECTION MODAL */}
+      <Modal
+        visible={isTripModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsTripModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Your Trip</Text>
+              <TouchableOpacity onPress={() => setIsTripModalVisible(false)}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
+                  <Path d="M18 6L6 18M6 6l12 12" />
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Which trip will you use to carry this parcel?</Text>
+            
+            <FlatList
+              data={myTrips}
+              keyExtractor={(item) => item.id}
+              style={{ maxHeight: 400 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.tripItem}
+                  onPress={() => submitMatchRequest(item.id)}
+                >
+                  <View style={styles.tripItemHeader}>
+                    <Text style={styles.tripDate}>{dayjs(item.travelDate).format('MMM DD, YYYY')}</Text>
+                    <View style={styles.tripStatus}>
+                      <View style={styles.statusDot} />
+                      <Text style={styles.statusTextSmall}>ACTIVE</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.tripRoute}>{item.fromLocation} → {item.toLocation}</Text>
+                  <Text style={styles.tripCapacity}>Remaining: {item.capacity - (item.usedCapacity || 0)} Kg</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View style={styles.emptyTrips}>
+                  <Text style={styles.emptyText}>No active trips found.</Text>
+                </View>
+              }
+            />
+
+            {requestingMatch && (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator color={theme.primary} />
+                <Text style={styles.loadingText}>Sending Request...</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Full Screen Image Slider Modal */}
       <Modal
@@ -801,479 +836,109 @@ const ParcelDetailsScreen = () => {
         animationType="fade"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.modalBg}>
-          <SafeAreaView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{activeImage + 1} / {parcel.imageUrls?.length}</Text>
-              <TouchableOpacity 
-                style={styles.closeModalBtn}
-                onPress={() => setIsModalVisible(false)}
-              >
-                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-                  <Path d="M18 6L6 18M6 6l12 12" />
-                </Svg>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              contentOffset={{ x: activeImage * width, y: 0 }}
-              onMomentumScrollEnd={(e) => {
-                const x = e.nativeEvent.contentOffset.x;
-                setActiveImage(Math.round(x / width));
-              }}
-            >
-              {parcel.imageUrls?.map((url: string, index: number) => (
-                <View key={index} style={styles.modalImageWrapper}>
-                  <Image 
-                    source={{ uri: url }} 
-                    style={styles.modalFullImage} 
-                    resizeMode="contain" 
-                  />
-                </View>
-              ))}
-            </ScrollView>
+        <View style={styles.fullScreenOverlay}>
+          <SafeAreaView style={styles.modalHeaderClose}>
+             <TouchableOpacity 
+               style={styles.closeModalBtn} 
+               onPress={() => setIsModalVisible(false)}
+             >
+               <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                 <Path d="M18 6L6 18M6 6l12 12" />
+               </Svg>
+             </TouchableOpacity>
           </SafeAreaView>
-        </View>
-      </Modal>
 
-      {/* Trip Selection Modal */}
-      <Modal
-        visible={isTripModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsTripModalVisible(false)}
-      >
-        <View style={styles.tripModalOverlay}>
-          <View style={styles.tripModalContent}>
-            <View style={styles.tripModalHeader}>
-              <Text style={styles.tripModalTitle}>Select Your Trip</Text>
-              <TouchableOpacity onPress={() => setIsTripModalVisible(false)}>
-                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5">
-                  <Path d="M18 6L6 18M6 6l12 12" />
-                </Svg>
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={styles.tripModalSubtitle}>Which trip will you use to carry this parcel?</Text>
-
-            <FlatList
-              data={myTrips}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.tripList}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.tripSelectItem}
-                  onPress={() => submitMatchRequest(item.id)}
-                  disabled={requestingMatch}
-                >
-                  <View style={styles.tripItemInfo}>
-                    <Text style={styles.tripItemRoute}>{item.fromLocation} → {item.toLocation}</Text>
-                    <Text style={styles.tripItemDate}>{dayjs(item.travelDate).format('dddd, MMM DD')}</Text>
-                  </View>
-                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
-                    <Path d="M9 18l6-6-6-6" />
-                  </Svg>
-                </TouchableOpacity>
-              )}
-            />
-
-            {requestingMatch && (
-              <View style={styles.tripModalLoading}>
-                <ActivityIndicator size="large" color="#006C52" />
+          <FlatList
+            data={parcel.imageUrls}
+            horizontal
+            pagingEnabled
+            initialScrollIndex={activeImage}
+            getItemLayout={(data, index) => ({
+              length: width,
+              offset: width * index,
+              index,
+            })}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <View style={styles.fullScreenImageWrapper}>
+                <Image 
+                  source={{ uri: item }} 
+                  style={styles.fullScreenImage} 
+                  resizeMode="contain" 
+                />
               </View>
             )}
-          </View>
-        </View>
-      </Modal>
+            keyExtractor={(_, index) => index.toString()}
+          />
 
-      {/* OTP Verification Modal */}
-      <Modal
-        visible={otpModalVisible}
-        transparent={true}
-        animationType="fade"
-      >
-        <View style={styles.otpOverlay}>
-          <View style={styles.otpContent}>
-            <Text style={styles.otpTitle}>{otpType === 'PICKUP' ? 'Verify Pickup' : 'Verify Delivery'}</Text>
-            <Text style={styles.otpSubtitle}>
-              {otpType === 'PICKUP' 
-                ? "Enter the 6-digit code provided by the sender." 
-                : "Enter the 6-digit code provided by the receiver."}
-            </Text>
-            
-            <View style={styles.otpInputContainer}>
-              <TextInput
-                style={styles.otpInput}
-                placeholder="000000"
-                keyboardType="number-pad"
-                maxLength={6}
-                value={otpCode}
-                onChangeText={setOtpCode}
-                autoFocus
+          <View style={styles.fullScreenDots}>
+            {parcel.imageUrls?.map((_: any, i: number) => (
+              <View 
+                key={i} 
+                style={[
+                  styles.fullScreenDot, 
+                  activeImage === i && styles.fullScreenActiveDot
+                ]} 
               />
-            </View>
-
-            <View style={styles.otpActions}>
-              <TouchableOpacity 
-                style={styles.otpCancelBtn} 
-                onPress={() => {
-                  setOtpModalVisible(false);
-                  setOtpCode('');
-                }}
-              >
-                <Text style={styles.otpCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.otpConfirmBtn, otpCode.length < 4 && { opacity: 0.5 }]} 
-                onPress={handleVerifyOtp}
-                disabled={otpCode.length < 4 || processingOtp}
-              >
-                {processingOtp ? <ActivityIndicator color="#FFF" /> : <Text style={styles.otpConfirmText}>Verify Code</Text>}
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
         </View>
       </Modal>
 
-      {/* App Theme Alert */}
-      <CustomAlert
-        visible={alertConfig.visible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        confirmText={alertConfig.confirmText}
-        onConfirm={alertConfig.onConfirm}
-        onCancel={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
-      />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
-  scrollContent: {
-    paddingBottom: 40,
-  },
+  scrollContent: { paddingBottom: 0 },
   imageContainer: {
     width: width,
-    height: width * 1.1,
-    backgroundColor: '#F1F5F9',
-    paddingTop: Platform.OS === 'ios' ? 0 : 0,
+    height: width * 0.85,
+    position: 'relative',
+    backgroundColor: theme.surface,
   },
-  mainImage: {
-    width: width,
-    height: width * 1.1,
-    resizeMode: 'cover',
-  },
+  mainImage: { width: width, height: width * 0.85 },
   noImageContainer: {
     width: width,
-    height: width * 0.9,
+    height: width * 0.85,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#F8FAFC',
   },
   noImageText: {
     marginTop: 12,
-    color: '#94A3B8',
-    fontFamily: Typography.regular,
+    fontSize: 14,
+    color: theme.text.tertiary,
+    fontFamily: Typography.medium,
   },
   absHeader: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
     alignItems: 'center',
     zIndex: 10,
   },
   shareBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  dotsContainer: {
-    position: 'absolute',
-    bottom: 20,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  activeDot: {
-    width: 18,
-    backgroundColor: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    marginTop: -30,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  headerInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  parcelName: {
-    fontSize: 24,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  parcelId: {
-    fontSize: 14,
-    color: '#94A3B8',
-    marginTop: 2,
-    fontFamily: Typography.regular,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
-  },
-  cardSeparator: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 24,
-  },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  sectionLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-    letterSpacing: 0.3,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
-  },
-  routeBox: {
-    flexDirection: 'row',
-  },
-  routeLineCenter: {
-    width: 24,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  routeDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#006C52',
-  },
-  routeDashed: {
-    width: 1,
-    height: 50,
-    borderWidth: 0.8,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
-    marginVertical: 4,
-  },
-  routeDotOutline: {
-    borderWidth: 2,
-    borderColor: '#006C52',
-    backgroundColor: '#FFFFFF',
-  },
-  routeTexts: {
-    flex: 1,
-    marginLeft: 12,
-
-  },
-  locLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-    marginBottom: 4,
-    fontFamily: Typography.regular,
-  },
-  locValue: {
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.semiBold,
-  },
-  dualCards: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  infoCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-  },
-  personName: {
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  personPhone: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-    fontFamily: Typography.regular,
-  },
-  detailsGrid: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 16,
-  },
-  gridItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  gridLabel: {
-    fontSize: 9,
-    color: '#94A3B8',
-    marginBottom: 4,
-    fontFamily: Typography.bold,
-  },
-  gridValue: {
-    fontSize: 14,
-    color: '#0F172A',
-    fontFamily: Typography.semiBold,
-  },
-  descText: {
-    fontSize: 15,
-    color: '#334155',
-    lineHeight: 22,
-    fontFamily: Typography.regular,
-  },
-  noteCard: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
-    borderWidth: 1,
-  },
-  noteText: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#065F46',
-    lineHeight: 22,
-    fontFamily: Typography.regular,
-  },
-  priceCard: {
-    borderRadius: 28,
-    overflow: 'hidden',
-    marginTop: 8,
-  },
-  priceGradient: {
-    padding: 24,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  priceLabel: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontFamily: Typography.regular,
-  },
-  priceValue: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
-  },
-  priceDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: 16,
-  },
-  priceSubRows: {
-    gap: 10,
-  },
-  pSubRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  pSubLabel: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontFamily: Typography.regular,
-  },
-  pSubValue: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontFamily: Typography.semiBold,
-  },
-  modalBg: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  modalContent: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    height: 60,
-  },
-  modalTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-  },
-  closeModalBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalImageWrapper: {
-    width: width,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalFullImage: {
-    width: width,
-    height: '100%',
+    shadowRadius: 5,
+    elevation: 5,
   },
   sliderBtn: {
     position: 'absolute',
@@ -1286,470 +951,133 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -18,
   },
-  leftSliderBtn: {
-    left: 15,
-  },
-  rightSliderBtn: {
-    right: 15,
-  },
-  hiddenInfo: {
-    fontSize: 12,
-    color: '#94A3B8',
-    fontStyle: 'italic',
-    marginTop: 4,
-    fontFamily: Typography.regular,
-  },
-  matchButton: {
-    marginBottom: 24,
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 6,
-  },
-  matchGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  matchButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-    letterSpacing: 0.5,
-  },
-  tripModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
-  },
-  tripModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    maxHeight: '80%',
-  },
-  tripModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  tripModalTitle: {
-    fontSize: 20,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  tripModalSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 20,
-    fontFamily: Typography.regular,
-  },
-  tripList: {
-    paddingBottom: 20,
-  },
-  tripSelectItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  tripItemInfo: {
-    flex: 1,
-  },
-  tripItemRoute: {
-    fontSize: 16,
-    fontFamily: Typography.bold,
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  tripItemDate: {
-    fontSize: 13,
-    color: '#64748B',
-    fontFamily: Typography.regular,
-  },
-  tripModalLoading: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  requestsSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 20,
-    fontFamily: Typography.regular,
-  },
-  matchRequestItem: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  travelerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  travelerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#DCFBEB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarLetter: {
-    fontSize: 18,
-    color: '#006C52',
-    fontFamily: Typography.bold,
-  },
-  travelerName: {
-    fontSize: 15,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  // travelerRating: {
-  //   fontSize: 11,
-  //   color: '#F59E0B',
-  //   fontFamily: Typography.semiBold,
-  //   marginTop: 2,
-  // },
-  requestTripInfo: {
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 16,
-  },
-  tripDateLabel: {
-    fontSize: 9,
-    color: '#94A3B8',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-    fontFamily: Typography.bold,
-  },
-  tripDateValue: {
-    fontSize: 14,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    marginBottom: 4,
-  },
-  tripRouteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  tripRouteText: {
-    fontSize: 13,
-    color: '#64748B',
-    fontFamily: Typography.regular,
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rejectBtn: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-  },
-  rejectBtnText: {
-    color: '#DC2626',
-    fontFamily: Typography.bold,
-    fontSize: 14,
-  },
-  acceptBtn: {
-    backgroundColor: '#006C52',
-  },
-  acceptBtnText: {
-    color: '#FFFFFF',
-    fontFamily: Typography.bold,
-    fontSize: 14,
-  },
-  matchedTravelerCard: {
-    marginTop: 24,
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    padding: 24,
-  },
-  matchedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  matchedLabelBadge: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  matchedLabelText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontFamily: Typography.bold,
-    letterSpacing: 0.5,
-  },
-  statusBadgeMatched: {
-    backgroundColor: '#DCFBEB',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  statusTextMatched: {
-    color: '#059669',
-    fontSize: 11,
-    fontFamily: Typography.bold,
-  },
-  travelerProfileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  largeAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  avatarImg: {
+  leftSliderBtn: { left: 16 },
+  rightSliderBtn: { right: 16 },
+  dotsContainer: {
+    position: 'absolute',
+    bottom: 20,
     width: '100%',
-    height: '100%',
-  },
-  largeAvatarLetter: {
-    fontSize: 32,
-    fontFamily: Typography.bold,
-    color: '#006C52',
-  },
-  travelerDetails: {
-    flex: 1,
-  },
-  travelerNameLarge: {
-    fontSize: 20,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    marginBottom: 2,
-  },
-  travelerContact: {
-    fontSize: 15,
-    color: '#64748B',
-    marginBottom: 12,
-    fontFamily: Typography.regular,
-  },
-  contactActions: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  contactBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+  },
+  dot: { width: 8, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
+  activeDot: { width: 16, backgroundColor: '#FFFFFF' },
+  content: { paddingHorizontal: 20, marginTop: 24 },
+  headerInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  parcelName: { fontSize: 24, color: theme.text.primary, fontFamily: Typography.extraBold },
+  parcelId: { fontSize: 13, color: theme.text.tertiary, marginTop: 4, fontFamily: Typography.bold },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  statusText: { fontSize: 12, fontFamily: Typography.bold, textTransform: 'uppercase' },
+  cardSeparator: { height: 1, backgroundColor: theme.border, marginVertical: 24 },
+  sectionCard: {
+    backgroundColor: theme.card,
+    padding: 20,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#DCFBEB',
+    borderColor: theme.border,
+    marginBottom: 20,
   },
-  matchedCustomerCard: {
-    marginTop: 24,
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    padding: 24,
-  },
-  contactBtnText: {
-    fontSize: 13,
-    fontFamily: Typography.bold,
-    color: '#006C52',
-  },
-  paymentBadge: {
-    alignItems: 'flex-end',
-  },
-  paymentMethodText: {
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontFamily: Typography.bold,
-    marginBottom: 2,
-  },
-  paymentStatusText: {
-    fontSize: 14,
-    fontFamily: Typography.bold,
-  },
-  actionSection: {
-    marginTop: 24,
-    gap: 12,
-  },
-  primaryActionButton: {
-    borderRadius: 18,
-    overflow: 'hidden',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 6,
-  },
-  actionGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-    letterSpacing: 0.5,
-  },
-  completedBadge: {
-    backgroundColor: '#DCFBEB',
-    paddingVertical: 18,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  completedText: {
-    color: '#059669',
-    fontSize: 16,
-    fontFamily: Typography.bold,
-  },
-  paymentWaitText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontFamily: Typography.medium,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  cashWarningCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFFBEB',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#FEF3C7',
-  },
-  cashWarningText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-    fontFamily: Typography.medium,
-  },
-  otpOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 30,
-  },
-  otpContent: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 32,
-    padding: 30,
-    alignItems: 'center',
-  },
-  otpTitle: {
-    fontSize: 22,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    marginBottom: 8,
-  },
-  otpSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    marginBottom: 24,
-    fontFamily: Typography.regular,
-  },
-  otpInputContainer: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  otpInput: {
-    height: 70,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    fontSize: 32,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-    textAlign: 'center',
-    letterSpacing: 8,
-  },
-  otpActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  otpCancelBtn: {
-    flex: 1,
-    height: 54,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  otpCancelText: {
-    color: '#64748B',
-    fontSize: 15,
-    fontFamily: Typography.bold,
-  },
-  otpConfirmBtn: {
-    flex: 2,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#006C52',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  otpConfirmText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: Typography.bold,
-  },
+  sectionLabel: { fontSize: 11, color: theme.text.tertiary, fontFamily: Typography.extraBold, letterSpacing: 1, marginBottom: 16 },
+  routeBox: { flexDirection: 'row', gap: 16 },
+  routeLineCenter: { alignItems: 'center', width: 20, paddingVertical: 5 },
+  routeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: theme.primary },
+  routeDotOutline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: theme.primary },
+  routeDashed: { width: 1, flex: 1, backgroundColor: theme.border, marginVertical: 4 },
+  routeTexts: { flex: 1 },
+  locLabel: { fontSize: 9, color: theme.text.tertiary, fontFamily: Typography.bold, marginBottom: 2 },
+  locValue: { fontSize: 15, color: theme.text.primary, fontFamily: Typography.bold },
+  dualCards: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  infoCard: { flex: 1, backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
+  personName: { fontSize: 15, color: theme.text.primary, fontFamily: Typography.bold },
+  personPhone: { fontSize: 13, color: theme.text.secondary, marginTop: 2 },
+  hiddenInfo: { fontSize: 12, color: theme.text.tertiary, fontStyle: 'italic' },
+  detailsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
+  gridItem: { flex: 1, minWidth: 100, backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
+  gridLabel: { fontSize: 9, color: theme.text.tertiary, fontFamily: Typography.extraBold, marginBottom: 4 },
+  gridValue: { fontSize: 14, color: theme.text.primary, fontFamily: Typography.bold },
+  descText: { fontSize: 14, color: theme.text.secondary, lineHeight: 20 },
+  noteCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#FFFBEB', borderColor: theme.isDark ? theme.border : '#FEF3C7' },
+  noteText: { fontSize: 14, color: theme.text.primary, fontFamily: Typography.medium, fontStyle: 'italic' },
+  priceCard: { borderRadius: 24, overflow: 'hidden', marginBottom: 24 },
+  priceGradient: { padding: 24 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priceLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: Typography.bold },
+  priceValue: { fontSize: 24, color: '#FFFFFF', fontFamily: Typography.extraBold, marginTop: 4 },
+  paymentBadge: { alignItems: 'flex-end' },
+  paymentMethodText: { fontSize: 9, color: 'rgba(255,255,255,0.6)', fontFamily: Typography.bold },
+  paymentStatusText: { fontSize: 14, fontFamily: Typography.extraBold, marginTop: 2 },
+  priceDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 20 },
+  priceSubRows: { gap: 10 },
+  pSubRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  pSubLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
+  pSubValue: { fontSize: 12, color: '#FFFFFF', fontFamily: Typography.bold },
+  actionSection: { gap: 16, marginBottom: 40 },
+  primaryActionButton: { borderRadius: 18, overflow: 'hidden', elevation: 4 },
+  actionGradient: { paddingVertical: 18, alignItems: 'center' },
+  actionButtonText: { color: '#FFFFFF', fontSize: 16, fontFamily: Typography.extraBold },
+  paymentWaitText: { fontSize: 12, color: theme.text.tertiary, textAlign: 'center', marginTop: 4 },
+  cashWarningCard: { flexDirection: 'row', padding: 16, backgroundColor: theme.isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', borderRadius: 16, gap: 12, alignItems: 'center' },
+  cashWarningText: { flex: 1, fontSize: 13, color: '#F59E0B', fontFamily: Typography.medium },
+  completedBadge: { padding: 18, backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFBEB', borderRadius: 18, alignItems: 'center' },
+  completedText: { color: '#10B981', fontSize: 16, fontFamily: Typography.extraBold },
+  matchRequestItem: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC', padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: theme.border },
+  travelerInfo: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  travelerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0', justifyContent: 'center', alignItems: 'center' },
+  avatarLetter: { fontSize: 18, color: theme.primary, fontFamily: Typography.bold },
+  travelerName: { fontSize: 15, color: theme.text.primary, fontFamily: Typography.bold },
+  tripDateValue: { fontSize: 12, color: theme.text.secondary, marginTop: 2 },
+  requestActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  actionButton: { flex: 1, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  rejectBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#EF4444' },
+  rejectBtnText: { color: '#EF4444', fontFamily: Typography.bold },
+  acceptBtn: { backgroundColor: theme.primary },
+  acceptBtnText: { color: '#FFFFFF', fontFamily: Typography.bold },
+  matchedCard: { backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.05)' : '#F0FDF4', borderColor: '#10B981' },
+  matchedLabelText: { fontSize: 11, color: '#10B981', fontFamily: Typography.extraBold },
+  travelerProfileRow: { flexDirection: 'row', gap: 16, alignItems: 'center', marginTop: 16 },
+  largeAvatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: theme.surface, borderWidth: 2, borderColor: theme.primary, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  avatarImg: { width: '100%', height: '100%' },
+  largeAvatarLetter: { fontSize: 24, color: theme.primary, fontFamily: Typography.extraBold },
+  travelerNameLarge: { fontSize: 18, color: theme.text.primary, fontFamily: Typography.extraBold },
+  travelerContact: { fontSize: 14, color: theme.text.secondary, marginTop: 2 },
+  otpOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  otpContent: { width: '100%', backgroundColor: theme.card, borderRadius: 32, padding: 32, alignItems: 'center' },
+  otpTitle: { fontSize: 22, color: theme.text.primary, fontFamily: Typography.extraBold },
+  otpSubtitle: { fontSize: 14, color: theme.text.secondary, textAlign: 'center', marginVertical: 12 },
+  otpInputContainer: { width: '100%', marginVertical: 24 },
+  otpInput: { height: 72, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC', borderRadius: 20, borderWidth: 1, borderColor: theme.border, fontSize: 32, color: theme.text.primary, textAlign: 'center', letterSpacing: 8, fontFamily: Typography.extraBold },
+  otpActions: { flexDirection: 'row', gap: 12, width: '100%' },
+  otpCancelBtn: { flex: 1, height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: theme.border },
+  otpCancelText: { color: theme.text.secondary, fontFamily: Typography.bold },
+  otpConfirmBtn: { flex: 2, height: 56, borderRadius: 16, backgroundColor: theme.primary, justifyContent: 'center', alignItems: 'center' },
+  otpConfirmText: { color: '#FFFFFF', fontFamily: Typography.extraBold },
+  matchedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  fullScreenOverlay: { flex: 1, backgroundColor: '#000000' },
+  modalHeaderClose: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 20 },
+  closeModalBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
+  fullScreenImageWrapper: { width: width, height: '100%', justifyContent: 'center', alignItems: 'center' },
+  fullScreenImage: { width: width, height: '100%' },
+  fullScreenDots: { position: 'absolute', bottom: 40, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  fullScreenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.3)' },
+  fullScreenActiveDot: { width: 20, backgroundColor: '#FFFFFF' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: theme.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  modalTitle: { fontSize: 22, color: theme.text.primary, fontFamily: Typography.extraBold },
+  modalSubtitle: { fontSize: 14, color: theme.text.secondary, marginBottom: 24, fontFamily: Typography.medium },
+  tripItem: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC', padding: 20, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: theme.border },
+  tripItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  tripDate: { fontSize: 15, color: theme.text.primary, fontFamily: Typography.bold },
+  tripStatus: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFBEB', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' },
+  statusTextSmall: { fontSize: 10, color: '#10B981', fontFamily: Typography.extraBold },
+  tripRoute: { fontSize: 14, color: theme.text.secondary, fontFamily: Typography.medium },
+  tripCapacity: { fontSize: 12, color: theme.text.tertiary, marginTop: 4, fontFamily: Typography.bold },
+  emptyTrips: { padding: 40, alignItems: 'center' },
+  emptyText: { color: theme.text.tertiary, fontFamily: Typography.medium },
+  modalLoading: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', borderRadius: 32 },
+  loadingText: { color: '#FFFFFF', marginTop: 12, fontFamily: Typography.bold },
 });
 
 export default ParcelDetailsScreen;

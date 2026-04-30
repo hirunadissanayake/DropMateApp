@@ -9,12 +9,10 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
-  Alert,
   RefreshControl,
   TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
@@ -23,12 +21,14 @@ import { BankDetail } from '../services/bankService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
+import CustomDropdown from '../components/common/CustomDropdown';
 import Toast from 'react-native-toast-message';
-
-const BRAND_GREEN = '#00875A';
-const BRAND_DARK = '#004D3A';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const BankDetailsScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const navigation = useNavigation();
   const { token } = useAuthStore();
   const [bankAccounts, setBankAccounts] = useState<BankDetail[]>([]);
@@ -51,6 +51,24 @@ const BankDetailsScreen = () => {
   const [bankToDelete, setBankToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const SRI_LANKAN_BANKS = [
+    'Bank of Ceylon',
+    'Commercial Bank of Ceylon',
+    'Hatton National Bank',
+    'Sampath Bank',
+    'People\'s Bank',
+    'Nations Trust Bank',
+    'DFCC Bank',
+    'Seylan Bank',
+    'NDB Bank',
+    'Pan Asia Bank',
+    'Union Bank of Colombo',
+    'Amana Bank',
+    'Cargills Bank',
+    'Sanasa Development Bank',
+    'Regional Development Bank',
+  ].sort();
+
   const isFormValid = 
     bankName.trim() !== '' &&
     accountNumber.trim() !== '' &&
@@ -66,7 +84,7 @@ const BankDetailsScreen = () => {
        isDefault !== (currentBank.isDefault || false))
     : true;
 
-  const isSaveDisabled = isSaving || !isFormValid || !hasChanges;
+  const isSaveDisabled = isSaving;
 
   const fetchBankDetails = async () => {
     try {
@@ -95,16 +113,16 @@ const BankDetailsScreen = () => {
 
     if (!bankName.trim()) {
       newErrors.bankName = 'Bank name is required';
-    } else if (/^\d+$/.test(bankName.trim())) {
-      newErrors.bankName = 'Bank name cannot be only numbers';
     }
 
     if (!accountNumber.trim()) {
       newErrors.accountNumber = 'Account number is required';
+    } else if (!/^\d+$/.test(accountNumber.trim())) {
+      newErrors.accountNumber = 'Account number must be numeric';
     }
 
     if (!accountHolderName.trim()) {
-      newErrors.accountHolderName = 'Account holder name is required';
+      newErrors.accountHolderName = 'Holder name is required';
     } else if (/^\d+$/.test(accountHolderName.trim())) {
       newErrors.accountHolderName = 'Name cannot be only numbers';
     }
@@ -118,7 +136,18 @@ const BankDetailsScreen = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Incomplete Information',
+        text2: 'Please fill in all required fields correctly'
+      });
       return;
+    }
+
+    if (editingId && currentBank && !hasChanges) {
+       Toast.show({ type: 'info', text1: 'No Changes', text2: 'No modifications detected' });
+       setShowModal(false);
+       return;
     }
 
     setIsSaving(true);
@@ -187,27 +216,28 @@ const BankDetailsScreen = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={BRAND_GREEN} />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <BackButton 
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
-            color="#006C52"
+            color={theme.primary}
           />
           <Text style={styles.headerTitle}>Bank Accounts</Text>
           <TouchableOpacity 
             style={styles.addHeaderBtn}
             onPress={() => { resetForm(); setShowModal(true); }}
           >
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5">
+            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                <Path d="M12 5v14M5 12h14" />
             </Svg>
           </TouchableOpacity>
@@ -217,7 +247,7 @@ const BankDetailsScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} colors={[theme.primary]} />
           }
         >
           <Text style={styles.sectionDesc}>
@@ -227,7 +257,7 @@ const BankDetailsScreen = () => {
           {bankAccounts.length === 0 ? (
             <View style={styles.emptyState}>
               <View style={styles.emptyIconCircle}>
-                 <Svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
+                 <Svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : theme.text.tertiary} strokeWidth="1.5">
                     <Path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
                  </Svg>
               </View>
@@ -251,14 +281,18 @@ const BankDetailsScreen = () => {
                   activeOpacity={0.7}
                 >
                   <View style={styles.bankIconContainer}>
-                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2">
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                       <Path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11" />
                     </Svg>
                   </View>
                   <View style={styles.bankTextContent}>
                     <View style={styles.bankTitleRow}>
                       <Text style={styles.bankNameText}>{bank.bankName}</Text>
-                      {bank.isDefault && <View style={styles.defaultBadge}><Text style={styles.defaultBadgeText}>Default</Text></View>}
+                      {bank.isDefault && (
+                        <View style={styles.defaultBadge}>
+                          <Text style={styles.defaultBadgeText}>Default</Text>
+                        </View>
+                      )}
                     </View>
                     <Text style={styles.accNoText}>Acc: {bank.accountNumber}</Text>
                     <Text style={styles.holderNameText}>{bank.accountHolderName}</Text>
@@ -270,7 +304,7 @@ const BankDetailsScreen = () => {
                   onPress={() => handleDeletePrompt(bank.id)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
                     <Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
                   </Svg>
                 </TouchableOpacity>
@@ -296,13 +330,16 @@ const BankDetailsScreen = () => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Bank Name *</Text>
-                <TextInput
-                  style={[styles.modalInput, errors.bankName && styles.inputError]}
-                  placeholder="e.g. Commercial Bank"
-                  value={bankName}
-                  onChangeText={(t) => { setBankName(t); if (errors.bankName) setErrors({...errors, bankName: null}); }}
-                  placeholderTextColor="#94A3B8"
+                <CustomDropdown 
+                   label="Bank Name *"
+                   options={SRI_LANKAN_BANKS}
+                   selectedOption={bankName}
+                   onSelect={(val) => {
+                      setBankName(val);
+                      if (errors.bankName) setErrors({...errors, bankName: null});
+                   }}
+                   placeholder="Select your bank"
+                   theme={theme}
                 />
                 {errors.bankName && <Text style={styles.errorText}>{errors.bankName}</Text>}
               </View>
@@ -315,7 +352,7 @@ const BankDetailsScreen = () => {
                   keyboardType="numeric"
                   value={accountNumber}
                   onChangeText={(t) => { setAccountNumber(t); if (errors.accountNumber) setErrors({...errors, accountNumber: null}); }}
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.placeholder}
                 />
                 {errors.accountNumber && <Text style={styles.errorText}>{errors.accountNumber}</Text>}
               </View>
@@ -327,7 +364,7 @@ const BankDetailsScreen = () => {
                   placeholder="Name as in bank book"
                   value={accountHolderName}
                   onChangeText={(t) => { setAccountHolderName(t); if (errors.accountHolderName) setErrors({...errors, accountHolderName: null}); }}
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.placeholder}
                 />
                 {errors.accountHolderName && <Text style={styles.errorText}>{errors.accountHolderName}</Text>}
               </View>
@@ -339,7 +376,7 @@ const BankDetailsScreen = () => {
                   placeholder="e.g. Colombo 07"
                   value={branchName}
                   onChangeText={(t) => { setBranchName(t); if (errors.branchName) setErrors({...errors, branchName: null}); }}
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.text.placeholder}
                 />
                 {errors.branchName && <Text style={styles.errorText}>{errors.branchName}</Text>}
               </View>
@@ -386,9 +423,9 @@ const BankDetailsScreen = () => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Delete Confirmation Alert */}
       <CustomAlert
         visible={deleteAlertVisible}
+        theme={theme}
         title="Delete Bank Account"
         message="Are you sure you want to remove this bank account?"
         confirmText="Delete"
@@ -405,10 +442,10 @@ const BankDetailsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -416,7 +453,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  headerTitle: { fontSize: 20, fontFamily: Typography.bold, color: '#0F172A' },
+  headerTitle: { fontSize: 20, fontFamily: Typography.bold, color: theme.text.primary },
   backBtn: {
     padding: 4,
     alignItems: 'center',
@@ -426,7 +463,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
   sectionDesc: { 
     fontSize: 14, 
-    color: '#64748B', 
+    color: theme.text.secondary, 
     fontFamily: Typography.medium, 
     marginBottom: 24,
     lineHeight: 20
@@ -435,56 +472,87 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     padding: 18,
-    borderRadius: 20,
+    borderRadius: 24,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 2,
   },
   bankInfo: { flexDirection: 'row', flex: 1 },
   bankIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#E6F5EF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   bankTextContent: { flex: 1 },
   bankTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  bankNameText: { fontSize: 16, fontFamily: Typography.bold, color: '#1E293B', marginRight: 8 },
-  defaultBadge: { backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  defaultBadgeText: { fontSize: 10, color: BRAND_GREEN, fontFamily: Typography.bold },
-  accNoText: { fontSize: 14, color: '#475569', fontFamily: Typography.bold, marginBottom: 2 },
-  holderNameText: { fontSize: 13, color: '#64748B', fontFamily: Typography.medium },
-  branchText: { fontSize: 12, color: '#94A3B8', fontFamily: Typography.regular, marginTop: 2 },
+  bankNameText: { fontSize: 16, fontFamily: Typography.bold, color: theme.text.primary, marginRight: 8 },
+  defaultBadge: { 
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.2)' : '#DCFCE7', 
+    paddingHorizontal: 8, 
+    paddingVertical: 3, 
+    borderRadius: 6 
+  },
+  defaultBadgeText: { fontSize: 10, color: theme.primary, fontFamily: Typography.extraBold },
+  accNoText: { fontSize: 14, color: theme.text.primary, fontFamily: Typography.bold, marginBottom: 2 },
+  holderNameText: { fontSize: 13, color: theme.text.secondary, fontFamily: Typography.medium },
+  branchText: { fontSize: 12, color: theme.text.tertiary, fontFamily: Typography.regular, marginTop: 2 },
   deleteBtn: { padding: 8 },
   emptyState: { alignItems: 'center', paddingVertical: 60, marginTop: 20 },
-  emptyIconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  emptyText: { fontSize: 16, fontFamily: Typography.bold, color: '#94A3B8', marginBottom: 24 },
-  addInitialBtn: { backgroundColor: BRAND_GREEN, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 100 },
+  emptyIconCircle: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : theme.inputBg, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginBottom: 24 
+  },
+  emptyText: { fontSize: 18, fontFamily: Typography.bold, color: theme.text.primary, marginBottom: 24 },
+  addInitialBtn: { backgroundColor: theme.primary, paddingHorizontal: 40, paddingVertical: 16, borderRadius: 100 },
   addInitialBtnText: { color: '#FFFFFF', fontFamily: Typography.bold, fontSize: 15 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: '85%' },
-  modalIndicator: { width: 40, height: 4, backgroundColor: '#E2E8F0', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'flex-end' },
+  modalSheet: { 
+    backgroundColor: theme.card, 
+    borderTopLeftRadius: 40, 
+    borderTopRightRadius: 40, 
+    padding: 24, 
+    maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  modalIndicator: { width: 40, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
   modalHeader: { marginBottom: 24 },
-  modalTitle: { fontSize: 20, fontFamily: Typography.bold, color: '#0F172A' },
+  modalTitle: { fontSize: 22, fontFamily: Typography.bold, color: theme.text.primary },
   inputGroup: { marginBottom: 20 },
-  inputLabel: { fontSize: 13, fontFamily: Typography.bold, color: '#475569', marginBottom: 8 },
-  modalInput: { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F1F5F9', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, fontFamily: Typography.medium, color: '#0F172A' },
+  inputLabel: { fontSize: 13, fontFamily: Typography.bold, color: theme.text.secondary, marginBottom: 8 },
+  modalInput: { 
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.inputBg, 
+    borderWidth: 1, 
+    borderColor: theme.border, 
+    borderRadius: 16, 
+    paddingHorizontal: 20, 
+    paddingVertical: 14, 
+    fontSize: 15, 
+    fontFamily: Typography.medium, 
+    color: theme.text.primary 
+  },
   inputError: { borderColor: '#EF4444' },
   errorText: { color: '#EF4444', fontSize: 12, marginTop: 6, marginLeft: 4, fontFamily: Typography.medium },
-  saveBtn: { backgroundColor: BRAND_GREEN, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 10, marginBottom: 12 },
+  saveBtn: { backgroundColor: theme.primary, borderRadius: 18, paddingVertical: 18, alignItems: 'center', marginTop: 10, marginBottom: 12 },
   saveBtnText: { color: '#FFFFFF', fontFamily: Typography.bold, fontSize: 16 },
   modalCancelBtn: { alignItems: 'center', paddingVertical: 12 },
-  modalCancelBtnText: { color: '#94A3B8', fontFamily: Typography.bold, fontSize: 15 },
+  modalCancelBtnText: { color: theme.text.tertiary, fontFamily: Typography.bold, fontSize: 15 },
   defaultOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -495,16 +563,16 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.inputBg,
   },
   checkboxActive: {
-    backgroundColor: BRAND_GREEN,
-    borderColor: BRAND_GREEN,
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   defaultTextContent: {
     flex: 1,
@@ -512,11 +580,11 @@ const styles = StyleSheet.create({
   defaultTitleText: {
     fontSize: 15,
     fontFamily: Typography.bold,
-    color: '#1E293B',
+    color: theme.text.primary,
   },
   defaultSubText: {
     fontSize: 12,
-    color: '#64748B',
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
     marginTop: 2,
   },

@@ -9,8 +9,9 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { Colors, AppTheme } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PrimaryButtonProps {
   text: string;
@@ -20,8 +21,8 @@ interface PrimaryButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  theme?: AppTheme;
 }
-
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   text,
@@ -32,6 +33,8 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   textStyle,
   icon,
 }) => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
 
   return (
     <TouchableOpacity
@@ -40,7 +43,6 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       onPress={onPress}
       disabled={disabled || loading}
     >
-
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
@@ -53,15 +55,15 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   button: {
     height: 56,
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.primary,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    shadowColor: '#00513D',
+    shadowColor: theme.isDark ? '#000' : '#00513D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
@@ -69,9 +71,9 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     backgroundColor: 'transparent',
-    fontFamily: Typography.semiBold,
+    fontFamily: Typography.bold,
   },
   contentContainer: {
     flexDirection: 'row',
@@ -83,9 +85,8 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   disabledButton: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
 });
-
 
 export default PrimaryButton;
