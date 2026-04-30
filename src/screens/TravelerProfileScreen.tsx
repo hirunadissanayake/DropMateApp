@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -26,6 +27,8 @@ import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
+import { useNotificationStore } from '../store/notificationStore';
+import CustomAlert from '../components/common/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -34,20 +37,16 @@ const TravelerProfileScreen = () => {
   const { theme } = useTheme();
   const { user, token, logout, setUser, setAuth } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
-
-  const [editedName, setEditedName] = useState(user?.name || '');
-
   const styles = makeStyles(theme);
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const fetchProfile = async () => {
     if (!token) return;
     try {
       const userData = await authService.getMe(token);
       setUser(userData);
-      setEditedName(userData.name);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -55,40 +54,15 @@ const TravelerProfileScreen = () => {
 
   useEffect(() => {
     fetchProfile();
+    if (token) fetchUnreadCount(token);
   }, [token]);
 
-  const handleUpdateProfile = async () => {
-    if (!token || !editedName.trim()) return;
-    
-    setLoading(true);
-    try {
-      await authService.updateProfile(token, {
-        name: editedName,
-      });
-      await fetchProfile();
-      setIsEditing(false);
-      Toast.show({
-        type: 'success',
-        text1: 'Profile Updated',
-        text2: 'Your name has been updated successfully.',
-      });
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Update Failed',
-        text2: error.message || 'Something went wrong',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditedName(user?.name || '');
-    setIsEditing(false);
-  };
 
   const handleLogout = () => {
+    setShowLogoutAlert(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     Toast.show({
       type: 'success',
@@ -133,9 +107,6 @@ const TravelerProfileScreen = () => {
     setRefreshing(false);
   }, [token]);
 
-  const getInitial = (name: string) => {
-    return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
-  };
 
   return (
     <View style={styles.container}>
@@ -165,81 +136,6 @@ const TravelerProfileScreen = () => {
           }
         >
           
-          {/* Profile Header Card */}
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarSection}>
-              <View style={styles.avatarBorder}>
-                <View style={styles.avatarContainer}>
-                   {user?.selfieUrl ? (
-                     <Image source={{ uri: user.selfieUrl }} style={styles.avatarRealImage} />
-                   ) : (
-                     <Text style={styles.avatarText}>{getInitial(user?.name || '')}</Text>
-                   )}
-                </View>
-              </View>
-            </View>
-            
-            <View style={styles.userMeta}>
-              {isEditing ? (
-                <View style={styles.nameEditWrapper}>
-                  <TextInput
-                    style={styles.nameInput}
-                    value={editedName}
-                    onChangeText={setEditedName}
-                    placeholder="Full Name"
-                    placeholderTextColor={theme.text.tertiary}
-                    autoFocus
-                  />
-                  <View style={styles.editActionsInline}>
-                    <TouchableOpacity 
-                      onPress={handleCancel}
-                      disabled={loading}
-                      style={[styles.miniActionBtn, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}
-                    >
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="3">
-                        <Path d="M18 6L6 18M6 6l12 12"/>
-                      </Svg>
-                    </TouchableOpacity>
-                    {(editedName.trim() !== (user?.name || '')) && (
-                      <TouchableOpacity 
-                        onPress={handleUpdateProfile}
-                        disabled={loading}
-                        style={[styles.miniActionBtn, { backgroundColor: theme.primary }]}
-                      >
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                          <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3">
-                            <Path d="M20 6L9 17l-5-5"/>
-                          </Svg>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity 
-                  style={styles.nameRow}
-                  onPress={() => setIsEditing(true)}
-                >
-                  <Text style={styles.userName}>{user?.name || 'Traveler'}</Text>
-                  <View style={styles.editBadgeSmall}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
-                      <Path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                    </Svg>
-                  </View>
-                </TouchableOpacity>
-              )}
-              
-              <View style={styles.badgeRow}>
-                <View style={[styles.statusBadge, { backgroundColor: user?.isTravelerApproved ? (theme.isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 135, 90, 0.1)') : (theme.isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2') }]}>
-                  <Text style={[styles.statusText, { color: user?.isTravelerApproved ? '#10B981' : '#EF4444' }]}>
-                    {user?.isTravelerApproved ? 'Verified' : 'Pending'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
 
           <View style={styles.settingsSection}>
             <Text style={styles.sectionHeaderTitle}>Account Overview</Text>
@@ -374,6 +270,7 @@ const TravelerProfileScreen = () => {
               label="Notifications" 
               onPress={() => navigation.navigate('Notifications')}
               theme={theme}
+              badgeCount={unreadCount}
             />
             <SettingsItem 
               icon="lock" 
@@ -392,6 +289,13 @@ const TravelerProfileScreen = () => {
               style={styles.logoutBtn}
               onPress={handleLogout}
             >
+              <View style={styles.logoutIconBox}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="2">
+                   <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                   <Path d="M16 17l5-5-5-5"/>
+                   <Path d="M21 12H9"/>
+                </Svg>
+              </View>
               <Text style={styles.logoutText}>Sign Out Account</Text>
             </TouchableOpacity>
           </View>
@@ -399,11 +303,20 @@ const TravelerProfileScreen = () => {
           <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
+      <CustomAlert
+        visible={showLogoutAlert}
+        title="Sign Out"
+        message="Are you sure you want to sign out of your account?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutAlert(false)}
+        confirmText="Sign Out"
+        type="warning"
+      />
     </View>
   );
 };
 
-const SettingsItem = ({ icon, label, onPress, theme }: any) => {
+const SettingsItem = ({ icon, label, onPress, theme, badgeCount }: any) => {
     const styles = makeStyles(theme);
     return (
         <TouchableOpacity style={styles.itemRow} onPress={onPress}>
@@ -413,6 +326,11 @@ const SettingsItem = ({ icon, label, onPress, theme }: any) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.itemLabel}>{label}</Text>
           </View>
+          {badgeCount > 0 && (
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>{badgeCount > 99 ? '99+' : badgeCount}</Text>
+            </View>
+          )}
           <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2">
             <Path d="M9 18l6-6-6-6" />
           </Svg>
@@ -456,107 +374,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.extraBold,
   },
   scrollContent: {
-    paddingTop: 20,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  avatarSection: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  avatarBorder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    padding: 2,
-    borderWidth: 2,
-    borderColor: theme.primary,
-  },
-  avatarContainer: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 46,
-    backgroundColor: theme.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarRealImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontFamily: Typography.bold,
-  },
-  userMeta: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    paddingLeft: 22,
-  },
-  userName: {
-    fontSize: 22,
-    color: theme.text.primary,
-    fontFamily: Typography.bold,
-  },
-  editBadgeSmall: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nameEditWrapper: {
-    width: '90%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
-  },
-  nameInput: {
-    flex: 1,
-    fontSize: 20,
-    color: theme.text.primary,
-    textAlign: 'center',
-    borderBottomWidth: 1.5,
-    borderBottomColor: theme.primary,
-    paddingVertical: 8,
-    fontFamily: Typography.bold,
-  },
-  editActionsInline: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  miniActionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 100,
-  },
-  statusText: {
-    fontSize: 11,
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
+    paddingTop: 24,
   },
   settingsSection: {
     paddingHorizontal: 20,
@@ -599,10 +417,21 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   logoutBtn: {
     backgroundColor: theme.isDark ? 'rgba(225, 29, 72, 0.1)' : '#FFF1F2',
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     marginTop: 24,
+    gap: 12,
+  },
+  logoutIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: theme.isDark ? 'rgba(225, 29, 72, 0.15)' : '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logoutText: {
     color: '#E11D48',
@@ -644,6 +473,18 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
     fontFamily: Typography.regular,
+  },
+  badgeContainer: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontFamily: Typography.bold,
   },
 });
 

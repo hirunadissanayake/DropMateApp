@@ -28,6 +28,7 @@ import { Typography } from '../constants/Typography';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
+import { useNotificationStore } from '../store/notificationStore';
 
 const { width } = Dimensions.get('window');
 
@@ -79,13 +80,13 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
   const { unreadCount: announcementUnread } = useAnnouncementStore();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   
   const [refreshing, setRefreshing] = useState(false);
   const [activeParcels, setActiveParcels] = useState<any[]>([]);
   const [recommendedTrips, setRecommendedTrips] = useState<any[]>([]);
   const [loadingParcels, setLoadingParcels] = useState(true);
   const [loadingTrips, setLoadingTrips] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const scrollViewRef = useRef<any>(null);
@@ -147,15 +148,6 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     }
   };
 
-  const fetchUnreadCount = async () => {
-    if (!token) return;
-    try {
-      const data = await notificationService.getNotifications(token);
-      setUnreadCount(data.unreadCount);
-    } catch (error) {
-      console.error('Fetch unread count error:', error);
-    }
-  };
 
   const fetchUserProfile = async () => {
     if (!token) return;
@@ -172,7 +164,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
       fetchUserProfile();
       fetchActiveParcels();
       fetchRecommendedTrips();
-      fetchUnreadCount();
+      if (token) fetchUnreadCount(token);
     }, [token, user?.isCustomerApproved])
   );
 
@@ -193,7 +185,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         const tripResponse = await tripService.getActiveTrips(token);
         setRecommendedTrips(tripResponse.trips?.slice(0, 5) || []);
       }
-      fetchUnreadCount();
+      if (token) fetchUnreadCount(token);
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {

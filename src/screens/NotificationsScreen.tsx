@@ -24,6 +24,7 @@ import CustomAlert from '../components/common/CustomAlert';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
+import { useNotificationStore } from '../store/notificationStore';
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -130,6 +131,7 @@ const NotificationsScreen = () => {
   const styles = makeStyles(theme);
   const navigation = useNavigation();
   const { token } = useAuthStore();
+  const { setUnreadCount } = useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,6 +144,7 @@ const NotificationsScreen = () => {
     try {
       const data = await notificationService.getNotifications(token);
       setNotifications(data.notifications);
+      setUnreadCount(data.unreadCount);
     } catch (error) {
       console.error('Fetch notifications error:', error);
     } finally {
@@ -165,9 +168,12 @@ const NotificationsScreen = () => {
     if (!token) return;
     try {
       await notificationService.markAsRead(token, id);
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-      );
+      
+      const updated = notifications.map(n => n.id === id ? { ...n, isRead: true } : n);
+      setNotifications(updated);
+      
+      const unreadCount = updated.filter(n => !n.isRead).length;
+      setUnreadCount(unreadCount);
     } catch (error) {
       console.error('Mark as read error:', error);
     }
@@ -178,6 +184,7 @@ const NotificationsScreen = () => {
     try {
       await notificationService.markAllAsRead(token);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
       Toast.show({ type: 'success', text1: 'All caught up!' });
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Failed to mark all as read' });

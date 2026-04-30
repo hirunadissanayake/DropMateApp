@@ -35,6 +35,7 @@ import {
 import {useTheme} from '../context/ThemeContext';
 import {AppTheme} from '../constants/Colors';
 import {useAnnouncementStore} from '../store/announcementStore';
+import {useNotificationStore} from '../store/notificationStore';
 
 const {width} = Dimensions.get('window');
 
@@ -90,8 +91,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
   const {theme, isDark, toggleTheme} = useTheme();
   const {user, token, setUser} = useAuthStore();
   const {unreadCount: announcementUnread} = useAnnouncementStore();
+  const {unreadCount, fetchUnreadCount} = useNotificationStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const s = makeStyles(theme);
@@ -117,15 +118,6 @@ const TravelerHomeScreen = ({navigation}: any) => {
   const [pendingRequestData, setPendingRequestData] = useState<RequestAlertData | null>(null);
   const requestModalVisibleRef = useRef(false);
 
-  const fetchUnreadCount = async () => {
-    if (!token) return;
-    try {
-      const data = await notificationService.getNotifications(token);
-      setUnreadCount(data.unreadCount);
-    } catch (error) {
-      console.error('Fetch unread count error:', error);
-    }
-  };
 
   const fetchUserProfile = async () => {
     if (!token) return;
@@ -209,7 +201,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
           text1: '✅ Request Accepted!',
           text2: 'The sender has been notified. Good luck!',
         });
-        fetchUnreadCount();
+        if (token) fetchUnreadCount(token);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -236,7 +228,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
           text1: 'Request Declined',
           text2: 'The sender has been notified.',
         });
-        fetchUnreadCount();
+        if (token) fetchUnreadCount(token);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -325,7 +317,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         fetchPendingRequests();
-        fetchUnreadCount();
+        if (token) fetchUnreadCount(token);
       }
     });
     return () => subscription.remove();
@@ -334,9 +326,9 @@ const TravelerHomeScreen = ({navigation}: any) => {
   useFocusEffect(
     useCallback(() => {
       fetchUserProfile();
-      fetchUnreadCount();
+      if (token) fetchUnreadCount(token);
       fetchPendingRequests();
-    }, [token, fetchPendingRequests, fetchUnreadCount]),
+    }, [token, fetchPendingRequests]),
   );
 
   useEffect(() => {
@@ -362,7 +354,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
     try {
       const userData = await authService.getMe(token);
       setUser(userData);
-      fetchUnreadCount();
+      fetchUnreadCount(token);
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {

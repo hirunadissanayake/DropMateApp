@@ -10,13 +10,16 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useAuthStore } from '../store/authStore';
-import { Colors } from '../constants/Colors';
+import { RootStackParamList } from '../navigation/AppNavigator';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 
 const BlockedScreen = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   const { user, logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -26,9 +29,9 @@ const BlockedScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle={theme.statusBar} translucent backgroundColor="transparent" />
       <LinearGradient
-        colors={['#FEF2F2', '#FFF1F2', '#FFFFFF']}
+        colors={theme.isDark ? ['rgba(239, 68, 68, 0.05)', theme.background] : ['#FEF2F2', '#FFF1F2', '#FFFFFF']}
         style={StyleSheet.absoluteFillObject}
       />
       
@@ -77,9 +80,10 @@ const BlockedScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -97,23 +101,23 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FECACA',
+    borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : '#FECACA',
   },
   title: {
     fontSize: 28,
     fontFamily: Typography.extraBold,
-    color: '#991B1B',
+    color: theme.isDark ? '#FCA5A5' : '#991B1B',
     textAlign: 'center',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: Typography.medium,
-    color: '#7F1D1D',
+    color: theme.isDark ? '#FCA5A5' : '#7F1D1D',
     textAlign: 'center',
     opacity: 0.8,
     marginBottom: 40,
@@ -121,11 +125,11 @@ const styles = StyleSheet.create({
   },
   reasonCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
     shadowColor: '#991B1B',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
@@ -136,14 +140,14 @@ const styles = StyleSheet.create({
   reasonLabel: {
     fontSize: 12,
     fontFamily: Typography.extraBold,
-    color: '#B91C1C',
+    color: theme.isDark ? '#F87171' : '#B91C1C',
     letterSpacing: 1,
     marginBottom: 12,
   },
   reasonText: {
     fontSize: 16,
     fontFamily: Typography.bold,
-    color: '#4B5563',
+    color: theme.text.primary,
     lineHeight: 24,
     fontStyle: 'italic',
   },
@@ -155,13 +159,13 @@ const styles = StyleSheet.create({
   instructionText: {
     fontSize: 14,
     fontFamily: Typography.medium,
-    color: '#6B7280',
+    color: theme.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 20,
   },
   contactBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -177,7 +181,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontFamily: Typography.bold,
-    color: '#991B1B',
+    color: theme.isDark ? '#FCA5A5' : '#991B1B',
     textDecorationLine: 'underline',
   },
   footer: {
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 10,
     fontFamily: Typography.extraBold,
-    color: '#D1D5DB',
+    color: theme.border,
     letterSpacing: 2,
   }
 });

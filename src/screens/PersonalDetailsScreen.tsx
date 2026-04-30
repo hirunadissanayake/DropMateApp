@@ -11,6 +11,7 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useEffect } from 'react';
 import { useRegistrationStore } from '../store/registrationStore';
@@ -23,6 +24,8 @@ import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
+import * as authService from '../services/authService';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -30,10 +33,11 @@ const PersonalDetailsScreen = () => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const navigation = useNavigation();
-  const { user: authUser } = useAuthStore();
+  const { user: authUser, token, setUser } = useAuthStore();
   const { updateData: updateRegistrationData } = useRegistrationStore();
   const [user, setLocalUser] = useState(authUser);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const role = authUser?.roleActive;
@@ -69,6 +73,40 @@ const PersonalDetailsScreen = () => {
       if (storeFieldMap[field]) {
           updateRegistrationData({ [storeFieldMap[field]]: value });
       }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!token || !user?.name.trim()) return;
+    
+    setLoading(true);
+    try {
+      await authService.updateProfile(token, {
+        name: user.name,
+        nicNumber: user.nicNumber,
+        permanentAddress: user.permanentAddress,
+        city: user.city,
+      });
+      
+      // Update local store
+      const updatedUser = await authService.getMe(token);
+      setUser(updatedUser);
+      setLocalUser(updatedUser);
+      
+      setIsEditing(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Profile updated successfully',
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Update Failed',
+        text2: error.message || 'Something went wrong',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -172,7 +210,9 @@ const PersonalDetailsScreen = () => {
 
             {/* Information Grid */}
             <View style={styles.cardSection}>
-                <Text style={styles.sectionTitle}>Identity Information</Text>
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Identity Information</Text>
+                </View>
                 <View style={styles.infoList}>
                     <InfoRow 
                         label="Full Name" 
@@ -181,13 +221,18 @@ const PersonalDetailsScreen = () => {
                         editable={isEditing}
                         onChangeText={(t: string) => handleUpdateField('name', t)}
                         theme={theme}
+                        showEditIcon={!isEditing}
+                        onEditPress={() => setIsEditing(true)}
+                        showSaveIcon={isEditing}
+                        onSavePress={handleUpdateProfile}
+                        loading={loading}
                     />
                     <InfoRow label="Email Address" value={user?.email} icon="mail" theme={theme} />
                     <InfoRow 
                         label="NIC Number" 
                         value={user?.nicNumber} 
                         icon="credit-card" 
-                        editable={isEditing}
+                        editable={isEditing && (!isVerified || isRejected)}
                         onChangeText={(t: string) => handleUpdateField('nicNumber', t)}
                         theme={theme}
                     />
@@ -195,7 +240,7 @@ const PersonalDetailsScreen = () => {
                         label="Permanent Address" 
                         value={user?.permanentAddress} 
                         icon="map-pin" 
-                        editable={isEditing}
+                        editable={isEditing && (!isVerified || isRejected)}
                         onChangeText={(t: string) => handleUpdateField('permanentAddress', t)}
                         theme={theme}
                     />
@@ -203,7 +248,7 @@ const PersonalDetailsScreen = () => {
                         label="City" 
                         value={user?.city} 
                         icon="map-pin" 
-                        editable={isEditing}
+                        editable={isEditing && (!isVerified || isRejected)}
                         onChangeText={(t: string) => handleUpdateField('city', t)}
                         theme={theme}
                     />
@@ -256,7 +301,7 @@ const PersonalDetailsScreen = () => {
   );
 };
 
-const InfoRow = ({ label, value, icon, editable, onChangeText, theme }: any) => {
+const InfoRow = ({ label, value, icon, editable, onChangeText, theme, showEditIcon, onEditPress, showSaveIcon, onSavePress, loading }: any) => {
     const s = makeStyles(theme);
     return (
         <View style={s.infoRow}>
@@ -265,17 +310,39 @@ const InfoRow = ({ label, value, icon, editable, onChangeText, theme }: any) => 
             </View>
             <View style={{ flex: 1 }}>
                 <Text style={s.infoLabelText}>{label}</Text>
-                {editable ? (
-                    <TextInput 
-                        style={[s.infoValueText, s.editableInput]}
-                        value={value}
-                        onChangeText={onChangeText}
-                        autoCapitalize="words"
-                        placeholderTextColor={theme.text.placeholder}
-                    />
-                ) : (
-                    <Text style={s.infoValueText}>{value || 'Not provided'}</Text>
-                )}
+                <View style={s.infoValueContainer}>
+                    {editable ? (
+                        <TextInput 
+                            style={[s.infoValueText, s.editableInput]}
+                            value={value}
+                            onChangeText={onChangeText}
+                            autoCapitalize="words"
+                            placeholderTextColor={theme.text.placeholder}
+                            autoFocus={label === 'Full Name'}
+                        />
+                    ) : (
+                        <Text style={s.infoValueText}>{value || 'Not provided'}</Text>
+                    )}
+                    
+                    {showEditIcon && (
+                        <TouchableOpacity onPress={onEditPress} style={s.inlineEditBtn}>
+                            <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
+                                <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </Svg>
+                        </TouchableOpacity>
+                    )}
+                    
+                    {showSaveIcon && (
+                        <TouchableOpacity onPress={onSavePress} style={s.inlineSaveBtn} disabled={loading}>
+                            {loading ? (
+                                <ActivityIndicator size="small" color={theme.primary} />
+                            ) : (
+                                <Text style={s.inlineSaveText}>Save</Text>
+                            )}
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
         </View>
     );
@@ -394,11 +461,25 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   sectionTitle: {
     fontSize: 18,
     color: theme.text.primary,
-    marginBottom: 24,
     fontFamily: Typography.bold,
+  },
+  editBtn: {
+    padding: 8,
+    marginRight: -8,
+  },
+  saveText: {
+    color: theme.primary,
+    fontFamily: Typography.bold,
+    fontSize: 14,
   },
   infoList: {
       gap: 20,
@@ -428,6 +509,26 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
       fontSize: 14,
       color: theme.text.primary,
       fontFamily: Typography.bold,
+  },
+  infoValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 24,
+  },
+  inlineEditBtn: {
+    padding: 4,
+  },
+  inlineSaveBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFCE7',
+    borderRadius: 8,
+  },
+  inlineSaveText: {
+    color: theme.primary,
+    fontSize: 12,
+    fontFamily: Typography.bold,
   },
   docsGrid: {
       flexDirection: 'row',

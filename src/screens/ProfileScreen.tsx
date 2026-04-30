@@ -25,6 +25,8 @@ import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
+import { useNotificationStore } from '../store/notificationStore';
+import CustomAlert from '../components/common/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -33,19 +35,17 @@ const ProfileScreen = () => {
   const { theme } = useTheme();
   const { user, token, logout, setUser, setAuth } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
-  const [editedName, setEditedName] = useState(user?.name || '');
-
   const s = makeStyles(theme);
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const fetchProfile = async () => {
     if (!token) return;
     try {
       const userData = await authService.getMe(token);
       setUser(userData);
-      setEditedName(userData.name);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -53,40 +53,15 @@ const ProfileScreen = () => {
 
   useEffect(() => {
     fetchProfile();
+    if (token) fetchUnreadCount(token);
   }, []);
 
-  const handleUpdateProfile = async () => {
-    if (!token || !editedName.trim()) return;
-    
-    setLoading(true);
-    try {
-      await authService.updateProfile(token, {
-        name: editedName,
-      });
-      await fetchProfile();
-      setIsEditing(false);
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Profile updated successfully',
-      });
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Update Failed',
-        text2: error.message || 'Something went wrong',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditedName(user?.name || '');
-    setIsEditing(false);
-  };
 
   const handleLogout = () => {
+    setShowLogoutAlert(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     Toast.show({
       type: 'success',
@@ -125,9 +100,6 @@ const ProfileScreen = () => {
     }
   };
 
-  const getInitial = (name: string) => {
-    return name ? name.charAt(0).toUpperCase() : 'U';
-  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -163,69 +135,6 @@ const ProfileScreen = () => {
           />
         }
       >
-        <View style={s.profileSection}>
-          <View style={s.profileAvatar}>
-             {user?.selfieUrl ? (
-               <Image source={{ uri: user.selfieUrl }} style={s.avatarImage} />
-             ) : (
-               <Text style={s.avatarInitial}>{getInitial(user?.name || '')}</Text>
-             )}
-          </View>
-          
-          {isEditing ? (
-            <View style={s.editNameWrapper}>
-              <View style={s.editNameContainer}>
-                <TextInput
-                  style={s.nameInput}
-                  value={editedName}
-                  onChangeText={setEditedName}
-                  placeholder="Enter your name"
-                  placeholderTextColor={theme.text.placeholder}
-                  autoFocus
-                />
-              </View>
-              <View style={s.editActions}>
-                 <TouchableOpacity 
-                   onPress={handleCancel}
-                   disabled={loading}
-                   style={[s.actionBtn, s.cancelBtn]}
-                 >
-                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
-                      <Path d="M18 6L6 18M6 6l12 12"/>
-                   </Svg>
-                 </TouchableOpacity>
-                 {(editedName.trim() !== (user?.name || '')) && (
-                   <TouchableOpacity 
-                     onPress={handleUpdateProfile}
-                     disabled={loading}
-                     style={[s.actionBtn, s.saveBtn]}
-                   >
-                     {loading ? (
-                       <ActivityIndicator size="small" color="#FFF" />
-                     ) : (
-                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3">
-                          <Path d="M20 6L9 17l-5-5"/>
-                       </Svg>
-                     )}
-                   </TouchableOpacity>
-                 )}
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity 
-              style={s.nameDisplayRow}
-              onPress={() => setIsEditing(true)}
-            >
-                <Text style={s.userName}>{user?.name || 'User Name'}</Text>
-              <View style={s.nameEditIcon}>
-                <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
-                  <Path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </Svg>
-              </View>
-            </TouchableOpacity>
-          )}
-          <Text style={s.userEmail}>{user?.email || 'email@dropmate.app'}</Text>
-        </View>
 
         <View style={s.settingsSection}>
           <Text style={s.sectionTitle}>Account Overview</Text>
@@ -320,6 +229,7 @@ const ProfileScreen = () => {
             label="Notifications" 
             onPress={() => navigation.navigate('Notifications')}
             theme={theme}
+            badgeCount={unreadCount}
           />
           <SettingsItem 
             icon="lock" 
@@ -350,11 +260,20 @@ const ProfileScreen = () => {
         </View>
         <View style={{ height: 100 }} />
       </ScrollView>
+      <CustomAlert
+        visible={showLogoutAlert}
+        title="Sign Out"
+        message="Are you sure you want to sign out of your account?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutAlert(false)}
+        confirmText="Sign Out"
+        type="warning"
+      />
     </View>
   );
 };
 
-const SettingsItem = ({ icon, label, subLabel, onPress, theme }: any) => {
+const SettingsItem = ({ icon, label, subLabel, onPress, theme, badgeCount }: any) => {
   const s = makeStyles(theme);
   return (
     <TouchableOpacity style={s.itemRow} activeOpacity={0.7} onPress={onPress}>
@@ -365,6 +284,11 @@ const SettingsItem = ({ icon, label, subLabel, onPress, theme }: any) => {
         <Text style={s.itemLabel}>{label}</Text>
         {subLabel && <Text style={s.itemSubLabel}>{subLabel}</Text>}
       </View>
+      {badgeCount > 0 && (
+        <View style={s.badgeContainer}>
+          <Text style={s.badgeText}>{badgeCount > 99 ? '99+' : badgeCount}</Text>
+        </View>
+      )}
       <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2">
         <Path d="M9 18l6-6-6-6" />
       </Svg>
@@ -411,96 +335,6 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingTop: 24,
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  profileAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    position: 'relative',
-    shadowColor: theme.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  avatarImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  avatarInitial: {
-    color: '#FFFFFF',
-    fontSize: 40,
-    fontWeight: '800',
-  },
-  nameDisplayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-    paddingLeft: 26,
-  },
-  userName: {
-    fontSize: 22,
-    color: theme.text.primary,
-    fontFamily: Typography.bold,
-  },
-  nameEditIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editNameWrapper: {
-    width: '90%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 4,
-  },
-  editNameContainer: {
-    flex: 1,
-  },
-  nameInput: {
-    fontSize: 20,
-    color: theme.text.primary,
-    textAlign: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: theme.primary,
-    paddingVertical: 8,
-    fontFamily: Typography.bold,
-  },
-  editActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelBtn: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
-  },
-  saveBtn: {
-    backgroundColor: theme.primary,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: theme.text.secondary,
-    fontFamily: Typography.regular,
   },
   settingsSection: {
     paddingHorizontal: 24,
@@ -601,6 +435,18 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
     fontFamily: Typography.regular,
+  },
+  badgeContainer: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontFamily: Typography.bold,
   },
 });
 
