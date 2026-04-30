@@ -1,15 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, SafeAreaView, Animated, Easing, StatusBar, Image } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-
-import { Colors } from '../constants/Colors';
 import { useAuthStore } from '../store/authStore';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { height } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const SplashScreen = ({ navigation }: any) => {
+  const { theme } = useTheme();
   const { token, user, _hasHydrated } = useAuthStore();
   
   // Entrance Animation Values
@@ -25,6 +26,8 @@ const SplashScreen = ({ navigation }: any) => {
   const ripple1Opacity = useRef(new Animated.Value(0.3)).current;
   const ripple2Scale = useRef(new Animated.Value(1)).current;
   const ripple2Opacity = useRef(new Animated.Value(0.3)).current;
+
+  const styles = makeStyles(theme);
 
   useEffect(() => {
     // 1. Sleek Entrance Array
@@ -68,7 +71,6 @@ const SplashScreen = ({ navigation }: any) => {
 
     const checkNavigation = () => {
       const state = useAuthStore.getState();
-      console.log('Splash Check - Hydrated:', state._hasHydrated, 'Has Token:', !!state.token);
       
       if (!state._hasHydrated) {
         setTimeout(checkNavigation, 50);
@@ -76,7 +78,6 @@ const SplashScreen = ({ navigation }: any) => {
       }
 
       if (state.token && state.user) {
-        console.log('Splash - Redirecting to Home. Role:', state.user.roleActive);
         if (state.user.roleActive === 'CUSTOMER') {
           navigation.replace('CustomerHome');
         } else if (state.user.roleActive === 'TRAVELER') {
@@ -85,7 +86,6 @@ const SplashScreen = ({ navigation }: any) => {
           navigation.replace('RoleSelection');
         }
       } else {
-        console.log('Splash - Redirecting to Login');
         navigation.replace('Login');
       }
     };
@@ -100,7 +100,7 @@ const SplashScreen = ({ navigation }: any) => {
       checkNavigation();
     });
 
-    // 2. Continual Ripple Pulse loop (Starts immediately but runs infinitely)
+    // 2. Continual Ripple Pulse loop
     const createRipple = (scaleAnim: Animated.Value, opacityAnim: Animated.Value, delay: number) => {
       Animated.loop(
         Animated.sequence([
@@ -119,7 +119,6 @@ const SplashScreen = ({ navigation }: any) => {
               useNativeDriver: true,
             }),
           ]),
-          // Reset invisible
           Animated.timing(scaleAnim, { toValue: 1, duration: 0, useNativeDriver: true }),
           Animated.timing(opacityAnim, { toValue: 0.3, duration: 0, useNativeDriver: true }),
         ])
@@ -127,7 +126,7 @@ const SplashScreen = ({ navigation }: any) => {
     };
 
     createRipple(ripple1Scale, ripple1Opacity, 0);
-    createRipple(ripple2Scale, ripple2Opacity, 1250); // Interleaved offset
+    createRipple(ripple2Scale, ripple2Opacity, 1250); 
 
   }, []);
 
@@ -138,17 +137,16 @@ const SplashScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      {/* Impeccably Clean Flat/Soft Gradient Base */}
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      
       <LinearGradient 
-        colors={['#EBF8F2', '#FAFDFB']}
+        colors={theme.isDark ? theme.bgGradient : ['#EBF8F2', '#FAFDFB']}
         style={StyleSheet.absoluteFillObject}
       />
 
       <SafeAreaView style={styles.contentWrapper}>
         <View style={styles.content}>
           <View style={styles.logoAndTextContainer}>
-            {/* Animated Logo + Pulse Ripples */}
             <Animated.View style={[styles.logoWrapper, { opacity: logoFade, transform: [{ scale: logoScale }] }]}>
               
               <Animated.View style={[styles.ripple, { transform: [{ scale: ripple1Scale }], opacity: ripple1Opacity }]} />
@@ -162,7 +160,6 @@ const SplashScreen = ({ navigation }: any) => {
 
             </Animated.View>
 
-            {/* Subtle Animated Text */}
             <Animated.View style={[styles.textContainer, { opacity: textFade, transform: [{ translateY: textTranslateY }] }]}>
               <Text style={styles.title}>Drop Mate</Text>
               <Text style={styles.subtitle}>
@@ -171,13 +168,12 @@ const SplashScreen = ({ navigation }: any) => {
             </Animated.View>
           </View>
 
-          {/* Loading Indicator */}
           <Animated.View style={[styles.loadingContainer, { opacity: textFade }]}>
             <View style={styles.progressBarTrack}>
               <AnimatedLinearGradient
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                colors={[Colors.primary, Colors.primaryLight]}
+                colors={[theme.primary, theme.primary]}
                 style={[styles.progressBarFill, { width: progressWidth }]}
               />
             </View>
@@ -185,7 +181,6 @@ const SplashScreen = ({ navigation }: any) => {
           </Animated.View>
         </View>
 
-        {/* Animated Footer */}
         <Animated.View style={[styles.footerContainer, { opacity: footerFade }]}>
           <Text style={styles.footerText}>VERIFIED LOGISTICS</Text>
           <View style={styles.footerDot} />
@@ -196,10 +191,10 @@ const SplashScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: theme.background,
   },
   contentWrapper: {
     flex: 1,
@@ -225,7 +220,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 32,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0, 108, 82, 0.08)',
   },
   logoImage: {
     width: 100,
@@ -233,17 +228,17 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: 'center',
-    gap: 12, // slightly tighter gap for professional grouping
+    gap: 12,
   },
   title: {
-    color: Colors.primary,
+    color: theme.primary,
     fontSize: 46,
     fontFamily: Typography.bold,
     lineHeight: 46,
     letterSpacing: -2.3,
   },
   subtitle: {
-    color: Colors.text.primary,
+    color: theme.text.primary,
     fontSize: 16,
     fontFamily: Typography.regular,
     letterSpacing: -0.2,
@@ -251,12 +246,12 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     alignItems: 'center',
-    marginTop: 70, // Good breathing room separation from logo
+    marginTop: 70, 
   },
   progressBarTrack: {
     width: 200, 
     height: 4, 
-    backgroundColor: 'rgba(0, 108, 82, 0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 108, 82, 0.08)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -265,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   initializingText: {
-    color: Colors.text.secondary,
+    color: theme.text.secondary,
     fontSize: 12,
     fontFamily: Typography.bold,
     letterSpacing: 2.5,
@@ -278,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: Colors.text.tertiary,
+    color: theme.text.tertiary,
     fontSize: 12,
     fontFamily: Typography.bold,
     letterSpacing: 2.0,
@@ -287,7 +282,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.text.tertiary,
+    backgroundColor: theme.text.tertiary,
     marginHorizontal: 12,
   },
 });

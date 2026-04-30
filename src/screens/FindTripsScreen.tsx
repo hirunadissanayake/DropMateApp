@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
-  Platform,
   Dimensions,
   Image,
 } from 'react-native';
@@ -23,12 +22,15 @@ import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
 import { Typography } from '../constants/Typography';
 import CustomDropdown from '../components/common/CustomDropdown';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
 const FindTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { token, user } = useAuthStore();
+  const { theme } = useTheme();
+  const { token } = useAuthStore();
   const [trips, setTrips] = useState<any[]>([]);
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
@@ -39,6 +41,7 @@ const FindTripsScreen = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+
   const fetchFilterCities = async () => {
     try {
       const froms = await tripService.getFromLocations(token!);
@@ -90,7 +93,6 @@ const FindTripsScreen = () => {
 
   useEffect(() => {
     fetchTrips(1);
-    // Refresh 'To' list when 'From' changes to show valid routes
     const refreshTos = async () => {
       try {
         const tos = await tripService.getToLocations(token!, fromLocation);
@@ -122,95 +124,90 @@ const FindTripsScreen = () => {
     setToLocation(temp);
   };
 
+  const s = makeStyles(theme);
+
   const renderTripItem = ({ item }: { item: any }) => {
     const isFull = item.isFull;
-    const rating = item.traveler?.rating || 0;
     
     return (
       <TouchableOpacity 
-        style={[styles.premiumTicket, isFull && styles.disabledTicket]}
+        style={[s.premiumTicket, isFull && s.disabledTicket]}
         onPress={() => !isFull && navigation.navigate('TripDetails', { tripId: item.id })}
         activeOpacity={isFull ? 1 : 0.85}
         disabled={isFull}
       >
-        <View style={styles.ticketMainBody}>
-          <View style={styles.travelerHeader}>
-            <View style={styles.travelerProfile}>
-              <View style={styles.avatarContainer}>
+        <View style={s.ticketMainBody}>
+          <View style={s.travelerHeader}>
+            <View style={s.travelerProfile}>
+              <View style={s.avatarContainer}>
                 {item.traveler?.selfieUrl ? (
-                  <Image source={{ uri: item.traveler.selfieUrl }} style={styles.premiumAvatarImg} />
+                  <Image source={{ uri: item.traveler.selfieUrl }} style={s.premiumAvatarImg} />
                 ) : (
-                  <View style={styles.initialsAvatar}>
-                    <Text style={styles.initialsText}>{item.traveler?.name?.charAt(0).toUpperCase()}</Text>
+                  <View style={s.initialsAvatar}>
+                    <Text style={s.initialsText}>{item.traveler?.name?.charAt(0).toUpperCase()}</Text>
                   </View>
                 )}
-                <View style={styles.premiumVerifiedBadge}>
+                <View style={s.premiumVerifiedBadge}>
                   <Svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4">
                     <Path d="M20 6L9 17l-5-5" />
                   </Svg>
                 </View>
               </View>
               <View>
-                <Text style={styles.travelerNameText}>{item.traveler?.name}</Text>
-                {/* <View style={styles.ratingBadge}>
-                  <Svg width="10" height="10" viewBox="0 0 24 24" fill="#F59E0B">
-                    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
-                  </Svg>
-                  <Text style={styles.ratingNumber}>{rating.toFixed(1)}</Text>
-                </View> */}
+                <Text style={s.travelerNameText}>{item.traveler?.name}</Text>
               </View>
             </View>
-            <View style={styles.capacityIndicator}>
-              <Text style={styles.capacityWeight}>
+            <View style={s.capacityIndicator}>
+              <Text style={s.capacityWeight}>
                 {item.usedCapacity > 0 ? `${item.capacityKg - item.usedCapacity}/${item.capacityKg}` : item.capacityKg} kg
               </Text>
-              <Text style={styles.capacityStatus}>Available</Text>
+              <Text style={s.capacityStatus}>Available</Text>
             </View>
           </View>
 
-          <View style={styles.routeSection}>
-            <View style={styles.routePoint}>
-              <View style={styles.routeIconCol}>
-                <View style={styles.startRing} />
-                <View style={styles.routeConnector} />
+          <View style={s.routeSection}>
+            <View style={s.routePoint}>
+              <View style={s.routeIconCol}>
+                <View style={s.startRing} />
+                <View style={s.routeConnector} />
               </View>
-              <View style={styles.routeInfoCol}>
-                <Text style={styles.routeLabel}>PICKUP</Text>
-                <Text style={styles.routeCityName}>{item.fromLocation}</Text>
+              <View style={s.routeInfoCol}>
+                <Text style={s.routeLabel}>PICKUP</Text>
+                <Text style={s.routeCityName}>{item.fromLocation}</Text>
               </View>
-              <View style={styles.dateCol}>
-                <Text style={styles.routeDateText}>{dayjs(item.travelDate).format('MMM DD')}</Text>
+              <View style={s.dateCol}>
+                <Text style={s.routeDateText}>{dayjs(item.travelDate).format('MMM DD')}</Text>
               </View>
             </View>
 
-            <View style={styles.routePoint}>
-              <View style={styles.routeIconCol}>
-                <View style={styles.endPin}>
+            <View style={s.routePoint}>
+              <View style={s.routeIconCol}>
+                <View style={s.endPin}>
                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="#EF4444">
                     <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <Circle cx="12" cy="10" r="3" fill="white" />
                   </Svg>
                 </View>
               </View>
-              <View style={styles.routeInfoCol}>
-                <Text style={styles.routeLabelDest}>DESTINATION</Text>
-                <Text style={styles.routeCityName}>{item.toLocation}</Text>
+              <View style={s.routeInfoCol}>
+                <Text style={s.routeLabelDest}>DESTINATION</Text>
+                <Text style={s.routeCityName}>{item.toLocation}</Text>
               </View>
-              <View style={styles.dateCol}>
-                <View style={styles.vehicleTagMini}>
-                  <Text style={styles.vehicleTagText}>{item.vehicleType || 'Car'}</Text>
+              <View style={s.dateCol}>
+                <View style={s.vehicleTagMini}>
+                  <Text style={s.vehicleTagText}>{item.vehicleType || 'Car'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          <View style={styles.ticketFooter}>
-            <Text style={styles.arrivalInfo}>Departs: <Text style={styles.arrivalValue}>{item.travelTime || 'Flexible'}</Text></Text>
+          <View style={s.ticketFooter}>
+            <Text style={s.arrivalInfo}>Departs: <Text style={s.arrivalValue}>{item.travelTime || 'Flexible'}</Text></Text>
             <TouchableOpacity 
-              style={styles.bookActionBtn}
+              style={s.bookActionBtn}
               onPress={() => navigation.navigate('TripDetails', { tripId: item.id })}
             >
-              <Text style={styles.bookActionText}>View Details</Text>
+              <Text style={s.bookActionText}>View Details</Text>
               <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                 <Path d="M9 18l6-6-6-6" />
               </Svg>
@@ -218,43 +215,39 @@ const FindTripsScreen = () => {
           </View>
         </View>
 
-        {/* Notches for Ticket Effect */}
-        <View style={styles.ticketNotchLeft} />
-        <View style={styles.ticketNotchRight} />
+        <View style={s.ticketNotchLeft} />
+        <View style={s.ticketNotchRight} />
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <LinearGradient
-        colors={['#F8FAFC', '#FFFFFF']}
-        style={StyleSheet.absoluteFillObject}
-      />
+    <View style={s.container}>
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Find Travelers</Text>
-          <Text style={styles.headerSubtitle}>Discover trips headed your way</Text>
+      <SafeAreaView style={s.safeArea} edges={['top']}>
+        <View style={s.header}>
+          <Text style={s.headerTitle}>Find Travelers</Text>
+          <Text style={s.headerSubtitle}>Discover trips headed your way</Text>
 
-          <View style={styles.searchHeaderCard}>
-            <View style={styles.searchInputsCol}>
+          <View style={s.searchHeaderCard}>
+            <View style={s.searchInputsCol}>
               <CustomDropdown
                 options={availableFrom}
                 selectedOption={fromLocation}
                 onSelect={setFromLocation}
                 placeholder="From"
+                theme={theme}
               />
-              <View style={styles.searchDivider}>
-                <View style={styles.dividerLine} />
-                <TouchableOpacity style={styles.swapBtn} onPress={swapLocations}>
-                  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <View style={s.searchDivider}>
+                <View style={s.dividerLine} />
+                <TouchableOpacity style={s.swapBtn} onPress={swapLocations}>
+                  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <Path d="M7 10l5-5 5 5" />
                     <Path d="M17 14l-5 5-5-5" />
                   </Svg>
                 </TouchableOpacity>
-                <View style={styles.dividerLine} />
+                <View style={s.dividerLine} />
               </View>
               <CustomDropdown
                 options={availableTo}
@@ -262,51 +255,52 @@ const FindTripsScreen = () => {
                 onSelect={setToLocation}
                 placeholder="To"
                 disabled={!fromLocation}
+                theme={theme}
               />
             </View>
 
             {(fromLocation || toLocation) && (
-              <TouchableOpacity style={styles.clearAllBtn} onPress={() => { setFromLocation(''); setToLocation(''); }}>
-                <Text style={styles.clearAllText}>Clear Filter</Text>
+              <TouchableOpacity style={s.clearAllBtn} onPress={() => { setFromLocation(''); setToLocation(''); }}>
+                <Text style={s.clearAllText}>Clear Filter</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {loading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#006C52" />
+          <View style={s.centerContainer}>
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         ) : (
           <FlatList
             data={trips}
             renderItem={renderTripItem}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={s.listContent}
             showsVerticalScrollIndicator={false}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
               loadingMore ? (
-                <View style={styles.footerLoader}>
-                  <ActivityIndicator color="#006C52" />
+                <View style={s.footerLoader}>
+                  <ActivityIndicator color={theme.primary} />
                 </View>
               ) : null
             }
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#006C52']} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
             }
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <View style={styles.emptyIconBox}>
-                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5">
+              <View style={s.emptyContainer}>
+                <View style={s.emptyIconBox}>
+                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
                     <Path d="M3 6l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
                     <Path d="M9 2v14" />
                     <Path d="M15 6v14" />
                   </Svg>
                 </View>
-                <Text style={styles.emptyTitle}>No Trips Available</Text>
-                <Text style={styles.emptySubtitle}>
+                <Text style={s.emptyTitle}>No Trips Available</Text>
+                <Text style={s.emptySubtitle}>
                   There are currently no active trips matching your search. Check back later!
                 </Text>
               </View>
@@ -318,10 +312,10 @@ const FindTripsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -333,13 +327,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.extraBold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#64748B',
+    color: theme.text.secondary,
     marginTop: 4,
     fontFamily: Typography.regular,
   },
@@ -350,250 +344,20 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  tripCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  travelerInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginRight: 8,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#DCFBEB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarLetter: {
-    fontSize: 18,
-    color: '#006C52',
-    fontFamily: Typography.bold,
-  },
-  travelerName: {
-    fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.medium,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#F59E0B',
-    fontFamily: Typography.medium,
-  },
-  capacityBadge: {
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  capacityText: {
-    fontSize: 11,
-    color: '#64748B',
-    textTransform: 'uppercase',
-    fontFamily: Typography.bold,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-    maxWidth: '50%',
-  },
-  requestedBadge: {
-    backgroundColor: '#006C52',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  requestedText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontFamily: Typography.bold,
-    textTransform: 'uppercase',
-  },
-  routeContainer: {
-    marginBottom: 20,
-  },
-  routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#006C52',
-    backgroundColor: '#FFFFFF',
-  },
-  line: {
-    width: 2,
-    height: 16,
-    backgroundColor: '#F1F5F9',
-    marginLeft: 6,
-    marginVertical: 4,
-  },
-  locationText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1E293B',
-    fontFamily: Typography.bold,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F8FAFC',
-  },
-  dateInfo: {
-    flex: 1,
-  },
-  dateText: {
-    fontSize: 13,
-    color: '#64748B',
-    fontFamily: Typography.medium,
-  },
-  viewBtn: {
-    backgroundColor: '#006C52',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  viewBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: Typography.bold,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 100,
-  },
-  emptyIconBox: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#F0FDF4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    color: '#0F172A',
-    marginBottom: 8,
-    fontFamily: Typography.bold,
-  },
-  searchHeaderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 16,
-    marginTop: 20,
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  searchInputsCol: {
-    gap: 0,
-  },
-  searchDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 30,
-    marginVertical: -5,
-    zIndex: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  swapBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#DCFBEB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 12,
-  },
-  clearAllBtn: {
-    marginTop: 12,
-    alignSelf: 'center',
-  },
-  clearAllText: {
-    fontSize: 12,
-    color: '#006C52',
-    fontFamily: Typography.bold,
-    textDecorationLine: 'underline',
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    paddingHorizontal: 40,
-    fontFamily: Typography.regular,
-    lineHeight: 22,
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
+    paddingBottom: 110,
   },
   premiumTicket: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#000',
+    borderColor: theme.border,
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
+    shadowOpacity: theme.isDark ? 0.3 : 0.05,
     shadowRadius: 20,
     elevation: 4,
-    overflow: 'visible', // Ensure notches are visible
+    overflow: 'visible',
   },
   disabledTicket: {
     opacity: 0.6,
@@ -616,7 +380,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? '#1E293B' : '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -629,7 +393,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -647,28 +411,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#10B981',
     borderWidth: 2,
-    borderColor: '#FFF',
+    borderColor: theme.card,
     justifyContent: 'center',
     alignItems: 'center',
   },
   travelerNameText: {
     fontSize: 16,
-    color: '#0F172A',
-    fontFamily: Typography.bold,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFFBEB',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 2,
-  },
-  ratingNumber: {
-    fontSize: 11,
-    color: '#D97706',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   capacityIndicator: {
@@ -676,12 +425,12 @@ const styles = StyleSheet.create({
   },
   capacityWeight: {
     fontSize: 18,
-    color: '#006C52',
+    color: theme.primary,
     fontFamily: Typography.extraBold,
   },
   capacityStatus: {
     fontSize: 10,
-    color: '#64748B',
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
     textTransform: 'uppercase',
   },
@@ -702,14 +451,14 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     borderWidth: 2.5,
-    borderColor: '#006C52',
-    backgroundColor: '#FFF',
+    borderColor: theme.primary,
+    backgroundColor: theme.card,
     marginTop: 4,
   },
   routeConnector: {
     flex: 1,
     width: 2,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.border,
     marginVertical: 4,
   },
   endPin: {
@@ -722,7 +471,7 @@ const styles = StyleSheet.create({
   },
   routeLabel: {
     fontSize: 9,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
     letterSpacing: 0.5,
   },
@@ -734,7 +483,7 @@ const styles = StyleSheet.create({
   },
   routeCityName: {
     fontSize: 15,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
     marginTop: -2,
   },
@@ -744,18 +493,18 @@ const styles = StyleSheet.create({
   },
   routeDateText: {
     fontSize: 12,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   vehicleTagMini: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F1F5F9',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   vehicleTagText: {
     fontSize: 10,
-    color: '#475569',
+    color: theme.isDark ? theme.primary : '#475569',
     fontFamily: Typography.bold,
     textTransform: 'uppercase',
   },
@@ -766,20 +515,20 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: theme.border,
     borderStyle: 'dashed',
   },
   arrivalInfo: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.text.secondary,
     fontFamily: Typography.regular,
   },
   arrivalValue: {
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   bookActionBtn: {
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -799,9 +548,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC', // Background color of the screen
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    backgroundColor: theme.background,
   },
   ticketNotchRight: {
     position: 'absolute',
@@ -810,33 +557,89 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC', // Background color of the screen
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    backgroundColor: theme.background,
   },
-
-  fullBadge: {
-    backgroundColor: '#64748B',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
   },
-  fullBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    textTransform: 'uppercase',
+  emptyIconBox: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.05)' : '#F0FDF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    color: theme.text.primary,
+    marginBottom: 8,
     fontFamily: Typography.bold,
   },
-  disabledBtn: {
-    backgroundColor: '#94A3B8',
-  },
-  fullNote: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 12,
-    fontStyle: 'italic',
+  emptySubtitle: {
+    fontSize: 15,
+    color: theme.text.secondary,
     textAlign: 'center',
+    paddingHorizontal: 40,
     fontFamily: Typography.regular,
+    lineHeight: 22,
+  },
+  searchHeaderCard: {
+    backgroundColor: theme.card,
+    borderRadius: 24,
+    padding: 16,
+    marginTop: 20,
+    shadowColor: theme.shadowColor,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
+    shadowRadius: 20,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  searchInputsCol: {
+    gap: 0,
+  },
+  searchDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 30,
+    marginVertical: -5,
+    zIndex: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.border,
+  },
+  swapBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
+    borderWidth: 1,
+    borderColor: theme.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 12,
+  },
+  clearAllBtn: {
+    marginTop: 12,
+    alignSelf: 'center',
+  },
+  clearAllText: {
+    fontSize: 12,
+    color: theme.primary,
+    fontFamily: Typography.bold,
+    textDecorationLine: 'underline',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });
 

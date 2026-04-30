@@ -11,8 +11,9 @@ import {
   TextInput,
 } from 'react-native';
 import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
-import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { AppTheme } from '../../constants/Colors';
+import { useTheme } from '../../context/ThemeContext';
 
 interface CustomDropdownProps {
   label?: string;
@@ -21,6 +22,7 @@ interface CustomDropdownProps {
   onSelect: (option: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  theme?: AppTheme;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -30,7 +32,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onSelect,
   placeholder = 'Select an option',
   disabled = false,
+  theme: propTheme,
 }) => {
+  const { theme: contextTheme } = useTheme();
+  const theme = propTheme || contextTheme;
+  const s = makeStyles(theme);
+
   const [isVisible, setIsVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -50,7 +57,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   };
 
   const renderOptionIcon = (option: string, active: boolean) => {
-    const color = active ? Colors.primary : '#64748B';
+    const color = active ? theme.primary : theme.text.tertiary;
     const size = 20;
 
     switch (option.toLowerCase()) {
@@ -94,36 +101,36 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         );
       default:
         return (
-          <View style={[styles.routeDotStart, !active && { backgroundColor: '#F8FAFC', borderColor: '#CBD5E1' }]}>
-            <View style={[styles.routeDotInner, !active && { backgroundColor: '#94A3B8' }]} />
+          <View style={[s.routeDotStart, !active && { backgroundColor: theme.isDark ? '#1E293B' : '#F8FAFC', borderColor: theme.border }]}>
+            <View style={[s.routeDotInner, !active && { backgroundColor: theme.text.tertiary }]} />
           </View>
         );
     }
   };
 
   return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+    <View style={s.container}>
+      {label && <Text style={s.label}>{label}</Text>}
       
       <TouchableOpacity
         style={[
-          styles.selectBox, 
-          isVisible && styles.selectedBoxActive,
-          disabled && styles.selectBoxDisabled
+          s.selectBox, 
+          isVisible && s.selectedBoxActive,
+          disabled && s.selectBoxDisabled
         ]}
         onPress={() => !disabled && setIsVisible(true)}
         activeOpacity={disabled ? 1 : 0.7}
       >
-        <View style={styles.selectedContent}>
+        <View style={s.selectedContent}>
           {renderOptionIcon(selectedOption, true)}
-          <Text style={[styles.selectText, !selectedOption && styles.placeholderText]}>
+          <Text style={[s.selectText, !selectedOption && s.placeholderText]}>
             {selectedOption || placeholder}
           </Text>
         </View>
         <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
           <Path
             d={isVisible ? "M18 15L12 9L6 15" : "M6 9L12 15L18 9"}
-            stroke={isVisible ? Colors.primary : "#64748B"}
+            stroke={isVisible ? theme.primary : theme.text.tertiary}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -138,42 +145,42 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         onRequestClose={handleClose}
       >
         <TouchableWithoutFeedback onPress={handleClose}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.dragHandle} />
+          <View style={s.modalOverlay}>
+            <View style={s.modalContent}>
+              <View style={s.dragHandle} />
               
-              <View style={styles.modalHeader}>
+              <View style={s.modalHeader}>
                 <View>
-                  <Text style={styles.modalTitle}>{label || 'Select Option'}</Text>
-                  <Text style={styles.modalSubtitle}>Please choose one from the list below</Text>
+                  <Text style={s.modalTitle}>{label || 'Select Option'}</Text>
+                  <Text style={s.modalSubtitle}>Please choose one from the list below</Text>
                 </View>
                 <TouchableOpacity 
                   onPress={handleClose}
-                  style={styles.closeBtn}
+                  style={s.closeBtn}
                 >
                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <Path d="M18 6L6 18M6 6L18 18" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <Path d="M18 6L6 18M6 6L18 18" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </Svg>
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.searchContainer}>
-                <View style={styles.searchBox}>
-                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <View style={s.searchContainer}>
+                <View style={s.searchBox}>
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <Circle cx="11" cy="11" r="8" />
                     <Line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </Svg>
                   <TextInput
-                    style={styles.searchInput}
+                    style={s.searchInput}
                     placeholder="Search options..."
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={theme.text.placeholder}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     autoCorrect={false}
                   />
                   {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <Path d="M18 6L6 18M6 6L18 18" />
                       </Svg>
                     </TouchableOpacity>
@@ -187,27 +194,27 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[
-                      styles.optionItem,
-                      selectedOption === item && styles.optionItemActive
+                      s.optionItem,
+                      selectedOption === item && s.optionItemActive
                     ]}
                     onPress={() => handleSelect(item)}
                   >
-                    <View style={styles.optionContentLeft}>
+                    <View style={s.optionContentLeft}>
                       <View style={[
-                        styles.iconContainer,
-                        selectedOption === item && styles.iconContainerActive
+                        s.iconContainer,
+                        selectedOption === item && s.iconContainerActive
                       ]}>
                         {renderOptionIcon(item, selectedOption === item)}
                       </View>
                       <Text style={[
-                        styles.optionText,
-                        selectedOption === item && styles.optionTextActive
+                        s.optionText,
+                        selectedOption === item && s.optionTextActive
                       ]}>
                         {item}
                       </Text>
                     </View>
                     {selectedOption === item && (
-                      <View style={styles.checkCircle}>
+                      <View style={s.checkCircle}>
                         <Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                           <Path d="M20 6L9 17L4 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                         </Svg>
@@ -215,10 +222,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                     )}
                   </TouchableOpacity>
                 )}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={s.listContent}
                 ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No matches found for "{searchQuery}"</Text>
+                  <View style={s.emptyContainer}>
+                    <Text style={s.emptyText}>No matches found for "{searchQuery}"</Text>
                   </View>
                 }
               />
@@ -230,13 +237,13 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     width: '100%',
   },
   label: {
     fontSize: 11,
-    color: Colors.text.secondary,
+    color: theme.text.secondary,
     marginBottom: 10,
     textTransform: 'uppercase',
     paddingLeft: 4,
@@ -244,33 +251,22 @@ const styles = StyleSheet.create({
   },
   selectBox: {
     height: 60,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.background,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     borderWidth: 1.5,
-    borderColor: '#F1F5F9',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+    borderColor: theme.border,
   },
   selectBoxDisabled: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
     opacity: 0.6,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
   },
   selectedBoxActive: {
-    borderColor: Colors.primary,
-    backgroundColor: '#FFFFFF',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    borderColor: theme.primary,
   },
   selectedContent: {
     flexDirection: 'row',
@@ -279,35 +275,39 @@ const styles = StyleSheet.create({
   },
   selectText: {
     fontSize: 16,
-    color: '#052017',
+    color: theme.text.primary,
     fontFamily: Typography.semiBold,
   },
   placeholderText: {
-    color: '#94A3B8',
+    color: theme.text.placeholder,
     fontFamily: Typography.medium,
     fontSize: 15,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 32, 23, 0.45)',
+    backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(5, 32, 23, 0.45)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     maxHeight: '80%',
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -12 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 24,
     elevation: 20,
+    borderTopWidth: theme.isDark ? 1 : 0,
+    borderLeftWidth: theme.isDark ? 1 : 0,
+    borderRightWidth: theme.isDark ? 1 : 0,
+    borderColor: theme.border,
   },
   dragHandle: {
     width: 40,
     height: 5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: theme.border,
     borderRadius: 3,
     alignSelf: 'center',
     marginTop: 12,
@@ -322,13 +322,13 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.extraBold,
     letterSpacing: -0.5,
   },
   modalSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: theme.text.secondary,
     fontFamily: Typography.regular,
     marginTop: 2,
   },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -351,9 +351,9 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 18,
     marginBottom: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
@@ -361,8 +361,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   optionItemActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+    borderColor: theme.primary,
   },
   optionContentLeft: {
     flexDirection: 'row',
@@ -373,30 +372,30 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconContainerActive: {
-    backgroundColor: 'rgba(0, 108, 82, 0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
   },
   optionText: {
     fontSize: 16,
-    color: '#475569',
+    color: theme.text.secondary,
     fontFamily: Typography.semiBold,
   },
   optionTextActive: {
-    color: '#052017',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   checkCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -406,39 +405,39 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: theme.primary,
   },
   routeDotInner: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: theme.primary,
   },
   searchContainer: {
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: theme.border,
   },
   searchBox: {
     height: 48,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.border,
   },
   searchInput: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.medium,
     padding: 0,
   },
@@ -449,7 +448,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: theme.text.placeholder,
     fontFamily: Typography.medium,
     textAlign: 'center',
   },

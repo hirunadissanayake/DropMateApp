@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -15,7 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,6 +26,8 @@ import dayjs from 'dayjs';
 import CustomAlert from '../components/common/CustomAlert';
 import Toast from 'react-native-toast-message';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
@@ -46,6 +48,7 @@ interface Parcel {
 
 const ShipmentsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { token } = useAuthStore();
   const [parcels, setParcels] = useState<Parcel[]>([]);
@@ -57,8 +60,9 @@ const ShipmentsScreen = () => {
   const [cancellingParcelId, setCancellingParcelId] = useState<string | null>(null);
   const [deletingParcelId, setDeletingParcelId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [payingParcelId, setPayingParcelId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
+
+  const s = makeStyles(theme);
 
   const fetchParcels = async () => {
     if (!token) return;
@@ -92,7 +96,7 @@ const ShipmentsScreen = () => {
       case 'IN_TRANSIT': return '#3B82F6';
       case 'ACCEPTED':
       case 'MATCHED': return '#059669';
-      default: return '#64748B';
+      default: return theme.text.tertiary;
     }
   };
 
@@ -148,153 +152,130 @@ const ShipmentsScreen = () => {
     }
   };
 
-  const handlePay = async (id: string) => {
-    if (!token) return;
-    setPayingParcelId(id);
-    try {
-      await parcelService.payParcel(token, id);
-      Toast.show({
-        type: 'success',
-        text1: 'Payment Successful',
-        text2: 'Card payment received. Traveler can now pick up.',
-      });
-      fetchParcels();
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Payment Failed',
-        text2: error.message || 'Something went wrong',
-      });
-    } finally {
-      setPayingParcelId(null);
-    }
-  };
-
   const renderParcelItem = ({ item }: { item: Parcel }) => (
     <TouchableOpacity 
-      style={styles.parcelCard}
+      style={s.parcelCard}
       activeOpacity={0.9}
       onPress={() => navigation.navigate('ParcelDetails', { parcelId: item.id })}
     >
-      <View style={styles.cardHeader}>
+      <View style={s.cardHeader}>
         <TouchableOpacity 
-          style={styles.imageWrapper}
+          style={s.imageWrapper}
           onPress={() => item.imageUrls && item.imageUrls.length > 0 && setActiveGallery({ images: item.imageUrls, index: 0 })}
         >
           {item.imageUrls && item.imageUrls[0] ? (
-            <Image source={{ uri: item.imageUrls[0] }} style={styles.parcelImage} />
+            <Image source={{ uri: item.imageUrls[0] }} style={s.parcelImage} />
           ) : (
-            <View style={styles.placeholderIcon}>
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+            <View style={s.placeholderIcon}>
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
                 <Path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" />
               </Svg>
             </View>
           )}
         </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.parcelName} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.dateText}>{dayjs(item.createdAt).format('DD MMM YYYY • HH:mm')}</Text>
+        <View style={s.headerInfo}>
+          <Text style={s.parcelName} numberOfLines={1}>{item.name}</Text>
+          <Text style={s.dateText}>{dayjs(item.createdAt).format('DD MMM YYYY • HH:mm')}</Text>
         </View>
         <View style={{ alignItems: 'flex-end', gap: 6 }}>
-          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
+          <View style={[s.statusBadge, { backgroundColor: `${getStatusColor(item.status)}15` }]}>
             {item.status.toUpperCase() === 'MATCHED' || item.status.toUpperCase() === 'ACCEPTED' ? (
               <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={getStatusColor(item.status)} strokeWidth="3" style={{ marginRight: 4 }}>
                 <Path d="M20 6L9 17l-5-5" />
               </Svg>
             ) : (
-              <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+              <View style={[s.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
             )}
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+            <Text style={[s.statusText, { color: getStatusColor(item.status) }]}>
               {item.status.toUpperCase() === 'MATCHED' ? 'ACCEPTED' : item.status}
             </Text>
           </View>
 
-          {/* Payment Method & Status Badge */}
           <View style={[
-            styles.paymentBadge, 
-            { backgroundColor: item.paymentMethod === 'ONLINE' ? '#EFF6FF' : '#FFFBEB' }
+            s.paymentBadge, 
+            { backgroundColor: item.paymentMethod === 'ONLINE' 
+              ? (theme.isDark ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF') 
+              : (theme.isDark ? 'rgba(217, 119, 6, 0.15)' : '#FFFBEB') }
           ]}>
              <Text style={[
-               styles.paymentBadgeText, 
-               { color: item.paymentMethod === 'ONLINE' ? '#2563EB' : '#D97706' }
+               s.paymentBadgeText, 
+               { color: item.paymentMethod === 'ONLINE' ? (theme.isDark ? '#60A5FA' : '#2563EB') : (theme.isDark ? '#FBBF24' : '#D97706') }
              ]}>
                {item.paymentMethod === 'ONLINE' ? 'CARD' : item.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH (PICKUP)' : 'CASH (DELIVERY)'}
              </Text>
-             <Text style={[styles.paymentStatusDot, { color: item.paymentStatus === 'PAID' ? '#059669' : '#94A3B8' }]}>
+             <Text style={[s.paymentStatusDot, { color: item.paymentStatus === 'PAID' ? '#10B981' : theme.text.tertiary }]}>
                {" • "}
              </Text>
              <Text style={[
-               styles.paymentStatusText, 
-               { color: item.paymentStatus === 'PAID' ? '#059669' : '#D97706' }
+               s.paymentStatusText, 
+               { color: item.paymentStatus === 'PAID' ? '#10B981' : (theme.isDark ? '#FBBF24' : '#D97706') }
              ]}>
                {item.paymentStatus}
              </Text>
           </View>
 
           {item.isRequested && item.status === 'PENDING' && (
-            <View style={styles.requestedBadgeSmall}>
-              <Text style={styles.requestedBadgeText}>REQUESTED</Text>
+            <View style={s.requestedBadgeSmall}>
+              <Text style={s.requestedBadgeText}>REQUESTED</Text>
             </View>
           )}
         </View>
 
       </View>
 
-      <View style={styles.routeContainer}>
-        <View style={styles.routeTextContainer}>
+      <View style={s.routeContainer}>
+        <View style={s.routeTextContainer}>
           <View>
-            <Text style={styles.routeLabel}>PICKUP</Text>
-            <Text style={styles.locationText}>{item.fromLocation}</Text>
+            <Text style={s.routeLabel}>PICKUP</Text>
+            <Text style={s.locationText}>{item.fromLocation}</Text>
           </View>
           <View>
-            <Text style={styles.routeLabel}>DROP OFF</Text>
-            <Text style={styles.locationText}>{item.toLocation}</Text>
+            <Text style={s.routeLabel}>DROP OFF</Text>
+            <Text style={s.locationText}>{item.toLocation}</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.cardFooter}>
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>WEIGHT</Text>
-          <Text style={styles.detailValue}>{item.weight} kg</Text>
+      <View style={s.cardFooter}>
+        <View style={s.detailItem}>
+          <Text style={s.detailLabel}>WEIGHT</Text>
+          <Text style={s.detailValue}>{item.weight} kg</Text>
         </View>
         
-        <View style={styles.footerDivider} />
+        <View style={s.footerDivider} />
         
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>PRICE</Text>
-          <Text style={styles.detailValue}>LKR {item.price.toLocaleString()}</Text>
+        <View style={s.detailItem}>
+          <Text style={s.detailLabel}>PRICE</Text>
+          <Text style={s.detailValue}>LKR {item.price.toLocaleString()}</Text>
         </View>
       </View>
 
-      {/* PENDING + not yet requested: Cancel only */}
       {item.status.toUpperCase() === 'PENDING' && !item.isRequested && (
-        <View style={styles.actionRow}>
+        <View style={s.actionRow}>
           <TouchableOpacity
-            style={[styles.actionBtnBase, styles.cancelBtnSmall, { flex: 1 }]}
+            style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
             onPress={(e) => { e.stopPropagation(); handleCancelPress(item.id); }}
             activeOpacity={0.8}
           >
-            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" style={{ marginRight: 5 }}>
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
               <Path d="M18 6L6 18M6 6l12 12" />
             </Svg>
-            <Text style={styles.cancelBtnTextSmall}>Cancel Parcel</Text>
+            <Text style={s.cancelBtnTextSmall}>Cancel Parcel</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* CANCELLED: Delete only */}
       {item.status.toUpperCase() === 'CANCELLED' && (
-        <View style={styles.actionRow}>
+        <View style={s.actionRow}>
           <TouchableOpacity
-            style={[styles.actionBtnBase, styles.deleteBtnSmall, { flex: 1 }]}
+            style={[s.actionBtnBase, s.deleteBtnSmall, { flex: 1 }]}
             onPress={(e) => { e.stopPropagation(); handleDeletePress(item.id); }}
             activeOpacity={0.8}
           >
-            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" style={{ marginRight: 5 }}>
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
               <Path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
             </Svg>
-            <Text style={styles.deleteBtnTextSmall}>Delete Parcel</Text>
+            <Text style={s.deleteBtnTextSmall}>Delete Parcel</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -303,79 +284,74 @@ const ShipmentsScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#006C52" />
+      <View style={s.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <LinearGradient
-        colors={['#F0FFF8', '#FFFFFF']}
-        style={StyleSheet.absoluteFillObject}
-      />
+    <View style={s.container}>
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
+      <SafeAreaView style={s.safeArea} edges={['top']}>
+        <View style={s.header}>
+          <View style={s.headerTop}>
             <View>
-              <Text style={styles.screenTitle}>My Shipments</Text>
-              <Text style={styles.screenSubtitle}>Manage yours delivery parcels</Text>
+              <Text style={s.screenTitle}>My Shipments</Text>
+              <Text style={s.screenSubtitle}>Manage yours delivery parcels</Text>
             </View>
             <TouchableOpacity 
-              style={styles.headerAddBtn}
+              style={s.headerAddBtn}
               onPress={() => navigation.navigate('CreateParcel')}
             >
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2.5">
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                 <Path d="M12 5V19M5 12H19" />
               </Svg>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.tabContainer}>
+        <View style={s.tabContainer}>
           <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'ongoing' && styles.activeTabButton]}
+            style={[s.tabButton, activeTab === 'ongoing' && s.activeTabButton]}
             onPress={() => setActiveTab('ongoing')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'ongoing' && styles.activeTabText]}>Ongoing</Text>
+            <Text style={[s.tabText, activeTab === 'ongoing' && s.activeTabText]}>Ongoing</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'history' && styles.activeTabButton]}
+            style={[s.tabButton, activeTab === 'history' && s.activeTabButton]}
             onPress={() => setActiveTab('history')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>Delivered</Text>
+            <Text style={[s.tabText, activeTab === 'history' && s.activeTabText]}>Delivered</Text>
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={parcels.filter(p => {
             const status = p.status.toUpperCase();
-            // History = only DELIVERED. CANCELLED stays in Ongoing so Delete button is visible immediately.
             const isHistoryStatus = status === 'DELIVERED';
             return activeTab === 'history' ? isHistoryStatus : !isHistoryStatus;
           })}
           renderItem={renderParcelItem}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#006C52" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} colors={[theme.primary]} />
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.illustrationBox}>
-                <Svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5">
+            <View style={s.emptyContainer}>
+              <View style={s.illustrationBox}>
+                <Svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
                   <Path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" />
                   <Path d="M3 8L12 13L21 8" />
                   <Path d="M12 21V13" />
                 </Svg>
               </View>
-              <Text style={styles.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={s.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
+              <Text style={s.emptySubtitle}>
                 {activeTab === 'ongoing' 
                   ? "Once you create a parcel, it will appear here for tracking."
                   : "You don't have any delivered parcels yet."}
@@ -386,7 +362,7 @@ const ShipmentsScreen = () => {
       </SafeAreaView>
 
       <TouchableOpacity 
-        style={styles.fab}
+        style={s.fab}
         onPress={() => navigation.navigate('CreateParcel')}
       >
         <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
@@ -394,21 +370,20 @@ const ShipmentsScreen = () => {
         </Svg>
       </TouchableOpacity>
 
-      {/* Image Preview Modal Swiper */}
       <Modal
         visible={!!activeGallery}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setActiveGallery(null)}
       >
-        <View style={styles.modalBackground}>
-          <SafeAreaView style={styles.modalSafeArea}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalCounter}>
+        <View style={s.modalBackground}>
+          <SafeAreaView style={s.modalSafeArea}>
+            <View style={s.modalHeaderPreview}>
+              <Text style={s.modalCounter}>
                 {activeGallery ? `${activeGallery.index + 1} / ${activeGallery.images.length}` : ''}
               </Text>
               <TouchableOpacity 
-                style={styles.modalCloseBtn}
+                style={s.modalCloseBtn}
                 onPress={() => setActiveGallery(null)}
               >
                 <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
@@ -429,10 +404,10 @@ const ShipmentsScreen = () => {
               }}
             >
               {activeGallery?.images.map((url, idx) => (
-                <View key={idx} style={styles.fullImageWrapper}>
+                <View key={idx} style={s.fullImageWrapper}>
                   <Image 
                     source={{ uri: url }} 
-                    style={styles.fullImage}
+                    style={s.fullImage}
                     resizeMode="contain"
                   />
                 </View>
@@ -445,6 +420,7 @@ const ShipmentsScreen = () => {
       <CustomAlert
         visible={isCancelAlertVisible}
         title="Cancel Parcel"
+        theme={theme}
         message="Are you sure you want to cancel this parcel? This action cannot be undone."
         onCancel={() => setIsCancelAlertVisible(false)}
         onConfirm={confirmCancel}
@@ -457,6 +433,7 @@ const ShipmentsScreen = () => {
       <CustomAlert
         visible={isDeleteAlertVisible}
         title="Delete Parcel"
+        theme={theme}
         message="Are you sure you want to permanently delete this parcel record?"
         onCancel={() => setIsDeleteAlertVisible(false)}
         onConfirm={confirmDelete}
@@ -469,16 +446,16 @@ const ShipmentsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -497,25 +474,25 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#006C52',
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0FDF4',
+    borderColor: theme.border,
   },
   screenTitle: {
     fontSize: 28,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.extraBold,
   },
   screenSubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: theme.text.secondary,
     marginTop: 4,
     fontFamily: Typography.medium,
   },
@@ -530,14 +507,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
   },
   activeTabButton: {
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
   },
   tabText: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
   },
   activeTabText: {
@@ -549,17 +526,17 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   parcelCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 28,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#006C52',
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
+    shadowOpacity: theme.isDark ? 0.3 : 0.05,
     shadowRadius: 20,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -570,7 +547,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? '#1E293B' : '#F8FAFC',
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -589,12 +566,12 @@ const styles = StyleSheet.create({
   },
   parcelName: {
     fontSize: 16,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   dateText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     marginTop: 2,
     fontFamily: Typography.medium,
   },
@@ -640,7 +617,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   requestedBadgeSmall: {
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -653,7 +630,7 @@ const styles = StyleSheet.create({
   },
   routeContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     borderRadius: 16,
     padding: 12,
     marginBottom: 16,
@@ -665,12 +642,12 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 14,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   routeLabel: {
     fontSize: 9,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
     letterSpacing: 0.3,
     marginBottom: 2,
@@ -685,32 +662,27 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 8,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     letterSpacing: 0.3,
     fontFamily: Typography.medium,
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 13,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   footerDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#F1F5F9',
-  },
-  actionCol: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: theme.border,
   },
   actionRow: {
     flexDirection: 'row',
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: theme.border,
   },
   actionBtnBase: {
     flexDirection: 'row',
@@ -721,42 +693,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   cancelBtnSmall: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
   },
   cancelBtnTextSmall: {
     fontSize: 12,
-    color: '#DC2626',
+    color: '#EF4444',
     fontFamily: Typography.bold,
   },
   deleteBtnSmall: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
     paddingHorizontal: 18,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
   },
   deleteBtnTextSmall: {
     fontSize: 12,
-    color: '#DC2626',
-    fontFamily: Typography.bold,
-  },
-  payBtnSmall: {
-    backgroundColor: '#006C52',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  payBtnTextSmall: {
-    fontSize: 12,
-    color: '#FFFFFF',
+    color: '#EF4444',
     fontFamily: Typography.bold,
   },
   emptyContainer: {
@@ -768,26 +722,28 @@ const styles = StyleSheet.create({
   illustrationBox: {
     width: 120,
     height: 120,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
+    shadowOpacity: theme.isDark ? 0.3 : 0.05,
     shadowRadius: 20,
     elevation: 5,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   emptyTitle: {
     fontSize: 20,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: theme.text.tertiary,
     textAlign: 'center',
     paddingHorizontal: 40,
     fontFamily: Typography.medium,
@@ -799,40 +755,36 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#006C52',
-    alignItems: 'center',
+    backgroundColor: theme.primary,
     justifyContent: 'center',
-    shadowColor: '#006C52',
-    shadowOffset: { width: 0, height: 10 },
+    alignItems: 'center',
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowRadius: 10,
+    elevation: 6,
   },
   modalBackground: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0,0,0,0.9)',
   },
   modalSafeArea: {
     flex: 1,
   },
-  modalHeader: {
+  modalHeaderPreview: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    height: 60,
   },
   modalCounter: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: Typography.bold,
   },
   modalCloseBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
   },
   fullImageWrapper: {
     width: width,
@@ -842,7 +794,7 @@ const styles = StyleSheet.create({
   },
   fullImage: {
     width: width,
-    height: '80%',
+    height: '100%',
   },
 });
 

@@ -11,7 +11,6 @@ import {
   StatusBar,
   ScrollView,
   Image,
-  ActivityIndicator,
 } from 'react-native';
 
 import LinearGradient from 'react-native-linear-gradient';
@@ -20,7 +19,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import CustomInput from '../components/common/CustomInput';
 import * as authService from '../services/authService';
 import Toast from 'react-native-toast-message';
-import Svg, { Path, Circle, G } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
 import { Typography } from '../constants/Typography';
 
@@ -72,7 +71,6 @@ const LockIcon = ({ color }: { color: string }) => (
   </Svg>
 );
 
-// LOGIN SCREEN
 const LoginScreen = ({ navigation }: any) => {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -135,7 +133,6 @@ const LoginScreen = ({ navigation }: any) => {
         translucent
       />
 
-      {/* Background Gradient */}
       <LinearGradient
         colors={theme.bgGradient as any}
         start={{ x: 0.5, y: 0 }}
@@ -143,41 +140,24 @@ const LoginScreen = ({ navigation }: any) => {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {/* Decorative blobs */}
       <View style={styles.decorativeContainer}>
         <View style={styles.circle1} />
         <View style={styles.circle2} />
       </View>
 
-      {/* ── Theme toggle pill ── */}
+      {/* ── Simplified Theme Toggle ── */}
       <SafeAreaView style={styles.toggleSafeArea}>
-        <View style={styles.toggleWrapper}>
-          <TouchableOpacity
-            style={styles.togglePill}
-            onPress={toggleTheme}
-            activeOpacity={0.8}
-          >
-            {/* track */}
-            <View style={styles.pillTrack}>
-              <View
-                style={[
-                  styles.pillThumb,
-                  isDark && styles.pillThumbDark,
-                ]}
-              />
-            </View>
-            <View style={styles.pillLabel}>
-              {isDark ? (
-                <MoonIcon color={theme.primary} />
-              ) : (
-                <SunIcon color={theme.primary} />
-              )}
-              <Text style={styles.toggleText}>
-                {isDark ? 'Dark' : 'Light'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={toggleTheme}
+          activeOpacity={0.7}
+        >
+          {isDark ? (
+            <SunIcon color={theme.primary} />
+          ) : (
+            <MoonIcon color={theme.primary} />
+          )}
+        </TouchableOpacity>
       </SafeAreaView>
 
       <SafeAreaView style={styles.safeArea}>
@@ -193,7 +173,6 @@ const LoginScreen = ({ navigation }: any) => {
           >
             <View style={styles.content}>
 
-              {/* Logo */}
               <View style={styles.logoRow}>
                 <Image
                   source={require('../assets/logo.png')}
@@ -203,7 +182,6 @@ const LoginScreen = ({ navigation }: any) => {
                 <Text style={styles.brandName}>rop Mate</Text>
               </View>
 
-              {/* Headline */}
               <View style={styles.headerTextContainer}>
                 <Text style={styles.welcomeTitle}>Welcome Back</Text>
                 <Text style={styles.welcomeSubtitle}>
@@ -211,9 +189,7 @@ const LoginScreen = ({ navigation }: any) => {
                 </Text>
               </View>
 
-              {/* Form card */}
               <View style={styles.formCard}>
-
                 <CustomInput
                   label="EMAIL"
                   placeholder="Enter your email"
@@ -252,7 +228,6 @@ const LoginScreen = ({ navigation }: any) => {
                 />
               </View>
 
-              {/* Footer */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Don't have an account? </Text>
                 <TouchableOpacity
@@ -270,7 +245,6 @@ const LoginScreen = ({ navigation }: any) => {
   );
 };
 
-//Dynamic Styles 
 const makeStyles = (theme: ReturnType<typeof import('../context/ThemeContext').useTheme>['theme']) =>
   StyleSheet.create({
     mainContainer: {
@@ -283,53 +257,17 @@ const makeStyles = (theme: ReturnType<typeof import('../context/ThemeContext').u
       right: 0,
       zIndex: 100,
     },
-    toggleWrapper: {
-      paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 8,
-      paddingRight: 16,
-      alignItems: 'flex-end',
-    },
-    togglePill: {
-      flexDirection: 'row',
+    toggleButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC',
+      justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: theme.toggleBg,
-      borderRadius: 24,
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-      gap: 8,
+      marginTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 12 : 12,
+      marginRight: 16,
       borderWidth: 1,
       borderColor: theme.border,
-    },
-    pillTrack: {
-      width: 32,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: theme.isDark ? theme.primary : 'rgba(0,108,82,0.2)',
-      justifyContent: 'center',
-      paddingHorizontal: 2,
-    },
-    pillThumb: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    pillThumbDark: {
-      transform: [{ translateX: 14 }],
-    },
-    pillLabel: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    toggleText: {
-      fontSize: 13,
-      fontFamily: Typography.bold,
-      color: theme.primary,
     },
     safeArea: {
       flex: 1,

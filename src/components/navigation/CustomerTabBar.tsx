@@ -8,25 +8,22 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
+import { AppTheme } from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
-// ─── Brand colours ───────────────────────────────────────────────────────────
-const BRAND_GREEN   = '#00875A';   // primary active colour
-const BRAND_LIGHT   = '#E6F5EF';   // pill background (active)
-const BRAND_GLOW    = '#00875A30'; // box-shadow tint
-const INACTIVE_CLR  = '#111111';   // inactive icon / label
-const BAR_BG        = 'rgba(235, 248, 242, 0.97)'; // greenish-white bar
-
-// ─── Main component ──────────────────────────────────────────────────────────
 const CustomerTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.tabBarWrapper}>
-        <View style={styles.tabBarContainer}>
+    <View style={s.container}>
+      <View style={s.tabBarWrapper}>
+        <View style={s.tabBarContainer}>
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
             const label =
@@ -56,6 +53,7 @@ const CustomerTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) =
                 label={label as string}
                 routeName={route.name}
                 onPress={onPress}
+                theme={theme}
               />
             );
           })}
@@ -65,16 +63,16 @@ const CustomerTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) =
   );
 };
 
-// ─── Tab item ────────────────────────────────────────────────────────────────
-const TabItem = ({ isFocused, label, routeName, onPress }: any) => {
+const TabItem = ({ isFocused, label, routeName, onPress, theme }: any) => {
   const scaleAnim      = useRef(new Animated.Value(isFocused ? 1.08 : 1)).current;
   const opacityAnim    = useRef(new Animated.Value(isFocused ? 1 : 0.55)).current;
   const pillOpacity    = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
   const pillScale      = useRef(new Animated.Value(isFocused ? 1 : 0.7)).current;
   const dotOpacity     = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
   const dotScale       = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
-
   const translateYAnim = useRef(new Animated.Value(isFocused ? -2 : 0)).current;
+
+  const s = makeStyles(theme);
 
   useEffect(() => {
     Animated.parallel([
@@ -124,18 +122,17 @@ const TabItem = ({ isFocused, label, routeName, onPress }: any) => {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={styles.tabItem}
+      style={s.tabItem}
     >
       <Animated.View
         style={[
-          styles.tabContentContainer,
+          s.tabContentContainer,
           { transform: [{ translateY: translateYAnim }] },
         ]}
       >
-        {/* Active pill background */}
         <Animated.View
           style={[
-            styles.activePill,
+            s.activePill,
             {
               opacity: pillOpacity,
               transform: [{ scale: pillScale }],
@@ -143,27 +140,25 @@ const TabItem = ({ isFocused, label, routeName, onPress }: any) => {
           ]}
         />
 
-        {/* Icon — scale + opacity applied here only */}
         <Animated.View
           style={[
-            styles.iconContainer,
+            s.iconContainer,
             {
               transform: [{ scale: scaleAnim }],
               opacity: opacityAnim,
             },
           ]}
         >
-          <View style={styles.iconWrapper}>
-            {renderIcon(routeName, isFocused)}
+          <View style={s.iconWrapper}>
+            {renderIcon(routeName, isFocused, theme)}
           </View>
         </Animated.View>
 
-        {/* Label — plain Text, color-only transition, never blurs */}
         <Text
           style={[
-            styles.tabLabel,
+            s.tabLabel,
             {
-              color: isFocused ? BRAND_GREEN : INACTIVE_CLR,
+              color: isFocused ? theme.primary : theme.text.tertiary,
             },
           ]}
           numberOfLines={1}
@@ -171,10 +166,9 @@ const TabItem = ({ isFocused, label, routeName, onPress }: any) => {
           {label}
         </Text>
 
-        {/* Indicator dot */}
         <Animated.View
           style={[
-            styles.indicatorDot,
+            s.indicatorDot,
             {
               opacity: dotOpacity,
               transform: [{ scale: dotScale }],
@@ -186,15 +180,15 @@ const TabItem = ({ isFocused, label, routeName, onPress }: any) => {
   );
 };
 
-// ─── Icons ───────────────────────────────────────────────────────────────────
-const renderIcon = (routeName: string, isFocused: boolean) => {
-  const color = isFocused ? BRAND_GREEN : INACTIVE_CLR;
+const renderIcon = (routeName: string, isFocused: boolean, theme: AppTheme) => {
+  const color = isFocused ? theme.primary : theme.text.tertiary;
   const sw    = isFocused ? '2.4' : '2';
   const size  = 22;
+  const fillColor = isFocused ? `${theme.primary}22` : 'none';
 
   if (routeName === 'Home') {
     return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
         <Path
           d="M3 9.5L12 3L21 9.5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V9.5Z"
           stroke={color}
@@ -223,14 +217,14 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
           strokeLinejoin="round"
         />
         {isFocused && (
-          <Circle cx="15" cy="10" r="2" fill={BRAND_GREEN} />
+          <Circle cx="15" cy="10" r="2" fill={theme.primary} />
         )}
       </Svg>
     );
   }
   if (routeName === 'Shipments' || routeName === 'Services') {
     return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
         <Path
           d="M21 8L12 3L3 8V16L12 21L21 16V8Z"
           stroke={color}
@@ -257,7 +251,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
   }
   if (routeName === 'Find Parcels' || routeName === 'Find Travelers') {
     return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
         <Path
           d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
           stroke={color}
@@ -270,7 +264,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
   }
   if (routeName === 'Profile') {
     return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
         <Path
           d="M20 21V19C20 17.8954 19.1046 17 18 17H6C4.89543 17 4 17.8954 4 19V21"
           stroke={color}
@@ -290,7 +284,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
   }
   if (routeName === 'Requests') {
     return (
-      <Svg width={size} height={size} viewBox="0 0 24 24" fill={isFocused ? `${BRAND_GREEN}22` : 'none'}>
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
         <Path
           d="M18 8A6 6 0 0 0 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
           stroke={color}
@@ -311,8 +305,7 @@ const renderIcon = (routeName: string, isFocused: boolean) => {
   return null;
 };
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 26 : 14,
@@ -322,15 +315,15 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     width: '100%',
-    backgroundColor: BAR_BG,
+    backgroundColor: theme.isDark ? 'rgba(13, 31, 24, 0.96)' : 'rgba(235, 248, 242, 0.97)',
     borderRadius: 28,
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.isDark ? '#000' : theme.primary,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
+    shadowOpacity: theme.isDark ? 0.3 : 0.18,
     shadowRadius: 24,
     elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 135, 90, 0.14)',
+    borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 135, 90, 0.14)',
     overflow: 'hidden',
   },
   tabBarContainer: {
@@ -352,16 +345,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Rounded green pill behind the active icon
   activePill: {
     position: 'absolute',
     top: '18%',
     width: 52,
     height: 48,
     borderRadius: 16,
-    backgroundColor: BRAND_LIGHT,
-    // inner glow
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.22,
     shadowRadius: 8,
@@ -381,15 +371,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     textAlign: 'center',
   },
-  // Small glowing dot below active tab
   indicatorDot: {
     position: 'absolute',
     bottom: 8,
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: BRAND_GREEN,
-    shadowColor: BRAND_GREEN,
+    backgroundColor: theme.primary,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 5,

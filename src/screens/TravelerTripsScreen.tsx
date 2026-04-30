@@ -22,13 +22,14 @@ import * as tripService from '../services/tripService';
 import Toast from 'react-native-toast-message';
 import CustomAlert from '../components/common/CustomAlert';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
-const BRAND_GREEN = '#006C52';
-const BRAND_LIGHT = '#DCFBEB';
 
 const TravelerTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { theme } = useTheme();
   const { token } = useAuthStore();
 
   const [trips, setTrips] = useState<any[]>([]);
@@ -52,11 +53,12 @@ const TravelerTripsScreen = () => {
     action: () => {}
   });
 
+  const styles = makeStyles(theme);
+
   const fetchTrips = async () => {
     try {
       const data = await tripService.getMyTrips(token!);
       const sortedTrips = data.sort((a: any, b: any) => {
-        // Sort by createdAt descending (newest first). Fallback to ID if needed.
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
         return timeB - timeA;
@@ -138,11 +140,7 @@ const TravelerTripsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <LinearGradient
-        colors={['#DCFBEB', '#F8FAFC', '#FFFFFF']}
-        style={StyleSheet.absoluteFillObject}
-      />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
@@ -160,8 +158,6 @@ const TravelerTripsScreen = () => {
             </Svg>
           </TouchableOpacity>
         </View>
-
-
 
         <View style={styles.tabContainer}>
           <TouchableOpacity 
@@ -182,16 +178,16 @@ const TravelerTripsScreen = () => {
 
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={BRAND_GREEN} />
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         ) : trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).length === 0 ? (
           <ScrollView
             contentContainerStyle={styles.emptyScroll}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
           >
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconContainer}>
-                <Svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                <Svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                   <Path d="M3 6l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
                   <Path d="M9 2v14" />
                   <Path d="M15 6v14" />
@@ -218,12 +214,13 @@ const TravelerTripsScreen = () => {
           <ScrollView 
             showsVerticalScrollIndicator={false} 
             contentContainerStyle={styles.scrollContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
           >
             {trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).map((trip) => (
               <TripCard 
                 key={trip.id} 
                 trip={trip} 
+                theme={theme}
                 onCancel={() => handleCancelTrip(trip.id)} 
                 onDelete={() => handleDeleteTrip(trip.id)} 
               />
@@ -234,6 +231,7 @@ const TravelerTripsScreen = () => {
 
         <CustomAlert
           visible={alertVisible}
+          theme={theme}
           title={alertConfig.title}
           message={alertConfig.message}
           confirmText={alertConfig.confirmText}
@@ -248,10 +246,12 @@ const TravelerTripsScreen = () => {
   );
 };
 
-const TripCard = ({ trip, onCancel, onDelete }: any) => {
+const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [isExpanded, setIsExpanded] = useState(false);
-  const statusColor = trip.status === 'ACTIVE' ? '#059669' : trip.status === 'COMPLETED' ? '#2563EB' : '#DC2626';
+  const styles = makeStyles(theme);
+  
+  const statusColor = trip.status === 'ACTIVE' ? '#10B981' : trip.status === 'COMPLETED' ? '#3B82F6' : '#EF4444';
   const date = new Date(trip.travelDate).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -262,12 +262,12 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
     switch (status?.toUpperCase()) {
       case 'PENDING': return '#F59E0B';
       case 'MATCHED':
-      case 'ACCEPTED': return '#4338CA';
-      case 'PICKED_UP': return '#A16207';
-      case 'IN_TRANSIT': return '#2563EB';
-      case 'DELIVERED': return '#059669';
-      case 'CANCELLED': return '#DC2626';
-      default: return '#64748B';
+      case 'ACCEPTED': return '#6366F1';
+      case 'PICKED_UP': return '#844d0f';
+      case 'IN_TRANSIT': return '#3B82F6';
+      case 'DELIVERED': return '#10B981';
+      case 'CANCELLED': return '#EF4444';
+      default: return theme.text.tertiary;
     }
   };
 
@@ -288,7 +288,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
             </View>
             <View style={styles.dashedLine} />
             <View style={styles.routePinEnd}>
-              <Svg width="16" height="16" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <Svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <Circle cx="12" cy="10" r="3" fill="#FFFFFF" />
               </Svg>
@@ -300,8 +300,8 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
           </View>
         </View>
         <View style={styles.headerRightCol}>
-          <View style={[styles.statusBadge, { backgroundColor: trip.isExpired ? '#64748B15' : statusColor + '15' }]}>
-            <Text style={[styles.statusText, { color: trip.isExpired ? '#64748B' : statusColor }]}>
+          <View style={[styles.statusBadge, { backgroundColor: trip.isExpired ? (theme.isDark ? 'rgba(148, 163, 184, 0.1)' : '#64748B15') : statusColor + '15' }]}>
+            <Text style={[styles.statusText, { color: trip.isExpired ? theme.text.tertiary : statusColor }]}>
               {trip.isExpired ? 'EXPIRED' : trip.status}
             </Text>
           </View>
@@ -312,7 +312,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
           )}
           {canDelete && (
             <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} activeOpacity={0.7}>
-              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <Path d="M3 6h18" />
                 <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 <Path d="M10 11v6" />
@@ -327,7 +327,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
         <View style={styles.infoCol}>
           <Text style={styles.infoLabel}>DATE</Text>
           <View style={styles.infoRow}>
-            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
               <Path d="M16 2v4M8 2v4M3 10h18"/>
             </Svg>
@@ -337,7 +337,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
         <View style={styles.infoCol}>
           <Text style={styles.infoLabel}>CAPACITY</Text>
           <View style={styles.infoRow}>
-            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <Rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
               <Path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </Svg>
@@ -351,7 +351,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
             onPress={() => setIsExpanded(!isExpanded)}
             activeOpacity={0.7}
           >
-            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
               <Path d="M3.27 6.96L12 12.01l8.73-5.05" />
               <Path d="M12 22.08V12" />
@@ -359,7 +359,7 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
             <Text style={styles.footerText}>{trip.parcels?.length || 0} Assigned</Text>
             {trip.parcels && trip.parcels.length > 0 && (
               <Svg 
-                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
               >
                 <Path d="M6 9l6 6 6-6" />
@@ -388,10 +388,10 @@ const TripCard = ({ trip, onCancel, onDelete }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -406,13 +406,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#64748B',
+    color: theme.text.secondary,
     marginTop: 4,
     fontFamily: Typography.medium,
   },
@@ -420,10 +420,10 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: BRAND_GREEN,
+    backgroundColor: theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -440,20 +440,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
   },
   activeTabButton: {
-    backgroundColor: BRAND_GREEN,
+    backgroundColor: theme.primary,
   },
   tabText: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
   },
   activeTabText: {
     color: '#FFFFFF',
   },
-
   scrollContent: {
     paddingHorizontal: 20,
     gap: 16,
@@ -476,7 +475,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: BRAND_LIGHT,
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : 'rgba(0, 108, 82, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -487,18 +486,18 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 1,
-    borderColor: BRAND_LIGHT,
+    borderColor: theme.isDark ? 'rgba(61, 217, 164, 0.2)' : 'rgba(0, 108, 82, 0.1)',
     borderStyle: 'dashed',
   },
   emptyTitle: {
     fontSize: 22,
-    color: '#0F172A',
+    color: theme.text.primary,
     marginBottom: 12,
     fontFamily: Typography.bold,
   },
   emptySubtitle: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
@@ -508,7 +507,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 14,
-    backgroundColor: BRAND_GREEN,
+    backgroundColor: theme.primary,
   },
   createNowText: {
     fontSize: 16,
@@ -516,16 +515,16 @@ const styles = StyleSheet.create({
     fontFamily: Typography.bold,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 20,
-    shadowColor: BRAND_GREEN,
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOpacity: theme.isDark ? 0.3 : 0.06,
     shadowRadius: 10,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -546,7 +545,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -556,13 +555,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: '#10B981',
   },
   dashedLine: {
     width: 1,
     height: 30,
     borderWidth: 0.5,
-    borderColor: '#CBD5E1',
+    borderColor: theme.border,
     borderStyle: 'dashed',
     marginVertical: 4,
   },
@@ -578,7 +577,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 16,
-    color: '#1E293B',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   statusBadge: {
@@ -600,11 +599,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#FCA5A5',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   cancelBtnText: {
     fontSize: 12,
-    color: '#DC2626',
+    color: '#EF4444',
     fontFamily: Typography.bold,
   },
   deleteBtn: {
@@ -613,7 +612,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#FCA5A5',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -622,14 +621,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: theme.border,
   },
   infoCol: {
     gap: 4,
   },
   infoLabel: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.extraBold,
   },
   infoRow: {
@@ -639,7 +638,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
-    color: '#475569',
+    color: theme.text.secondary,
     fontFamily: Typography.bold,
   },
   parcelStatusesContainer: {
@@ -662,19 +661,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     flex: 1,
   },
-  moreParcelsText: {
-    fontSize: 9,
-    color: '#94A3B8',
-    fontFamily: Typography.medium,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
   expandedParcels: {
     marginTop: 16,
   },
   expandedDivider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginBottom: 12,
   },
 });

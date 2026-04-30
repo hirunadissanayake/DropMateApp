@@ -20,13 +20,18 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import dayjs from 'dayjs';
 import { Typography } from '../constants/Typography';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 const RequestsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { theme } = useTheme();
   const { token, user } = useAuthStore();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const styles = makeStyles(theme);
 
   const fetchRequests = async () => {
     try {
@@ -62,13 +67,13 @@ const RequestsScreen = () => {
       >
         <View style={styles.cardHeader}>
           <View style={styles.badgeContainer}>
-            <View style={[styles.roleBadge, { backgroundColor: isIncoming ? '#DCFBEB' : '#E0F2FE' }]}>
-              <Text style={[styles.roleText, { color: isIncoming ? '#059669' : '#0284C7' }]}>
+            <View style={[styles.roleBadge, { backgroundColor: isIncoming ? (theme.isDark ? 'rgba(16, 185, 129, 0.15)' : '#DCFBEB') : (theme.isDark ? 'rgba(14, 165, 233, 0.15)' : '#E0F2FE') }]}>
+              <Text style={[styles.roleText, { color: isIncoming ? '#10B981' : '#0EA5E9' }]}>
                 {isIncoming ? 'Incoming Request' : 'Sent Request'}
               </Text>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: item.status === 'PENDING' ? '#FEF3C7' : '#DCFBEB' }]}>
-              <Text style={[styles.statusText, { color: item.status === 'PENDING' ? '#B45309' : '#059669' }]}>
+            <View style={[styles.statusBadge, { backgroundColor: item.status === 'PENDING' ? (theme.isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7') : (theme.isDark ? 'rgba(16, 185, 129, 0.15)' : '#DCFBEB') }]}>
+              <Text style={[styles.statusText, { color: item.status === 'PENDING' ? '#F59E0B' : '#10B981' }]}>
                 {item.status}
               </Text>
             </View>
@@ -100,7 +105,7 @@ const RequestsScreen = () => {
                 {isIncoming ? (item.sender?.name || 'Customer') : (item.trip?.traveler?.name || 'Traveler')}
               </Text>
             </View>
-            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2.5">
+            <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
               <Path d="M9 18l6-6-6-6" />
             </Svg>
           </View>
@@ -111,11 +116,7 @@ const RequestsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <LinearGradient
-        colors={['#F8FAFC', '#FFFFFF']}
-        style={StyleSheet.absoluteFillObject}
-      />
+      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
@@ -125,7 +126,7 @@ const RequestsScreen = () => {
 
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#006C52" />
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         ) : (
           <FlatList
@@ -135,12 +136,12 @@ const RequestsScreen = () => {
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#006C52']} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <View style={styles.emptyIconBox}>
-                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="1.5">
+                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
                     <Path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <Circle cx="8.5" cy="7" r="4" />
                     <Path d="M20 8v6M23 11h-6" />
@@ -159,10 +160,10 @@ const RequestsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
   },
   safeArea: {
     flex: 1,
@@ -174,13 +175,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
     letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#64748B',
+    color: theme.text.secondary,
     marginTop: 4,
     fontFamily: Typography.regular,
   },
@@ -194,17 +195,17 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   requestCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#006C52',
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: theme.isDark ? 0.3 : 0.05,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.regular,
   },
   cardBody: {
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
   },
   parcelName: {
     fontSize: 18,
-    color: '#0F172A',
+    color: theme.text.primary,
     marginBottom: 4,
     fontFamily: Typography.bold,
   },
@@ -259,12 +260,12 @@ const styles = StyleSheet.create({
   },
   routeText: {
     fontSize: 14,
-    color: '#64748B',
+    color: theme.text.secondary,
     fontFamily: Typography.regular,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
   },
   travelerSection: {
     flexDirection: 'row',
@@ -275,13 +276,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetter: {
     fontSize: 16,
-    color: '#006C52',
+    color: theme.primary,
     fontFamily: Typography.bold,
   },
   travelerDetails: {
@@ -289,13 +290,13 @@ const styles = StyleSheet.create({
   },
   travelerLabel: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     fontFamily: Typography.medium,
     marginBottom: 2,
   },
   travelerName: {
     fontSize: 15,
-    color: '#1E293B',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
   },
   emptyContainer: {
@@ -308,20 +309,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 20,
-    color: '#0F172A',
+    color: theme.text.primary,
     fontFamily: Typography.bold,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 15,
-    color: '#64748B',
+    color: theme.text.secondary,
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 22,

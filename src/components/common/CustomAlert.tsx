@@ -6,11 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../../constants/Typography';
+import { useTheme } from '../../context/ThemeContext';
+import { AppTheme } from '../../constants/Colors';
 
 interface CustomAlertProps {
   visible: boolean;
@@ -23,6 +24,7 @@ interface CustomAlertProps {
   loading?: boolean;
   type?: 'success' | 'warning' | 'error' | 'info';
   showCancel?: boolean;
+  theme?: AppTheme;
 }
 
 const { width } = Dimensions.get('window');
@@ -38,22 +40,27 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   loading = false,
   type = 'info',
   showCancel = true,
+  theme: propTheme,
 }) => {
+  const { theme: contextTheme } = useTheme();
+  const theme = propTheme || contextTheme;
+  const s = makeStyles(theme);
+
   const getIconColor = () => {
     switch (type) {
-      case 'success': return '#059669';
+      case 'success': return '#10B981';
       case 'warning': return '#F59E0B';
-      case 'error': return '#DC2626';
-      default: return '#006C52';
+      case 'error': return '#EF4444';
+      default: return theme.primary;
     }
   };
 
   const getIconBg = () => {
     switch (type) {
-      case 'success': return '#ECFDF5';
-      case 'warning': return '#FFFBEB';
-      case 'error': return '#FEF2F2';
-      default: return '#F0FDF4';
+      case 'success': return theme.isDark ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5';
+      case 'warning': return theme.isDark ? 'rgba(245, 158, 11, 0.15)' : '#FFFBEB';
+      case 'error': return theme.isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEF2F2';
+      default: return theme.isDark ? 'rgba(61, 217, 164, 0.15)' : '#F0FDF4';
     }
   };
 
@@ -64,10 +71,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       animationType="fade"
       onRequestClose={loading ? undefined : onCancel}
     >
-      <View style={styles.overlay}>
-        <View style={styles.alertContainer}>
-          <View style={styles.iconContainer}>
-            <View style={[styles.iconCircle, { backgroundColor: getIconBg() }]}>
+      <View style={s.overlay}>
+        <View style={s.alertContainer}>
+          <View style={s.iconContainer}>
+            <View style={[s.iconCircle, { backgroundColor: getIconBg() }]}>
               {type === 'warning' || type === 'error' ? (
                 <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={getIconColor()} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <Circle cx="12" cy="12" r="10" />
@@ -85,25 +92,25 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             </View>
           </View>
 
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <Text style={s.title}>{title}</Text>
+          <Text style={s.message}>{message}</Text>
 
-          <View style={styles.buttonContainer}>
+          <View style={s.buttonContainer}>
             {showCancel && !loading && (
               <TouchableOpacity 
-                style={[styles.button, styles.cancelButton]} 
+                style={[s.button, s.cancelButton]} 
                 onPress={onCancel}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                <Text style={s.cancelButtonText}>{cancelText}</Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity 
               style={[
-                styles.button, 
-                styles.confirmButton, 
-                type === 'warning' || type === 'error' ? { backgroundColor: '#DC2626' } : {},
+                s.button, 
+                s.confirmButton, 
+                type === 'warning' || type === 'error' ? { backgroundColor: '#EF4444' } : {},
                 loading ? { opacity: 0.8 } : {}
               ]} 
               onPress={onConfirm}
@@ -113,7 +120,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                <Text style={s.confirmButtonText}>{confirmText}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -123,10 +130,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 32, 23, 0.7)',
+    backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(5, 32, 23, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -134,15 +141,17 @@ const styles = StyleSheet.create({
   alertContainer: {
     width: '100%',
     maxWidth: width - 48,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.background,
     borderRadius: 32,
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.25,
+    shadowOpacity: theme.isDark ? 0.4 : 0.25,
     shadowRadius: 25,
     elevation: 12,
+    borderWidth: theme.isDark ? 1 : 0,
+    borderColor: theme.border,
   },
   iconContainer: {
     marginBottom: 20,
@@ -156,14 +165,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    color: '#0F172A',
+    color: theme.text.primary,
     marginBottom: 12,
     textAlign: 'center',
     fontFamily: Typography.bold,
   },
   message: {
     fontSize: 16,
-    color: '#64748B',
+    color: theme.text.secondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
@@ -183,13 +192,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
   },
   confirmButton: {
-    backgroundColor: '#006C52',
+    backgroundColor: theme.primary,
   },
   cancelButtonText: {
-    color: '#64748B',
+    color: theme.text.tertiary,
     fontSize: 15,
     fontFamily: Typography.medium,
   },
