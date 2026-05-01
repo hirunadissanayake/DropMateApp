@@ -153,7 +153,7 @@ const TravelerEarningsScreen = () => {
             <SafeAreaView edges={['top']}>
               <View style={styles.headerRow}>
                  <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-                 <Text style={styles.headerTitle}>My Earnings</Text>
+                 <Text style={styles.headerTitle}>My Wallet</Text>
                  <View style={{ width: 40 }} />
               </View>
 

@@ -121,8 +121,8 @@ const TopUpScreen = ({ navigation }: any) => {
 
             <View style={styles.bankBox}>
               {[
-                { label: 'Bank', value: 'Commercial Bank of Ceylon' },
-                { label: 'Account Name', value: 'DropMate Pvt Ltd' },
+                { label: 'Bank', value: 'Commercial Bank' },
+                { label: 'Account Name', value: 'DropMate (Pvt) Ltd' },
                 { label: 'Account No', value: '1000 8820 9921', highlight: true },
                 { label: 'Branch', value: 'Colombo 03' },
               ].map(({ label, value, highlight }) => (
@@ -280,9 +280,9 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: theme.background,
   },
   header: {
-    paddingBottom: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerRow: {
     flexDirection: 'row',
@@ -295,7 +295,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 28,
     color: '#FFFFFF',
     fontFamily: Typography.bold,
   },

@@ -169,7 +169,7 @@ const TravelerProfileScreen = () => {
                     </Svg>
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.itemLabel}>My Earnings</Text>
+                    <Text style={styles.itemLabel}>My Wallet</Text>
                     <Text style={styles.itemSubLabel}>Balance, History & Withdrawals</Text>
                 </View>
                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2">
