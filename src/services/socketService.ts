@@ -6,15 +6,17 @@ import { useAuthStore } from '../store/authStore';
 import Toast from 'react-native-toast-message';
 
 class SocketService {
+  private userId: string | null = null;
   private socket: Socket | null = null;
 
   connect(userId?: string) {
+    if (userId) {
+      this.userId = userId;
+    }
+
     if (this.socket) {
-      if (userId && this.socket.connected) {
-        this.joinUserRoom(userId);
-      } else if (userId) {
-        // If socket exists but not connected yet, we can attach a one-time listener or rely on the existing connect listener
-        // The existing connect listener in the constructor/init will handle joining the room once connected.
+      if (this.userId && this.socket.connected) {
+        this.joinUserRoom(this.userId);
       }
       return;
     }
@@ -26,8 +28,8 @@ class SocketService {
 
     this.socket.on('connect', () => {
       console.log('Connected to Socket');
-      if (userId) {
-        this.joinUserRoom(userId);
+      if (this.userId) {
+        this.joinUserRoom(this.userId);
       }
     });
 
@@ -99,12 +101,30 @@ class SocketService {
   sendSupportMessage(data: { userId: string, message: string, isAdmin: boolean, senderName?: string }) {
     if (this.socket?.connected) {
       this.socket.emit('send_support_message', data);
+    } else {
+      console.warn('Socket not connected, cannot send message');
+      // Attempt to reconnect if needed
+      this.connect(data.userId);
+      // Wait a bit and try once more
+      setTimeout(() => {
+        if (this.socket?.connected) {
+          this.socket.emit('send_support_message', data);
+        }
+      }, 2000);
     }
   }
 
   getSupportHistory(userId: string) {
     if (this.socket?.connected) {
       this.socket.emit('get_support_history', userId);
+    } else {
+      console.warn('Socket not connected, cannot fetch history');
+      this.connect(userId);
+      setTimeout(() => {
+        if (this.socket?.connected) {
+          this.socket.emit('get_support_history', userId);
+        }
+      }, 2000);
     }
   }
 
