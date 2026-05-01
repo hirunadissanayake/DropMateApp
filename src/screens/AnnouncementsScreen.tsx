@@ -12,7 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
-import { Colors } from '../constants/Colors';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useNavigation } from '@react-navigation/native';
 import BackButton from '../components/common/BackButton';
@@ -23,6 +24,8 @@ import { socketService } from '../services/socketService';
 const { width } = Dimensions.get('window');
 
 const AnnouncementsScreen = () => {
+  const { theme, isDark } = useTheme();
+  const s = makeStyles(theme);
   const navigation = useNavigation();
   const { announcements, clearUnread } = useAnnouncementStore();
   const [refreshing, setRefreshing] = React.useState(false);
@@ -52,26 +55,26 @@ const AnnouncementCard = ({ item }: { item: any }) => {
   const isLongMessage = numLines > 3;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.headerLeft}>
-          <View style={styles.iconCircle}>
+    <View style={s.card}>
+      <View style={s.cardHeader}>
+        <View style={s.headerLeft}>
+          <View style={s.iconCircle}>
             <LinearGradient
-              colors={[Colors.primary, '#064E3B']}
-              style={styles.iconGradient}
+              colors={[theme.primary, theme.primaryDark]}
+              style={s.iconGradient}
             >
               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
               </Svg>
             </LinearGradient>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.senderName}>{item.senderName || 'DropMate Admin'}</Text>
-            <View style={styles.timeRow}>
-              <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+          <View style={s.headerInfo}>
+            <Text style={s.senderName}>{item.senderName || 'DropMate Admin'}</Text>
+            <View style={s.timeRow}>
+              <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
                 <Circle cx="12" cy="12" r="10" /><Path d="M12 6v6l4 2" />
               </Svg>
-              <Text style={styles.timeText}>{dayjs(item.createdAt).format('DD MMM, hh:mm A')}</Text>
+              <Text style={s.timeText}>{dayjs(item.createdAt).format('DD MMM, hh:mm A')}</Text>
             </View>
           </View>
         </View>
@@ -80,10 +83,10 @@ const AnnouncementCard = ({ item }: { item: any }) => {
       <TouchableOpacity 
         activeOpacity={0.9} 
         onPress={() => isLongMessage && setExpanded(!expanded)}
-        style={styles.contentArea}
+        style={s.contentArea}
       >
         <Text 
-          style={styles.messageText}
+          style={s.messageText}
           numberOfLines={expanded ? undefined : 3}
           onTextLayout={(e) => {
             if (!expanded) setNumLines(e.nativeEvent.lines.length);
@@ -93,10 +96,10 @@ const AnnouncementCard = ({ item }: { item: any }) => {
         </Text>
         
         {isLongMessage && (
-          <View style={styles.expandAction}>
-             <Text style={styles.expandText}>{expanded ? 'Show Less' : 'Read More'}</Text>
-             <View style={[styles.arrowBox, expanded && { transform: [{ rotate: '180deg' }] }]}>
-                <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Colors.primary} strokeWidth="3">
+          <View style={s.expandAction}>
+             <Text style={s.expandText}>{expanded ? 'Show Less' : 'Read More'}</Text>
+             <View style={[s.arrowBox, expanded && { transform: [{ rotate: '180deg' }] }]}>
+                <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="3">
                    <Path d="M6 9l6 6 6-6" />
                 </Svg>
              </View>
@@ -108,16 +111,16 @@ const AnnouncementCard = ({ item }: { item: any }) => {
 };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+    <View style={s.container}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       
-      <LinearGradient colors={[Colors.primary, '#004D3A']} style={styles.headerGradient}>
+      <LinearGradient colors={[theme.primary, theme.primaryDark]} style={s.headerGradient}>
         <SafeAreaView edges={['top']}>
-          <View style={styles.header}>
+          <View style={s.header}>
             <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-            <View style={styles.headerTitleContainer}>
-               <Text style={styles.headerTitle}>Announcement Center</Text>
-               <Text style={styles.headerSubtitle}>Official updates from DropMate</Text>
+            <View style={s.headerTitleContainer}>
+               <Text style={s.headerTitle}>Announcement Center</Text>
+               <Text style={s.headerSubtitle}>Official updates from DropMate</Text>
             </View>
             <View style={{ width: 40 }} />
           </View>
@@ -125,29 +128,29 @@ const AnnouncementCard = ({ item }: { item: any }) => {
       </LinearGradient>
 
       <ScrollView 
-        style={styles.content}
+        style={s.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollPadding}
+        contentContainerStyle={s.scrollPadding}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            colors={[Colors.primary]}
-            tintColor={Colors.primary}
+            colors={[theme.primary]}
+            tintColor={theme.primary}
           />
         }
       >
         {sortedAnnouncements.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconCircle}>
-               <LinearGradient colors={['#F1F5F9', '#E2E8F0']} style={styles.emptyGradient}>
-                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.5">
+          <View style={s.emptyState}>
+            <View style={s.emptyIconCircle}>
+               <LinearGradient colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F1F5F9', '#E2E8F0']} style={s.emptyGradient}>
+                  <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="1.5">
                     <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                   </Svg>
                </LinearGradient>
             </View>
-            <Text style={styles.emptyTitle}>No Announcements Yet</Text>
-            <Text style={styles.emptySubtitle}>We'll keep you posted with the latest updates and important news here.</Text>
+            <Text style={s.emptyTitle}>No Announcements Yet</Text>
+            <Text style={s.emptySubtitle}>We'll keep you posted with the latest updates and important news here.</Text>
           </View>
         ) : (
           sortedAnnouncements.map(item => <AnnouncementCard key={item.id} item={item} />)
@@ -157,10 +160,10 @@ const AnnouncementCard = ({ item }: { item: any }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.background,
   },
   headerGradient: {
     paddingBottom: 20,
@@ -196,17 +199,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 20,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
+    shadowOpacity: theme.isDark ? 0.3 : 0.04,
     shadowRadius: 12,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: theme.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
   senderName: {
     fontSize: 17,
     fontFamily: Typography.bold,
-    color: '#0F172A',
+    color: theme.text.primary,
     marginBottom: 2,
   },
   timeRow: {
@@ -247,10 +250,10 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 12,
     fontFamily: Typography.medium,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
   },
   broadcastBadge: {
-    backgroundColor: Colors.primary + '10',
+    backgroundColor: theme.primary + '10',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -258,16 +261,16 @@ const styles = StyleSheet.create({
   broadcastBadgeText: {
     fontSize: 10,
     fontFamily: Typography.bold,
-    color: Colors.primary,
+    color: theme.primary,
     letterSpacing: 0.5,
   },
   contentArea: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   messageText: {
     fontSize: 15,
     fontFamily: Typography.semiBold,
-    color: '#334155',
+    color: theme.text.secondary,
     lineHeight: 24,
   },
   expandAction: {
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
   expandText: {
     fontSize: 13,
     fontFamily: Typography.bold,
-    color: Colors.primary,
+    color: theme.primary,
   },
   arrowBox: {
     justifyContent: 'center',
@@ -290,7 +293,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: theme.border,
     marginBottom: 16,
   },
   footerRow: {
@@ -301,7 +304,7 @@ const styles = StyleSheet.create({
   footerBrand: {
     fontSize: 11,
     fontFamily: Typography.bold,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -309,7 +312,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.primary + '08',
+    backgroundColor: theme.primary + '08',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -317,7 +320,7 @@ const styles = StyleSheet.create({
   verifiedText: {
     fontSize: 10,
     fontFamily: Typography.bold,
-    color: Colors.primary,
+    color: theme.primary,
   },
   emptyState: {
     flex: 1,
@@ -341,14 +344,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontFamily: Typography.bold,
-    color: '#1E293B',
+    color: theme.text.primary,
     marginBottom: 12,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 15,
     fontFamily: Typography.medium,
-    color: '#94A3B8',
+    color: theme.text.tertiary,
     textAlign: 'center',
     lineHeight: 24,
   },

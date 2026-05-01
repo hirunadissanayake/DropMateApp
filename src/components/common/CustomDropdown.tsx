@@ -123,7 +123,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       >
         <View style={s.selectedContent}>
           {renderOptionIcon(selectedOption, true)}
-          <Text style={[s.selectText, !selectedOption && s.placeholderText]}>
+          <Text 
+            style={[s.selectText, !selectedOption && s.placeholderText]} 
+            numberOfLines={1} 
+            ellipsizeMode="tail"
+          >
             {selectedOption || placeholder}
           </Text>
         </View>
@@ -272,11 +276,14 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+    marginRight: 8,
   },
   selectText: {
     fontSize: 16,
     color: theme.text.primary,
     fontFamily: Typography.semiBold,
+    flex: 1,
   },
   placeholderText: {
     color: theme.text.placeholder,

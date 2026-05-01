@@ -12,6 +12,8 @@ import {
   RefreshControl,
   Animated,
   AppState,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -93,9 +95,19 @@ const TravelerHomeScreen = ({navigation}: any) => {
   const {unreadCount: announcementUnread} = useAnnouncementStore();
   const {unreadCount, fetchUnreadCount} = useNotificationStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const s = makeStyles(theme);
+
+  const toggleActions = () => {
+    // Enable LayoutAnimation for Android
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowActions(!showActions);
+  };
 
   const playAlertSound = useCallback(() => {
     playGlobalSound();
@@ -399,48 +411,75 @@ const TravelerHomeScreen = ({navigation}: any) => {
         </TouchableOpacity>
 
         <View style={s.headerRightActions}>
-          <TouchableOpacity 
-            style={s.notificationBtn} 
-            activeOpacity={0.7}
-            onPress={toggleTheme}
-          >
-            {isDark ? (
-                <SunIcon color={theme.primary} />
-              ) : (
-                <MoonIcon color={theme.primary} />
-              )}
-          </TouchableOpacity>
-
           <TouchableOpacity
-            style={s.notificationBtn}
+            style={[s.notificationBtn, showActions && { backgroundColor: theme.primary + '15' }]}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('Announcements')}>
-            <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
-              <Path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
-              <Path d="M12 8v4" />
-              <Path d="M12 16h.01" />
-            </Svg>
-            {announcementUnread > 0 && (
-              <View style={s.notifBadge}>
-                <Text style={s.notifBadgeText}>{announcementUnread > 99 ? '99+' : announcementUnread}</Text>
-              </View>
+            onPress={toggleActions}>
+            <View style={{ transform: [{ rotate: showActions ? '180deg' : '0deg' }] }}>
+              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <Path d="M6 9l6 6 6-6" />
+              </Svg>
+            </View>
+            {!showActions && (announcementUnread > 0 || unreadCount > 0) && (
+              <View style={[s.notifBadge, { top: -2, right: -2, width: 12, height: 12, borderRadius: 6, minWidth: 0, padding: 0 }]} />
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={s.notificationBtn}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('Notifications')}>
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
-              <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" />
-              <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" />
-            </Svg>
-            {unreadCount > 0 && (
-              <View style={s.notifBadge}>
-                <Text style={s.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          {showActions && (
+            <View style={s.dropdownActions}>
+              <TouchableOpacity 
+                style={s.notificationBtn} 
+                activeOpacity={0.7}
+                onPress={() => {
+                  toggleTheme();
+                  toggleActions();
+                }}
+              >
+                {isDark ? (
+                    <SunIcon color={theme.primary} />
+                  ) : (
+                    <MoonIcon color={theme.primary} />
+                  )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={s.notificationBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.navigate('Announcements');
+                  toggleActions();
+                }}>
+                <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
+                  <Path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                  <Path d="M12 8v4" />
+                  <Path d="M12 16h.01" />
+                </Svg>
+                {announcementUnread > 0 && (
+                  <View style={s.notifBadge}>
+                    <Text style={s.notifBadgeText}>{announcementUnread > 99 ? '99+' : announcementUnread}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={s.notificationBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.navigate('Notifications');
+                  toggleActions();
+                }}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
+                  <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" />
+                  <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" />
+                </Svg>
+                {unreadCount > 0 && (
+                  <View style={s.notifBadge}>
+                    <Text style={s.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
 
@@ -500,7 +539,6 @@ const TravelerHomeScreen = ({navigation}: any) => {
         </View>
 
         <View style={s.cardsSection}>
-          <Text style={s.sectionHeader}>Action Required</Text>
           {!user?.isTravelerApproved && (
             <View style={s.reviewCard}>
               <View style={s.reviewCardContent}>
@@ -554,7 +592,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 16, paddingRight: 24, paddingBottom: 20}}>
             <View style={s.tipCard}>
               <View style={s.tipImagePlaceholder}>
-                  <LinearGradient colors={theme.isDark ? ['#1E293B', '#0F172A'] : ['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
+                  <LinearGradient colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
                   <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" style={{opacity: 0.5}}>
                     <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                   </Svg>
@@ -568,8 +606,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
 
             <View style={s.tipCard}>
               <View style={s.tipImagePlaceholder}>
-                  <LinearGradient colors={theme.isDark ? ['#1E293B', '#0F172A'] : ['#E6E6FA', '#D8BFD8']} style={StyleSheet.absoluteFillObject} />
-                  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? '#A78BFA' : '#4A0E4E'} strokeWidth="2" style={{opacity: 0.5}}>
+                  <LinearGradient colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
+                  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" style={{opacity: 0.5}}>
                     <Path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                   </Svg>
                   <View style={s.tipBadge}><Text style={s.tipBadgeText}>Quality</Text></View>
@@ -715,6 +753,23 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: theme.card,
+  },
+  dropdownActions: {
+    position: 'absolute',
+    top: 55,
+    right: 0,
+    backgroundColor: theme.isDark ? theme.card : '#FFFFFF',
+    borderRadius: 20,
+    padding: 8,
+    gap: 12,
+    zIndex: 1000,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   notifBadgeText: {
     color: '#FFFFFF',

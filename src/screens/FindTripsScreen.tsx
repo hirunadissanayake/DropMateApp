@@ -231,32 +231,34 @@ const FindTripsScreen = () => {
           <Text style={s.headerSubtitle}>Discover trips headed your way</Text>
 
           <View style={s.searchHeaderCard}>
-            <View style={s.searchInputsCol}>
-              <CustomDropdown
-                options={availableFrom}
-                selectedOption={fromLocation}
-                onSelect={setFromLocation}
-                placeholder="From"
-                theme={theme}
-              />
-              <View style={s.searchDivider}>
-                <View style={s.dividerLine} />
-                <TouchableOpacity style={s.swapBtn} onPress={swapLocations}>
-                  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <Path d="M7 10l5-5 5 5" />
-                    <Path d="M17 14l-5 5-5-5" />
-                  </Svg>
-                </TouchableOpacity>
-                <View style={s.dividerLine} />
+            <View style={s.searchInputsRow}>
+              <View style={{ flex: 1 }}>
+                <CustomDropdown
+                  options={availableFrom}
+                  selectedOption={fromLocation}
+                  onSelect={setFromLocation}
+                  placeholder="From"
+                  theme={theme}
+                />
               </View>
-              <CustomDropdown
-                options={availableTo}
-                selectedOption={toLocation}
-                onSelect={setToLocation}
-                placeholder="To"
-                disabled={!fromLocation}
-                theme={theme}
-              />
+
+              <TouchableOpacity style={s.horizontalSwapBtn} onPress={swapLocations}>
+                <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <Path d="M7 16V4M7 4L3 8M7 4L11 8" />
+                  <Path d="M17 8v12M17 20l-4-4M17 20l4-4" />
+                </Svg>
+              </TouchableOpacity>
+
+              <View style={{ flex: 1 }}>
+                <CustomDropdown
+                  options={availableTo}
+                  selectedOption={toLocation}
+                  onSelect={setToLocation}
+                  placeholder="To"
+                  disabled={!fromLocation}
+                  theme={theme}
+                />
+              </View>
             </View>
 
             {(fromLocation || toLocation) && (
@@ -477,7 +479,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   routeLabelDest: {
     fontSize: 9,
-    color: '#EF4444',
+    color: theme.text.tertiary,
     fontFamily: Typography.bold,
     letterSpacing: 0.5,
   },
@@ -601,31 +603,20 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
   },
-  searchInputsCol: {
-    gap: 0,
-  },
-  searchDivider: {
+  searchInputsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 30,
-    marginVertical: -5,
-    zIndex: 10,
+    gap: 8,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.border,
-  },
-  swapBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  horizontalSwapBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
     borderWidth: 1,
     borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 12,
   },
   clearAllBtn: {
     marginTop: 12,
