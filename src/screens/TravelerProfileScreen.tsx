@@ -369,7 +369,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     color: theme.text.primary,
     fontFamily: Typography.extraBold,
   },

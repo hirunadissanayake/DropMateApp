@@ -309,7 +309,13 @@ const CreateParcelScreen = () => {
         style={{ flex: 1 }}
       >
         <View style={styles.stickyHeader}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <View style={styles.headerActionRow}>
+            <View style={styles.headerLeft}>
+              <BackButton onPress={() => navigation.goBack()} />
+            </View>
+            <Text style={styles.headerTitleCenter}>New Parcel</Text>
+            <View style={styles.headerRight} />
+          </View>
         </View>
 
         <ScrollView 
@@ -332,7 +338,6 @@ const CreateParcelScreen = () => {
           <View style={styles.contentPadding}>
             {/* Header Section */}
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>New Parcel</Text>
               <Text style={styles.heroSubtitle}>Fill in the details to get started with your delivery.</Text>
             </View>
 
@@ -618,6 +623,25 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: 'transparent',
     zIndex: 100,
+  },
+  headerActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  headerLeft: {
+    width: 44,
+    alignItems: 'flex-start',
+  },
+  headerRight: {
+    width: 44,
+  },
+  headerTitleCenter: {
+    fontSize: 28,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
+    letterSpacing: -0.5,
   },
   contentPadding: {
     paddingHorizontal: 20,

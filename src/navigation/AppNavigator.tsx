@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { CONFIG } from '../constants/Config';
 import { requestUserPermission, getFcmToken, setupFcmListeners } from '../services/fcmService';
 import '@react-native-firebase/app';
 import { getMessaging, onTokenRefresh } from '@react-native-firebase/messaging';
@@ -33,7 +34,6 @@ import TripDetailsScreen from '../screens/TripDetailsScreen';
 import RequestsScreen from '../screens/RequestsScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
-import WalletScreen from '../screens/WalletScreen';
 import BankDetailsScreen from '../screens/BankDetailsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import AnnouncementsScreen from '../screens/AnnouncementsScreen';
@@ -116,6 +116,9 @@ export const AppNavigator = () => {
     };
   }, [token]);
 
+  const isBlockedByWallet = (user?.walletBalance ?? 0) < CONFIG.WALLET_BLOCK_THRESHOLD;
+  const isBlocked = user?.isBlocked || isBlockedByWallet;
+
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator 
@@ -125,9 +128,9 @@ export const AppNavigator = () => {
           fullScreenGestureEnabled: true,
           gestureEnabled: true,
         }} 
-        initialRouteName={user?.isBlocked ? "Blocked" : "Splash"}
+        initialRouteName={isBlocked ? "Blocked" : "Splash"}
       >
-        {user?.isBlocked ? (
+        {isBlocked ? (
           <>
             <Stack.Screen 
                 name="Blocked" 
@@ -229,10 +232,6 @@ export const AppNavigator = () => {
             <Stack.Screen 
               name="TravelerEarnings" 
               component={TravelerEarningsScreen} 
-            />
-            <Stack.Screen 
-              name="Wallet" 
-              component={WalletScreen} 
             />
             <Stack.Screen 
               name="BankDetails" 

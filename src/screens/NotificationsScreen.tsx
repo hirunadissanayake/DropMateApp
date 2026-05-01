@@ -254,27 +254,30 @@ const NotificationsScreen = () => {
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
             }
-            contentContainerStyle={notifications.length === 0 ? { flex: 1 } : styles.scrollContent}
+            contentContainerStyle={notifications.length === 0 ? { flex: 1, justifyContent: 'center' } : styles.scrollContent}
           >
             <LinearGradient 
               colors={theme.isDark ? ['rgba(61, 217, 164, 0.05)', 'rgba(61, 217, 164, 0.02)', theme.background] : ['#E6F5EF', '#F0FDF4', theme.background]} 
               style={styles.backgroundGradient} 
             />
 
-            <View style={styles.contentPadding}>
-
-
               {notifications.length === 0 ? (
                 <View style={styles.emptyState}>
                   <View style={styles.emptyIconCircle}>
-                      <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : "#FFFFFF"} strokeWidth="1.5">
+                    <LinearGradient 
+                      colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F1F5F9', '#E2E8F0']} 
+                      style={styles.emptyGradient}
+                    >
+                      <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : theme.text.tertiary} strokeWidth="1.5">
                           <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                       </Svg>
+                    </LinearGradient>
                   </View>
                   <Text style={styles.emptyText}>No notifications yet</Text>
                   <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
                 </View>
               ) : (
+              <View style={styles.contentPadding}>
               <View style={styles.listContainer}>
                 {groupNotifications(notifications).map(([groupName, items], index) => (
                   <View key={groupName} style={styles.groupSection}>
@@ -325,10 +328,10 @@ const NotificationsScreen = () => {
                     })}
                   </View>
                 ))}
-              </View>
-            )}
-            </View>
-          </ScrollView>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
 
           <CustomAlert
             visible={alertVisible}
@@ -514,21 +517,18 @@ function makeStyles(theme: AppTheme) {
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: 40,
-      marginTop: 40,
     },
     emptyIconCircle: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : theme.primary,
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      overflow: 'hidden',
+      marginBottom: 32,
+    },
+    emptyGradient: {
+      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 32,
-      shadowColor: theme.primary,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.1,
-      shadowRadius: 20,
-      elevation: 5,
     },
     emptyText: {
       fontSize: 24,

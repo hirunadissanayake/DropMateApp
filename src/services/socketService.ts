@@ -67,8 +67,43 @@ class SocketService {
     });
     
     this.socket.on('user_status_updated', (updatedUser: any) => {
+      const prevUser = useAuthStore.getState().user;
       useAuthStore.getState().setUser(updatedUser);
+      
+      // If user is suddenly blocked
+      if (!prevUser?.isBlocked && updatedUser.isBlocked) {
+        Toast.show({
+          type: 'error',
+          text1: 'Account Restricted 🚫',
+          text2: updatedUser.blockReason || 'Your account has been restricted.',
+          visibilityTime: 5000,
+        });
+      }
+      
       console.log('User status updated via socket:', updatedUser.isBlocked);
+    });
+
+    this.socket.on('wallet_update', (data: { balance: number, message?: string }) => {
+      const prevUser = useAuthStore.getState().user;
+      if (prevUser) {
+        useAuthStore.getState().setUser({ ...prevUser, walletBalance: data.balance });
+        
+        Toast.show({
+          type: data.balance >= 0 ? 'success' : 'info',
+          text1: 'Wallet Updated 💰',
+          text2: data.message || `New Balance: LKR ${data.balance}`,
+        });
+
+        // Trigger a block check if needed (AppNavigator handles this reactively)
+      }
+    });
+
+    this.socket.on('payout_status_updated', (data: { status: string, amount: number }) => {
+      Toast.show({
+        type: data.status === 'COMPLETED' ? 'success' : 'info',
+        text1: 'Payout Update 💸',
+        text2: `Your payout of LKR ${data.amount} is ${data.status.toLowerCase()}.`,
+      });
     });
 
     this.socket.on('global_message_updated', (updatedMessage: any) => {

@@ -16,12 +16,14 @@ import { AppTheme } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CONFIG } from '../constants/Config';
 
 const BlockedScreen = () => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const { user, logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isWalletBlocked = (user?.walletBalance ?? 0) < CONFIG.WALLET_BLOCK_THRESHOLD;
 
   const handleContactSupport = () => {
     navigation.navigate('SupportChat');
@@ -46,15 +48,19 @@ const BlockedScreen = () => {
             </View>
           </View>
 
-          <Text style={styles.title}>Account Restricted</Text>
+          <Text style={styles.title}>{isWalletBlocked ? "Wallet Suspended" : "Account Restricted"}</Text>
           <Text style={styles.subtitle}>
-            Your access to DropMate has been restricted by the administration.
+            {isWalletBlocked 
+              ? "Your account has been automatically suspended due to a low wallet balance."
+              : "Your access to DropMate has been restricted by the administration."}
           </Text>
 
           <View style={styles.reasonCard}>
             <Text style={styles.reasonLabel}>REASON FOR BLOCK:</Text>
             <Text style={styles.reasonText}>
-              "{user?.blockReason || 'Violation of Platform Terms & Conditions.'}"
+              {isWalletBlocked 
+                ? `Negative Balance: LKR ${user?.walletBalance}. Please settle your outstanding commissions (limit: LKR ${CONFIG.WALLET_BLOCK_THRESHOLD}).`
+                : `"${user?.blockReason || 'Violation of Platform Terms & Conditions.'}"`}
             </Text>
           </View>
 

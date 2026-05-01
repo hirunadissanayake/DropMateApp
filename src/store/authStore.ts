@@ -41,11 +41,12 @@ interface AuthState {
   logout: () => void;
   setRoleActive: (role: 'CUSTOMER' | 'TRAVELER') => void;
   setHasHydrated: (state: boolean) => void;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       user: null,
       isLoading: false,
@@ -58,6 +59,18 @@ export const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, roleActive: role } : null
         })),
       setHasHydrated: (state) => set({ _hasHydrated: state }),
+      refreshUser: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          // Explicitly requiring since dynamic import has TS issues depending on tsconfig. 
+          const authService = require('../services/authService');
+          const userData = await authService.getMe(token);
+          set({ user: userData });
+        } catch (error) {
+          console.error('Failed to refresh user:', error);
+        }
+      },
     }),
     {
       name: 'dropmate-auth-storage',

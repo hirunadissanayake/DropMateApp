@@ -28,6 +28,7 @@ import Toast from 'react-native-toast-message';
 import BackButton from '../components/common/BackButton';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
+import { CONFIG } from '../constants/Config';
 
 const { width } = Dimensions.get('window');
 
@@ -102,6 +103,11 @@ const TravelerEarningsScreen = () => {
       return;
     }
 
+    if (amount > (summary?.walletBalance || 0)) {
+      Toast.show({ type: 'error', text1: 'Insufficient balance' });
+      return;
+    }
+
     if (!selectedBankId) {
       Toast.show({ type: 'error', text1: 'Please select a payout method' });
       return;
@@ -155,13 +161,24 @@ const TravelerEarningsScreen = () => {
                  <Text style={styles.balanceLabel}>Available for Payout</Text>
                  <Text style={styles.balanceAmount}>{formatLKR(summary?.walletBalance || 0)}</Text>
                  
-                 <TouchableOpacity 
-                    style={styles.withdrawMainBtn} 
-                    onPress={() => setShowWithdrawModal(true)}
-                    activeOpacity={0.8}
-                 >
+                  <TouchableOpacity 
+                    style={[styles.withdrawMainBtn, (summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT && { opacity: 0.5 }]} 
+                    onPress={() => (summary?.walletBalance || 0) >= CONFIG.MIN_WITHDRAWAL_AMOUNT && setShowWithdrawModal(true)}
+                    activeOpacity={(summary?.walletBalance || 0) >= CONFIG.MIN_WITHDRAWAL_AMOUNT ? 0.8 : 1}
+                  >
                     <Text style={styles.withdrawMainText}>Request Payout</Text>
-                 </TouchableOpacity>
+                  </TouchableOpacity>
+                  {(summary?.walletBalance || 0) < 0 ? (
+                    <View style={styles.warningBox}>
+                      <Text style={styles.blockWarning}>
+                        Warning: Your balance is negative. Reaching LKR {Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD)} negative will result in an account block.
+                      </Text>
+                    </View>
+                  ) : (summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT ? (
+                    <Text style={styles.minPayoutWarning}>
+                      Minimum LKR {CONFIG.MIN_WITHDRAWAL_AMOUNT} required for payout
+                    </Text>
+                  ) : null}
               </View>
             </SafeAreaView>
           </LinearGradient>
@@ -443,8 +460,8 @@ function makeStyles(theme: AppTheme) {
       paddingVertical: 12,
     },
     headerTitle: { 
-      fontSize: 22, 
-      fontFamily: Typography.bold, 
+      fontSize: 28, 
+      fontFamily: Typography.extraBold, 
       color: '#FFFFFF' 
     },
     balanceContainer: {
@@ -480,6 +497,27 @@ function makeStyles(theme: AppTheme) {
       color: theme.primary, 
       fontFamily: Typography.bold, 
       fontSize: 15 
+    },
+    minPayoutWarning: {
+      color: 'rgba(255, 255, 255, 0.8)',
+      fontFamily: Typography.medium,
+      fontSize: 11,
+      marginTop: 10,
+    },
+    warningBox: {
+      backgroundColor: 'rgba(239, 68, 68, 0.15)', // Red tint
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 12,
+      marginTop: 14,
+      borderWidth: 1,
+      borderColor: 'rgba(239, 68, 68, 0.3)',
+    },
+    blockWarning: {
+      color: '#FECACA', // Light red text
+      fontFamily: Typography.bold,
+      fontSize: 11,
+      textAlign: 'center',
     },
     contentBody: {
       paddingHorizontal: 16,
