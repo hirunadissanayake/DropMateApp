@@ -83,18 +83,22 @@ class SocketService {
       console.log('User status updated via socket:', updatedUser.isBlocked);
     });
 
-    this.socket.on('wallet_update', (data: { balance: number, message?: string }) => {
+    this.socket.on('wallet_update', (data: { walletBalance?: number, balance?: number, message?: string }) => {
+      // Accept both field names for compatibility
+      const newBalance = data.walletBalance ?? data.balance ?? 0;
       const prevUser = useAuthStore.getState().user;
       if (prevUser) {
-        useAuthStore.getState().setUser({ ...prevUser, walletBalance: data.balance });
-        
+        // Update the local user balance immediately
+        useAuthStore.getState().setUser({ ...prevUser, walletBalance: newBalance });
+
         Toast.show({
-          type: data.balance >= 0 ? 'success' : 'info',
+          type: newBalance >= 0 ? 'success' : 'info',
           text1: 'Wallet Updated 💰',
-          text2: data.message || `New Balance: LKR ${data.balance}`,
+          text2: data.message || `New Balance: LKR ${newBalance.toFixed(2)}`,
         });
 
-        // Trigger a block check if needed (AppNavigator handles this reactively)
+        // ✅ Full server-sync: ensures AppNavigator Wallet Guard re-evaluates block status
+        useAuthStore.getState().refreshUser();
       }
     });
 

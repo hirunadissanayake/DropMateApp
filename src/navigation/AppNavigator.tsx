@@ -39,6 +39,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import AnnouncementsScreen from '../screens/AnnouncementsScreen';
 import HelpCenterScreen from '../screens/HelpCenterScreen';
 import SupportChatScreen from '../screens/SupportChatScreen';
+import TopUpScreen from '../screens/TopUpScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -70,6 +71,7 @@ export type RootStackParamList = {
   Announcements: undefined;
   HelpCenter: undefined;
   SupportChat: undefined;
+  TopUp: undefined;
   Blocked: undefined;
 };
 
@@ -139,6 +141,10 @@ export const AppNavigator = () => {
                 animation: 'fade',
                 gestureEnabled: false 
                 }}
+            />
+            <Stack.Screen 
+                name="TopUp" 
+                component={TopUpScreen} 
             />
             <Stack.Screen 
                 name="SupportChat" 
@@ -252,6 +258,10 @@ export const AppNavigator = () => {
             <Stack.Screen 
               name="SupportChat" 
               component={SupportChatScreen} 
+            />
+            <Stack.Screen 
+              name="TopUp" 
+              component={TopUpScreen} 
             />
           </>
         )}

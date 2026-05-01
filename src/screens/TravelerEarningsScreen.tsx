@@ -169,10 +169,19 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.withdrawMainText}>Request Payout</Text>
                   </TouchableOpacity>
                   {(summary?.walletBalance || 0) < 0 ? (
-                    <View style={styles.warningBox}>
-                      <Text style={styles.blockWarning}>
-                        Warning: Your balance is negative. Reaching LKR {Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD)} negative will result in an account block.
-                      </Text>
+                    <View style={{ alignItems: 'center' }}>
+                      <View style={styles.warningBox}>
+                        <Text style={styles.blockWarning}>
+                          Warning: Your balance is negative. Reaching LKR {Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD)} negative will result in an account block.
+                        </Text>
+                      </View>
+                      <TouchableOpacity 
+                        style={styles.topUpButtonSmall}
+                        onPress={() => navigation.navigate('TopUp' as never)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.topUpButtonSmallText}>Top Up Wallet</Text>
+                      </TouchableOpacity>
                     </View>
                   ) : (summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT ? (
                     <Text style={styles.minPayoutWarning}>
@@ -518,6 +527,20 @@ function makeStyles(theme: AppTheme) {
       fontFamily: Typography.bold,
       fontSize: 11,
       textAlign: 'center',
+    },
+    topUpButtonSmall: {
+      marginTop: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    topUpButtonSmallText: {
+      color: '#FFFFFF',
+      fontFamily: Typography.bold,
+      fontSize: 13,
     },
     contentBody: {
       paddingHorizontal: 16,

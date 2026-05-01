@@ -66,8 +66,19 @@ const BlockedScreen = () => {
 
           <View style={styles.instructionBox}>
             <Text style={styles.instructionText}>
-              If you believe this is a mistake or would like to request an unblock, please contact the DropMate support team.
+              Please contact support to resolve this issue and restore your account access.
             </Text>
+            
+            {(user?.walletBalance ?? 0) < 0 && (
+              <TouchableOpacity 
+                style={[styles.topUpButton, { backgroundColor: theme.primary }]}
+                onPress={() => navigation.navigate('TopUp')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.topUpText}>Top Up Now</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity style={styles.contactBtn} onPress={handleContactSupport}>
                 <Text style={styles.contactBtnText}>Contact Support Team</Text>
             </TouchableOpacity>
@@ -196,10 +207,28 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   footerText: {
     fontSize: 10,
-    fontFamily: Typography.extraBold,
+    fontFamily: Typography.semiBold,
     color: theme.border,
     letterSpacing: 2,
-  }
+  },
+  topUpButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  topUpText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontFamily: Typography.bold,
+  },
 });
 
 export default BlockedScreen;

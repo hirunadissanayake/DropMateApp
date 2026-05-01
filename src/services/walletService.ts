@@ -59,3 +59,36 @@ export const requestWithdrawal = async (
     throw error.response?.data || error;
   }
 };
+
+export const requestTopUp = async (
+  token: string,
+  payload: {
+    amount: number;
+    slipUri: string;
+  }
+): Promise<{ message: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append('amount', payload.amount.toString());
+    
+    // Append the file
+    const filename = payload.slipUri.split('/').pop() || 'slip.jpg';
+    const type = filename.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    
+    formData.append('slip', {
+      uri: payload.slipUri,
+      name: filename,
+      type: type,
+    } as any);
+
+    const response = await axios.post(ENDPOINTS.WALLET.TOP_UP, formData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
