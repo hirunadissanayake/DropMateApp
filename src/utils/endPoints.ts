@@ -70,4 +70,7 @@ export const ENDPOINTS = {
     MARK_ALL_READ: `${BASE_URL}/api/notifications/read-all`,
     DELETE: (id: string) => `${BASE_URL}/api/notifications/${id}`,
   },
+  BANNERS: {
+    GET: (screen?: string) => `${BASE_URL}/api/banners${screen ? `?screen=${screen}` : ''}`,
+  },
 };

@@ -31,6 +31,8 @@ import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useNotificationStore } from '../store/notificationStore';
+import * as bannerService from '../services/bannerService';
+import { BASE_URL } from '../utils/endPoints';
 
 const { width } = Dimensions.get('window');
 
@@ -59,7 +61,7 @@ const MoonIcon = ({ color }: { color: string }) => (
   </Svg>
 );
 
-const BANNERS = [
+const STATIC_BANNERS = [
   {
     id: '1',
     title: 'DropMate Premium',
@@ -75,8 +77,6 @@ const BANNERS = [
     icon: 'map'
   }
 ];
-
-const EXTENDED_BANNERS = [...BANNERS, { ...BANNERS[0], id: 'clone-1' }];
 
 const CustomerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
@@ -99,9 +99,28 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   const [loadingParcels, setLoadingParcels] = useState(true);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const scrollX = useRef(new Animated.Value(0)).current;
-
   const scrollViewRef = useRef<any>(null);
   const currentIndexRef = useRef(0);
+
+  const [displayBanners, setDisplayBanners] = useState<any[]>(STATIC_BANNERS);
+  const extendedBanners = [...displayBanners, displayBanners.length > 0 ? { ...displayBanners[0], id: 'clone-1' } : null].filter(Boolean);
+
+  const fetchBanners = useCallback(async () => {
+    try {
+      const data = await bannerService.getBanners('CUSTOMER');
+      if (data && data.length > 0) {
+        setDisplayBanners(data);
+      }
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+    }
+  }, []);
+
+  const formatImageUrl = (url?: string) => {
+    if (!url) return undefined;
+    if (url.startsWith('http')) return url;
+    return `${BASE_URL}/${url.replace(/\\/g, '/')}`;
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -112,7 +131,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
       }
       currentIndexRef.current = nextIndex;
 
-      if (nextIndex === BANNERS.length) {
+      if (nextIndex === displayBanners.length) {
         setTimeout(() => {
           if (scrollViewRef.current) {
             scrollViewRef.current.scrollTo({ x: 0, animated: false });
@@ -123,7 +142,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [displayBanners.length]);
 
   const fetchActiveParcels = async () => {
     if (!token || !user?.isCustomerApproved || user?.roleActive !== 'CUSTOMER') {
@@ -175,8 +194,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
       fetchUserProfile();
       fetchActiveParcels();
       fetchRecommendedTrips();
+      fetchBanners();
       if (token) fetchUnreadCount(token);
-    }, [token, user?.isCustomerApproved])
+    }, [token, user?.isCustomerApproved, fetchBanners])
   );
 
   const onRefresh = useCallback(async () => {
@@ -196,6 +216,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         const tripResponse = await tripService.getActiveTrips(token);
         setRecommendedTrips(tripResponse.trips?.slice(0, 5) || []);
       }
+      fetchBanners();
       if (token) fetchUnreadCount(token);
     } catch (error) {
       console.error('Refresh error:', error);
@@ -350,27 +371,44 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             )}
             scrollEventThrottle={16}
           >
-            {EXTENDED_BANNERS.map((banner) => (
+            {extendedBanners.map((banner) => (
               <View key={banner.id} style={s.bannerWrapper}>
-                <LinearGradient
-                  colors={banner.colors}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={s.bannerCard}
+                <TouchableOpacity 
+                  activeOpacity={0.9} 
+                  onPress={() => {
+                    console.log('Banner pressed:', banner.id, 'Link:', banner.link);
+                    if (banner.link) {
+                      bannerService.openLink(banner.link);
+                    } else {
+                      console.log('No link for this banner');
+                    }
+                  }}
+                  style={s.bannerTouch}
                 >
-                  <View style={s.bannerContent}>
-                    <Text style={s.bannerTitle}>{banner.title}</Text>
-                    <Text style={s.bannerSubtitle}>{banner.subtitle}</Text>
-                  </View>
-                  <View style={s.bannerIconBox}>
-                    {renderServiceIcon(banner.icon, 'rgba(255,255,255,0.2)', 80)}
-                  </View>
-                </LinearGradient>
+                  <LinearGradient
+                    colors={banner.colors || (isDark ? ['#006C52', '#064E3B'] : ['#008766', '#006C52'])}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={s.bannerCard}
+                  >
+                    {banner.imageUrl && (
+                      <Image 
+                        source={{uri: formatImageUrl(banner.imageUrl)}} 
+                        style={StyleSheet.absoluteFillObject}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={s.bannerContent}>
+                      <Text style={s.bannerTitle}>{banner.title}</Text>
+                      <Text style={s.bannerSubtitle}>{banner.description || banner.subtitle}</Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             ))}
           </Animated.ScrollView>
           <View style={s.dotContainer}>
-            {BANNERS.map((_, i) => {
+            {displayBanners.map((_, i) => {
               const dotWidth = scrollX.interpolate({
                 inputRange: [(i - 1) * width, i * width, (i + 1) * width],
                 outputRange: [8, 20, 8],
@@ -732,14 +770,19 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     width: width,
     paddingHorizontal: 20,
   },
+  bannerTouch: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
   bannerCard: {
-    height: 130,
-    borderRadius: 24,
-    padding: 20,
+    width: '100%',
+    height: '100%',
+    padding: 18,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    overflow: 'hidden',
   },
   bannerContent: {
     flex: 1,

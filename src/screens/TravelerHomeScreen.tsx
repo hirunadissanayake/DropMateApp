@@ -38,6 +38,8 @@ import {useTheme} from '../context/ThemeContext';
 import {AppTheme} from '../constants/Colors';
 import {useAnnouncementStore} from '../store/announcementStore';
 import {useNotificationStore} from '../store/notificationStore';
+import * as bannerService from '../services/bannerService';
+
 
 const {width} = Dimensions.get('window');
 
@@ -66,7 +68,7 @@ const MoonIcon = ({ color }: { color: string }) => (
   </Svg>
 );
 
-const banners = [
+const STATIC_BANNERS = [
   {
     id: '1',
     title: 'Maximize Earnings!',
@@ -87,8 +89,6 @@ const banners = [
   },
 ];
 
-const extendedBanners = [...banners, {...banners[0], id: 'clone-1'}];
-
 const TravelerHomeScreen = ({navigation}: any) => {
   const {theme, isDark, toggleTheme} = useTheme();
   const {user, token, setUser} = useAuthStore();
@@ -108,6 +108,20 @@ const TravelerHomeScreen = ({navigation}: any) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setShowActions(!showActions);
   };
+
+  const [displayBanners, setDisplayBanners] = useState<any[]>(STATIC_BANNERS);
+  const extendedBanners = [...displayBanners, displayBanners.length > 0 ? {...displayBanners[0], id: 'clone-1'} : null].filter(Boolean);
+
+  const fetchBanners = useCallback(async () => {
+    try {
+      const data = await bannerService.getBanners('TRAVELER');
+      if (data && data.length > 0) {
+        setDisplayBanners(data);
+      }
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+    }
+  }, []);
 
   const playAlertSound = useCallback(() => {
     playGlobalSound();
@@ -340,7 +354,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
       fetchUserProfile();
       if (token) fetchUnreadCount(token);
       fetchPendingRequests();
-    }, [token, fetchPendingRequests]),
+      fetchBanners();
+    }, [token, fetchPendingRequests, fetchBanners]),
   );
 
   useEffect(() => {
@@ -350,7 +365,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         scrollViewRef.current.scrollTo({x: nextIndex * width, animated: true});
       }
       currentIndexRef.current = nextIndex;
-      if (nextIndex === banners.length) {
+      if (nextIndex === displayBanners.length) {
         setTimeout(() => {
           if (scrollViewRef.current) scrollViewRef.current.scrollTo({x: 0, animated: false});
           currentIndexRef.current = 0;
@@ -358,7 +373,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [displayBanners.length]);
 
   const onRefresh = useCallback(async () => {
     if (!token) return;
@@ -367,6 +382,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
       const userData = await authService.getMe(token);
       setUser(userData);
       fetchUnreadCount(token);
+      fetchBanners();
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {
@@ -500,7 +516,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
             onMomentumScrollEnd={(event: any) => {
               const x = event.nativeEvent.contentOffset.x;
               let index = Math.round(x / width);
-              if (index === banners.length) {
+              if (index === displayBanners.length) {
                 if (scrollViewRef.current) scrollViewRef.current.scrollTo({x: 0, animated: false});
                 index = 0;
               }
@@ -509,24 +525,56 @@ const TravelerHomeScreen = ({navigation}: any) => {
             scrollEventThrottle={16}>
             {extendedBanners.map((banner) => (
               <View key={banner.id} style={s.bannerWrapper}>
-                <LinearGradient colors={banner.bgColors} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={s.bannerContainer}>
-                  <View style={s.bannerContent}>
-                    <Text style={s.bannerTitle}>{banner.title}</Text>
-                    <Text style={s.bannerDesc}>{banner.desc}</Text>
-                  </View>
-                  <View style={s.bannerIconOverlay}>
-                    <Svg width="120" height="120" viewBox="0 0 24 24" fill="none" style={{opacity: 0.1, transform: [{rotate: '-15deg'}, {scale: 1.5}]}}>
-                      <Path d="M5 12h14M12 5l7 7-7 7" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                  </View>
-                </LinearGradient>
+                <TouchableOpacity 
+                  activeOpacity={0.9} 
+                  onPress={() => {
+                    console.log('Banner pressed:', banner.id, 'Link:', banner.link);
+                    if (banner.link) {
+                      bannerService.openLink(banner.link);
+                    } else {
+                      console.log('No link for this banner');
+                    }
+                  }}
+                  style={s.bannerTouch}
+                >
+                  <LinearGradient 
+                    colors={banner.bgColors || (isDark ? ['#006C52', '#004A38'] : ['#008766', '#006C52'])} 
+                    start={{x: 0, y: 0}} 
+                    end={{x: 1, y: 1}} 
+                    style={s.bannerContainer}
+                  >
+                    {banner.imageUrl && (
+                      <Image 
+                        source={{uri: formatImageUrl(banner.imageUrl)}} 
+                        style={StyleSheet.absoluteFillObject}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={s.bannerContent}>
+                      <Text style={s.bannerTitle}>{banner.title}</Text>
+                      <Text style={s.bannerDesc}>{banner.description || banner.desc}</Text>
+                    </View>
+                    <View style={s.bannerIconOverlay}>
+                      <Svg width="120" height="120" viewBox="0 0 24 24" fill="none" style={{opacity: 0.1, transform: [{rotate: '-15deg'}, {scale: 1.5}]}}>
+                        <Path d="M5 12h14M12 5l7 7-7 7" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </Svg>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             ))}
           </Animated.ScrollView>
 
           <View style={s.dotsContainer}>
-            {banners.map((_, i) => {
-              const inputRange = i === 0 ? [-width, 0, width, (banners.length - 1) * width, banners.length * width, (banners.length + 1) * width] : [(i - 1) * width, i * width, (i + 1) * width];
+            {displayBanners.length > 1 && displayBanners.map((_, i) => {
+              const inputRange = i === 0 
+                ? [-width, 0, width, (displayBanners.length - 1) * width, displayBanners.length * width, (displayBanners.length + 1) * width] 
+                : [(i - 1) * width, i * width, (i + 1) * width];
+              
+              // Ensure inputRange is monotonically non-decreasing by filtering duplicates and sorting if length is small
+              // Actually, if length is > 1 it should be fine except for the cloned parts.
+              // Let's simplify for 1 banner case by checking length.
+              
               const outputWidth = i === 0 ? [8, 24, 8, 8, 24, 8] : [8, 24, 8];
               const outputOpacity = i === 0 ? [0.3, 1, 0.3, 0.3, 1, 0.3] : [0.3, 1, 0.3];
               const dotWidth = scrollX.interpolate({inputRange, outputRange: outputWidth, extrapolate: 'clamp'});
@@ -573,7 +621,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
               <Text style={s.gridDesc}>Get support & FAQs.</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={s.gridCard} activeOpacity={0.8} onPress={() => navigation.navigate('Profile')}>
+            <TouchableOpacity style={s.gridCard} activeOpacity={0.8} onPress={() => navigation.navigate('TravelerEarnings')}>
               <View style={s.gridIconHeader}>
                 <View style={s.gridIconBox}>
                   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
@@ -581,8 +629,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
                   </Svg>
                 </View>
               </View>
-              <Text style={s.gridTitle}>Profile</Text>
-              <Text style={s.gridDesc}>Manage your Profile.</Text>
+              <Text style={s.gridTitle}>My Wallet</Text>
+              <Text style={s.gridDesc}>Manage your Wallet.</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -786,12 +834,16 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     width: width,
     paddingHorizontal: 24,
   },
+  bannerTouch: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
   bannerContainer: {
     width: '100%',
-    height: 140,
-    borderRadius: 20,
-    overflow: 'hidden',
-    padding: 24,
+    height: '100%',
+    padding: 18,
     justifyContent: 'center',
   },
   bannerContent: {
@@ -821,7 +873,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 10,
     gap: 6,
   },
   dot: {
