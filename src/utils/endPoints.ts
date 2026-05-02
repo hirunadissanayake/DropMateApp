@@ -63,6 +63,7 @@ export const ENDPOINTS = {
   BANK: {
     DETAILS: `${BASE_URL}/api/bank-details`,
     DETAIL: (id: string) => `${BASE_URL}/api/bank-details/${id}`,
+    DROPMATE_DETAILS: `${BASE_URL}/api/dropmate-bank-details`,
   },
   NOTIFICATIONS: {
     GET_ALL: `${BASE_URL}/api/notifications`,

@@ -55,3 +55,12 @@ export const deleteBankDetail = async (token: string, id: string): Promise<void>
     throw error.response?.data || error;
   }
 };
+
+export const getDropMateBankDetails = async (): Promise<any[]> => {
+  try {
+    const response = await axios.get(ENDPOINTS.BANK.DROPMATE_DETAILS);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};

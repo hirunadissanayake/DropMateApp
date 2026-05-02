@@ -11,18 +11,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../constants/Typography';
 import BackButton from '../components/common/BackButton';
 import { useAuthStore } from '../store/authStore';
 import * as walletService from '../services/walletService';
+import * as bankService from '../services/bankService';
 import Toast from 'react-native-toast-message';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AppTheme } from '../constants/Colors';
 import { useTheme } from '../context/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, G } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 const MIN_TOPUP = 500;
@@ -34,6 +36,48 @@ const TopUpScreen = ({ navigation }: any) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [slipUri, setSlipUri] = useState<string | null>(null);
+  const [companyBanks, setCompanyBanks] = useState<any[]>([]);
+  const [banksLoading, setBanksLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [expandedBankIndex, setExpandedBankIndex] = useState<number | null>(0);
+
+  const fetchCompanyBanks = async () => {
+    try {
+      setBanksLoading(count === 0); // Only show big loader on first fetch
+      const banks = await bankService.getDropMateBankDetails();
+      setCompanyBanks(banks);
+    } catch (error) {
+      console.error('Failed to fetch company banks:', error);
+    } finally {
+      setBanksLoading(false);
+    }
+  };
+
+  const [count, setCount] = React.useState(0);
+
+  React.useEffect(() => {
+    fetchCompanyBanks();
+    setCount(c => c + 1);
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refreshUser(),
+        fetchCompanyBanks(),
+      ]);
+      Toast.show({
+        type: 'success',
+        text1: 'Refreshed',
+        text2: 'Bank details updated',
+      });
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUser]);
 
   const selectImage = async () => {
     const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
@@ -105,7 +149,18 @@ const TopUpScreen = ({ navigation }: any) => {
       </LinearGradient>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.primary]}
+              tintColor={theme.primary}
+            />
+          }
+        >
 
           {/* Step 1 — Bank Details */}
           <View style={styles.stepCard}>
@@ -119,20 +174,67 @@ const TopUpScreen = ({ navigation }: any) => {
               </View>
             </View>
 
-            <View style={styles.bankBox}>
-              {[
-                { label: 'Bank', value: 'Commercial Bank' },
-                { label: 'Account Name', value: 'DropMate (Pvt) Ltd' },
-                { label: 'Account No', value: '1000 8820 9921', highlight: true },
-                { label: 'Branch', value: 'Colombo 03' },
-              ].map(({ label, value, highlight }) => (
-                <View key={label} style={styles.bankRow}>
-                  <Text style={styles.bankLabel}>{label}</Text>
-                  <Text style={[styles.bankValue, highlight && { color: theme.primary, fontFamily: Typography.bold }]}>
-                    {value}
+            <View style={{ gap: 12 }}>
+              {banksLoading ? (
+                <ActivityIndicator color={theme.primary} style={{ marginVertical: 20 }} />
+              ) : companyBanks.length === 0 ? (
+                <View style={styles.bankBox}>
+                  <Text style={[styles.bankLabel, { textAlign: 'center', paddingVertical: 20 }]}>
+                    No bank details available. Please contact support.
                   </Text>
                 </View>
-              ))}
+              ) : (
+                companyBanks.map((bank, index) => {
+                  const isExpanded = expandedBankIndex === index;
+                  return (
+                    <View key={bank.id || index} style={[styles.bankBox, isExpanded && styles.expandedBankBox]}>
+                      <TouchableOpacity 
+                        style={styles.bankBoxHeader} 
+                        onPress={() => setExpandedBankIndex(isExpanded ? null : index)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.bankInfoMain}>
+                          <Text style={styles.bankNameText}>{bank.bankName}</Text>
+                          <Text style={styles.bankBranchText}>{bank.branchName} Branch</Text>
+                        </View>
+                        <View style={[styles.expandIconCircle, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}>
+                          <Svg 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke={isExpanded ? theme.primary : theme.text.secondary} 
+                            strokeWidth="3" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
+                          >
+                            <Path d="M6 9l6 6 6-6" />
+                          </Svg>
+                        </View>
+                      </TouchableOpacity>
+
+                      {isExpanded && (
+                        <View style={styles.bankDetailsContent}>
+                          {[
+                            { label: 'Bank', value: bank.bankName },
+                            { label: 'Account Name', value: bank.accountName },
+                            { label: 'Account No', value: bank.accountNumber, highlight: true },
+                            { label: 'Branch', value: bank.branchName },
+                          ].map(({ label, value, highlight }) => (
+                            <View key={label} style={styles.bankRow}>
+                              <Text style={styles.bankLabel}>{label}</Text>
+                              <Text style={[styles.bankValue, highlight && { color: theme.primary, fontFamily: Typography.bold }]}>
+                                {value}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
+              )}
             </View>
           </View>
 
@@ -353,11 +455,48 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 2,
   },
   bankBox: {
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : '#F7FCF9',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.card,
     borderRadius: 16,
-    paddingHorizontal: 16,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: theme.border,
+  },
+  expandedBankBox: {
+    borderColor: theme.primary + '40',
+    borderWidth: 1.5,
+  },
+  bankBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  bankInfoMain: {
+    flex: 1,
+  },
+  bankNameText: {
+    fontSize: 15,
+    fontFamily: Typography.bold,
+    color: theme.text.primary,
+  },
+  bankBranchText: {
+    fontSize: 12,
+    fontFamily: Typography.medium,
+    color: theme.text.tertiary,
+    marginTop: 2,
+  },
+  expandIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bankDetailsContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: theme.border + '50',
   },
   bankRow: {
     flexDirection: 'row',
@@ -365,7 +504,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.border,
+    borderBottomColor: theme.border + '50',
   },
   bankLabel: {
     fontSize: 13,
