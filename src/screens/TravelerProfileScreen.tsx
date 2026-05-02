@@ -178,23 +178,25 @@ const TravelerProfileScreen = () => {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity 
-              style={styles.itemRow}
-              onPress={() => navigation.navigate('BankDetails')}
-            >
-              <View style={styles.itemIconBox}>
-                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
-                    <Path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11" />
-                  </Svg>
-              </View>
-              <View style={{ flex: 1 }}>
-                  <Text style={styles.itemLabel}>Bank Accounts</Text>
-                  <Text style={styles.itemSubLabel}>Manage saved payout accounts</Text>
-              </View>
-              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2">
-                  <Path d="M9 18l6-6-6-6" />
-              </Svg>
-            </TouchableOpacity>
+            {user?.isTravelerApproved && (
+              <TouchableOpacity 
+                style={styles.itemRow}
+                onPress={() => navigation.navigate('BankDetails')}
+              >
+                <View style={styles.itemIconBox}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
+                      <Path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11" />
+                    </Svg>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.itemLabel}>Bank Accounts</Text>
+                    <Text style={styles.itemSubLabel}>Manage saved payout accounts</Text>
+                </View>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.border} strokeWidth="2">
+                    <Path d="M9 18l6-6-6-6" />
+                </Svg>
+              </TouchableOpacity>
+            )}
 
             {(!user?.isCustomerRequested && !user?.isCustomerApproved) ? (
               <TouchableOpacity 

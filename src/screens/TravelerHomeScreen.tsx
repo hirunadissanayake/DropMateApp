@@ -623,17 +623,31 @@ const TravelerHomeScreen = ({navigation}: any) => {
               <Text style={s.gridDesc}>Get support & FAQs.</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={s.gridCard} activeOpacity={0.8} onPress={() => navigation.navigate('TravelerEarnings')}>
-              <View style={s.gridIconHeader}>
-                <View style={s.gridIconBox}>
-                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
-                    <Path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </Svg>
+            {user?.isTravelerApproved ? (
+              <TouchableOpacity style={s.gridCard} activeOpacity={0.8} onPress={() => navigation.navigate('TravelerEarnings')}>
+                <View style={s.gridIconHeader}>
+                  <View style={s.gridIconBox}>
+                    <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
+                      <Path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </Svg>
+                  </View>
                 </View>
-              </View>
-              <Text style={s.gridTitle}>My Wallet</Text>
-              <Text style={s.gridDesc}>Manage your Wallet.</Text>
-            </TouchableOpacity>
+                <Text style={s.gridTitle}>My Wallet</Text>
+                <Text style={s.gridDesc}>Manage your Wallet.</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={s.gridCard} activeOpacity={0.8} onPress={() => navigation.navigate('Profile')}>
+                <View style={s.gridIconHeader}>
+                  <View style={s.gridIconBox}>
+                    <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
+                      <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><Circle cx="12" cy="7" r="4"/>
+                    </Svg>
+                  </View>
+                </View>
+                <Text style={s.gridTitle}>Profile</Text>
+                <Text style={s.gridDesc}>Complete verification.</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
