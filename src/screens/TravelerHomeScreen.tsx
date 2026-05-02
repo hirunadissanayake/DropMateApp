@@ -201,6 +201,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
           toLocation: parcel.toLocation || match.toLocation,
           senderName: match.sender?.name || parcel.senderName || 'DropMate User',
           offerPrice: match.offerPrice?.toString() || parcel.price?.toString() || parcel.offerPrice?.toString(),
+          paymentMethod: parcel.paymentMethod,
           remainingSeconds: remainingSeconds,
         });
 
@@ -325,6 +326,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         toLocation: fcmData.toLocation,
         senderName: fcmData.senderName || 'DropMate User',
         offerPrice: fcmData.offerPrice?.toString(),
+        paymentMethod: fcmData.paymentMethod,
         remainingSeconds,
       });
 

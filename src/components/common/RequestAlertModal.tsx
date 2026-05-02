@@ -245,7 +245,13 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 </View>
                 <View style={styles.infoBox}>
                   <Text style={styles.infoLabel}>PAYMENT</Text>
-                  <Text style={styles.infoValue}>{data?.paymentMethod || 'Online'}</Text>
+                  <Text style={styles.infoValue}>
+                    {data?.paymentMethod === 'CASH_ON_PICKUP' || data?.paymentMethod === 'cash_pick_up' 
+                      ? 'Cash On Pickup' 
+                      : data?.paymentMethod === 'CASH_ON_DELIVERY' 
+                      ? 'Cash On Delivery' 
+                      : 'Online'}
+                  </Text>
                 </View>
                 <View style={[styles.infoBox, { borderLeftWidth: 1, borderLeftColor: theme.border }]}>
                   <Text style={styles.infoLabel}>YOU EARN</Text>
@@ -618,12 +624,12 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   infoValue: {
     fontFamily: Typography.bold,
-    fontSize: 17,
+    fontSize: 15,
     color: theme.text.primary,
   },
   infoPrice: {
     fontFamily: Typography.bold,
-    fontSize: 17,
+    fontSize: 15,
     color: theme.primary,
   },
   routeSection: {

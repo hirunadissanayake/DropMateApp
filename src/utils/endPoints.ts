@@ -65,7 +65,7 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `${BASE_URL}/api/bank-details/${id}`,
     DROPMATE_DETAILS: `${BASE_URL}/api/dropmate-bank-details`,
   },
-  NOTIFICATIONS: {
+  NOTIFICATIONS: { 
     GET_ALL: `${BASE_URL}/api/notifications`,
     MARK_READ: (id: string) => `${BASE_URL}/api/notifications/${id}/read`,
     MARK_ALL_READ: `${BASE_URL}/api/notifications/read-all`,

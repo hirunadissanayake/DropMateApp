@@ -373,7 +373,13 @@ const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
         <View style={styles.expandedParcels}>
           <View style={styles.expandedDivider} />
           <View style={styles.parcelStatusesContainer}>
-            {trip.parcels.map((p: any) => (
+            {[...trip.parcels]
+              .sort((a: any, b: any) => {
+                if (a.status === 'DELIVERED' && b.status !== 'DELIVERED') return 1;
+                if (a.status !== 'DELIVERED' && b.status === 'DELIVERED') return -1;
+                return 0;
+              })
+              .map((p: any) => (
               <View key={p.id} style={styles.parcelStatusRow}>
                 <View style={[styles.statusDotSmall, { backgroundColor: getParcelStatusColor(p.status) }]} />
                 <Text style={[styles.parcelStatusText, { color: getParcelStatusColor(p.status) }]} numberOfLines={1}>

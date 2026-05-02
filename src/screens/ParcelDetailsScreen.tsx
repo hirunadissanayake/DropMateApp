@@ -17,6 +17,7 @@ import {
   FlatList,
   TextInput,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -81,6 +82,13 @@ const ParcelDetailsScreen = () => {
   });
 
   const styles = makeStyles(theme);
+
+  // Derived visibility flags
+  const statusUpper = parcel?.status?.toUpperCase();
+  const isMatchedState = ['MATCHED', 'PICKED_UP', 'IN_TRANSIT', 'ARRIVED', 'DELIVERED'].includes(statusUpper);
+  const isSender = parcel && user ? String(user.id) === String(parcel.senderId) || String(user.id) === String(parcel.sender?.id) : false;
+  const isTraveler = parcel?.matchedTrip?.travelerId && user ? String(user.id) === String(parcel.matchedTrip.travelerId) : false;
+
 
   useEffect(() => {
     fetchDetails();
@@ -349,6 +357,14 @@ const ParcelDetailsScreen = () => {
     }
   };
 
+  const handleCall = (phone?: string) => {
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    } else {
+      Alert.alert('Error', 'Phone number not available');
+    }
+  };
+
   const handlePay = () => {
     navigation.navigate('Payment', { parcelId, amount: parcel.price });
   };
@@ -500,29 +516,29 @@ const ParcelDetailsScreen = () => {
             </View>
           </View>
 
-          {/* Sender & Recipient */}
-          <View style={styles.dualCards}>
-            <View style={styles.infoCard}>
-              <Text style={styles.sectionLabel}>RECEIVER</Text>
-              {parcel.receiverName ? (
-                <>
+          {/* Recipient Info */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionLabel}>RECEIVER DETAILS</Text>
+            {parcel.receiverName ? (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View>
                   <Text style={styles.personName}>{parcel.receiverName}</Text>
                   <Text style={styles.personPhone}>{parcel.receiverPhone}</Text>
-                </>
-              ) : (
-                <Text style={styles.hiddenInfo}>Hidden until matched</Text>
-              )}
-            </View>
-            {user?.id !== parcel.senderId && (
-              <View style={styles.infoCard}>
-                <Text style={styles.sectionLabel}>SENDER</Text>
-                <Text style={styles.personName}>{parcel.sender?.name}</Text>
-                {parcel.sender?.phone ? (
-                  <Text style={styles.personPhone}>{parcel.sender?.phone}</Text>
-                ) : (
-                  <Text style={styles.hiddenInfo}>Contact hidden until matched</Text>
+                </View>
+                {parcel.receiverPhone && (
+                  <TouchableOpacity 
+                    style={styles.callButton} 
+                    activeOpacity={0.7}
+                    onPress={() => handleCall(parcel.receiverPhone)}
+                  >
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
+                      <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.11-2.11a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </Svg>
+                  </TouchableOpacity>
                 )}
               </View>
+            ) : (
+              <Text style={styles.hiddenInfo}>Hidden until matched</Text>
             )}
           </View>
 
@@ -593,7 +609,7 @@ const ParcelDetailsScreen = () => {
           </View>
 
           {/* Customer Online Payment */}
-          {user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.paymentMethod === 'ONLINE' && parcel.paymentStatus === 'PENDING' && (
+          {isSender && statusUpper === 'MATCHED' && parcel.paymentMethod === 'ONLINE' && parcel.paymentStatus === 'PENDING' && (
             <View style={styles.actionSection}>
               <TouchableOpacity style={styles.primaryActionButton} onPress={handlePay}>
                 <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
@@ -605,7 +621,7 @@ const ParcelDetailsScreen = () => {
           )}
 
           {/* Traveler Lifecycle Actions */}
-          {user?.id === parcel.matchedTrip?.travelerId && (
+          {isTraveler && (
             <View style={styles.actionSection}>
               {parcel.status === 'MATCHED' && (
                 <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiatePickup}>
@@ -650,29 +666,29 @@ const ParcelDetailsScreen = () => {
           )}
 
           {/* Match Request List */}
-          {(user?.id === parcel.senderId || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user?.id && m.status === 'PENDING'))) && parcel.status === 'PENDING' && parcel.matches?.length > 0 && (
+          {(isSender || (user?.roleActive === 'TRAVELER' && parcel.matches?.some((m: any) => m.travelerId === user?.id && m.status === 'PENDING'))) && statusUpper === 'PENDING' && parcel.matches?.length > 0 && (
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
               <Text style={styles.sectionLabel}>MATCH REQUESTS</Text>
               
               {parcel.matches
-                .filter((m: any) => m.status === 'PENDING' && (user?.id === parcel.senderId || m.travelerId === user?.id))
+                .filter((m: any) => m.status === 'PENDING' && (isSender || m.travelerId === user?.id))
                 .map((match: any) => (
                 <View key={match.id} style={styles.matchRequestItem}>
                   <View style={styles.travelerInfo}>
                     <View style={styles.travelerAvatar}>
                       <Text style={styles.avatarLetter}>
-                        {(user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name)?.charAt(0).toUpperCase()}
+                        {(isSender ? match.traveler?.name : match.sender?.name)?.charAt(0).toUpperCase()}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.travelerName}>
-                        {user?.id === parcel.senderId ? match.traveler?.name : match.sender?.name}
+                        {isSender ? match.traveler?.name : match.sender?.name}
                       </Text>
                       <Text style={styles.tripDateValue}>{dayjs(match.trip?.travelDate).format('MMM DD')} • {match.trip?.travelTime || 'Anytime'}</Text>
                     </View>
                   </View>
                   
-                  {user?.id === parcel.senderId && (
+                  {isSender && (
                     <View style={styles.requestActions}>
                       <TouchableOpacity style={[styles.actionButton, styles.rejectBtn]} onPress={() => handleRejectMatch(match.id)}>
                         <Text style={styles.rejectBtnText}>Decline</Text>
@@ -687,8 +703,8 @@ const ParcelDetailsScreen = () => {
             </View>
           )}
 
-          {/* Matched Info Cards */}
-          {(user?.id === parcel.senderId && parcel.status === 'MATCHED' && parcel.matchedTrip) && (
+          {/* Matched Info Cards - Show Traveler to Sender */}
+          {isSender && isMatchedState && parcel.matchedTrip && (
             <View style={[styles.sectionCard, styles.matchedCard]}>
               <View style={styles.matchedHeader}>
                 <Text style={styles.matchedLabelText}>MATCHED TRAVELER</Text>
@@ -705,24 +721,50 @@ const ParcelDetailsScreen = () => {
                   <Text style={styles.travelerNameLarge}>{parcel.matchedTrip.traveler?.name}</Text>
                   <Text style={styles.travelerContact}>{parcel.matchedTrip.traveler?.phone}</Text>
                 </View>
+                {parcel.matchedTrip.traveler?.phone && (
+                  <TouchableOpacity 
+                    style={styles.callButton} 
+                    activeOpacity={0.7}
+                    onPress={() => handleCall(parcel.matchedTrip.traveler?.phone)}
+                  >
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
+                      <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </Svg>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
 
-          {/* Matched Customer Info for Traveler */}
-          {user?.id === parcel.matchedTrip?.travelerId && parcel.status === 'MATCHED' && (
+          {/* Matched Info Cards - Show Sender to Traveler */}
+          {isTraveler && isMatchedState && (
             <View style={[styles.sectionCard, styles.matchedCard, { borderColor: '#10B981' }]}>
               <View style={styles.matchedHeader}>
                 <Text style={[styles.matchedLabelText, { color: '#10B981' }]}>PARCEL OWNER</Text>
               </View>
               <View style={styles.travelerProfileRow}>
                 <View style={[styles.largeAvatar, { borderColor: '#10B981' }]}>
-                   <Text style={[styles.largeAvatarLetter, { color: '#10B981' }]}>{parcel.sender?.name?.charAt(0).toUpperCase()}</Text>
+                   {parcel.sender?.selfieUrl ? (
+                      <Image source={{ uri: parcel.sender.selfieUrl }} style={styles.avatarImg} />
+                   ) : (
+                      <Text style={[styles.largeAvatarLetter, { color: '#10B981' }]}>{parcel.sender?.name?.charAt(0).toUpperCase()}</Text>
+                   )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.travelerNameLarge}>{parcel.sender?.name}</Text>
                   <Text style={styles.travelerContact}>{parcel.sender?.phone || 'Contact number available'}</Text>
                 </View>
+                {parcel.sender?.phone && (
+                   <TouchableOpacity 
+                      style={styles.callButton} 
+                      activeOpacity={0.7}
+                      onPress={() => handleCall(parcel.sender?.phone)}
+                   >
+                      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
+                         <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.11-2.11a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </Svg>
+                   </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
@@ -751,7 +793,11 @@ const ParcelDetailsScreen = () => {
             </View>
 
             <View style={styles.otpActions}>
-              <TouchableOpacity style={styles.otpCancelBtn} onPress={() => setOtpModalVisible(false)}>
+              <TouchableOpacity 
+                style={[styles.otpCancelBtn, processingOtp && { opacity: 0.5 }]} 
+                onPress={() => setOtpModalVisible(false)}
+                disabled={processingOtp}
+              >
                 <Text style={styles.otpCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.otpConfirmBtn} onPress={handleVerifyOtp} disabled={processingOtp}>
@@ -990,7 +1036,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   dualCards: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   infoCard: { flex: 1, backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
   personName: { fontSize: 15, color: theme.text.primary, fontFamily: Typography.bold },
-  personPhone: { fontSize: 13, color: theme.text.secondary, marginTop: 2 },
+  personPhone: { fontSize: 13, color: theme.text.secondary, marginTop: 2, fontFamily: Typography.bold },
   hiddenInfo: { fontSize: 12, color: theme.text.tertiary, fontStyle: 'italic' },
   detailsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   gridItem: { flex: 1, minWidth: 100, backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
@@ -1040,7 +1086,21 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   largeAvatarLetter: { fontSize: 24, color: theme.primary, fontFamily: Typography.extraBold },
   travelerNameLarge: { fontSize: 18, color: theme.text.primary, fontFamily: Typography.extraBold },
-  travelerContact: { fontSize: 14, color: theme.text.secondary, marginTop: 2 },
+  travelerContact: { fontSize: 14, color: theme.text.secondary, marginTop: 2,fontFamily:Typography.bold },
+  callButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.primary,
+    
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+  },
   otpOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   otpContent: { width: '100%', backgroundColor: theme.card, borderRadius: 32, padding: 32, alignItems: 'center' },
   otpTitle: { fontSize: 22, color: theme.text.primary, fontFamily: Typography.extraBold },

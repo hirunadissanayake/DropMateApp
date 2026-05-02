@@ -454,7 +454,13 @@ const TripDetailsScreen = () => {
                   ASSIGNED PARCELS ({trip.parcels?.length || 0})
                 </Text>
                 {trip.parcels && trip.parcels.length > 0 ? (
-                  trip.parcels.map((parcel: any, idx: number) => (
+                  [...trip.parcels]
+                    .sort((a: any, b: any) => {
+                      if (a.status === 'DELIVERED' && b.status !== 'DELIVERED') return 1;
+                      if (a.status !== 'DELIVERED' && b.status === 'DELIVERED') return -1;
+                      return 0;
+                    })
+                    .map((parcel: any, idx: number, sortedArray: any[]) => (
                     <TouchableOpacity
                       key={parcel.id}
                       activeOpacity={0.7}
