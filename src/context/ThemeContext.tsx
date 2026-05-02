@@ -11,13 +11,13 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  isDark: true,
-  theme: darkTheme,
+  isDark: false,
+  theme: lightTheme,
   toggleTheme: () => {},
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
   // Load theme from storage on mount
   useEffect(() => {
@@ -27,8 +27,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (storedTheme !== null) {
           setIsDark(JSON.parse(storedTheme));
         } else {
-          // Default to dark if no preference is stored
-          setIsDark(true);
+          // Default to light if no preference is stored
+          setIsDark(false);
         }
       } catch (error) {
         console.error('Failed to load theme:', error);
