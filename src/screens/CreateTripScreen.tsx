@@ -208,7 +208,10 @@ const CreateTripScreen = () => {
         style={{ flex: 1 }}
       >
         <View style={styles.stickyHeader}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <View style={styles.backButtonContainer}>
+            <BackButton onPress={() => navigation.goBack()} />
+          </View>
+          <Text style={styles.headerTitle}>Post a Trip</Text>
         </View>
 
         <ScrollView 
@@ -230,7 +233,6 @@ const CreateTripScreen = () => {
 
           <View style={styles.contentPadding}>
             <View style={styles.heroSection}>
-              <Text style={styles.heroTitle}>Post a Trip</Text>
               <Text style={styles.heroSubtitle}>Share your travel schedule and earn by carrying parcels.</Text>
             </View>
 
@@ -492,24 +494,34 @@ function makeStyles(theme: AppTheme) {
   },
   stickyHeader: {
     paddingTop: 10,
+    paddingBottom: 10,
     paddingHorizontal: 24,
     backgroundColor: 'transparent',
     zIndex: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    left: 24,
+    top: 10,
+    zIndex: 10,
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    color: theme.text.primary,
+    fontFamily: Typography.extraBold,
+    
   },
   contentPadding: {
     paddingHorizontal: 20,
   },
   heroSection: {
     marginBottom: 24,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  heroTitle: {
-    fontSize: 28,
-    color: theme.text.primary,
-    fontFamily: Typography.extraBold,
-    letterSpacing: -0.5,
-    marginBottom: 8,
+    marginTop: 10,
   },
   heroSubtitle: {
     fontSize: 15,

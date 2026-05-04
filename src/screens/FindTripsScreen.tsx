@@ -55,7 +55,20 @@ const FindTripsScreen = () => {
   };
 
   const fetchTrips = async (pageNum = 1, isRefreshing = false) => {
-    if (pageNum > 1) setLoadingMore(true);
+    if (!fromLocation) {
+      setTrips([]);
+      setTotalPages(1);
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+      return;
+    }
+
+    if (pageNum === 1 && !isRefreshing) {
+      setLoading(true);
+    } else if (pageNum > 1) {
+      setLoadingMore(true);
+    }
     
     try {
       const response = await tripService.getActiveTrips(token!, {
@@ -88,23 +101,8 @@ const FindTripsScreen = () => {
     useCallback(() => {
       fetchFilterCities();
       fetchTrips(1);
-    }, [token])
+    }, [token, fromLocation, toLocation])
   );
-
-  useEffect(() => {
-    fetchTrips(1);
-    const refreshTos = async () => {
-      try {
-        const tos = await tripService.getToLocations(token!, fromLocation);
-        setAvailableTo(tos);
-      } catch (e) {}
-    };
-    refreshTos();
-  }, [fromLocation]);
-
-  useEffect(() => {
-    fetchTrips(1);
-  }, [toLocation]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -301,9 +299,14 @@ const FindTripsScreen = () => {
                     <Path d="M15 6v14" />
                   </Svg>
                 </View>
-                <Text style={s.emptyTitle}>No Trips Available</Text>
+                <Text style={s.emptyTitle}>
+                  {!fromLocation ? 'Select a Location' : 'No Trips Available'}
+                </Text>
                 <Text style={s.emptySubtitle}>
-                  There are currently no active trips matching your search. Check back later!
+                  {!fromLocation 
+                    ? 'Please select your starting location (From) to discover travelers heading your way.'
+                    : 'There are currently no active trips matching your search. Check back later!'
+                  }
                 </Text>
               </View>
             }
@@ -343,6 +346,8 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    paddingBottom: 120,
   },
   listContent: {
     paddingHorizontal: 20,
