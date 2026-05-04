@@ -40,6 +40,7 @@ import AnnouncementsScreen from '../screens/AnnouncementsScreen';
 import HelpCenterScreen from '../screens/HelpCenterScreen';
 import SupportChatScreen from '../screens/SupportChatScreen';
 import TopUpScreen from '../screens/TopUpScreen';
+import EarningsHistoryScreen from '../screens/EarningsHistoryScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -66,6 +67,7 @@ export type RootStackParamList = {
   Payment: { parcelId: string, amount: number };
   TravelerEarnings: undefined;
   Wallet: undefined;
+  EarningsHistory: undefined;
   BankDetails: undefined;
   Notifications: undefined;
   Announcements: undefined;
@@ -238,6 +240,10 @@ export const AppNavigator = () => {
             <Stack.Screen 
               name="TravelerEarnings" 
               component={TravelerEarningsScreen} 
+            />
+            <Stack.Screen 
+              name="EarningsHistory" 
+              component={EarningsHistoryScreen} 
             />
             <Stack.Screen 
               name="BankDetails" 

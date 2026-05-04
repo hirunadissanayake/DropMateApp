@@ -486,11 +486,11 @@ const CreateParcelScreen = () => {
 
             {/* Recipient Details */}
             <View style={styles.contentCard}>
-              <Text style={styles.fieldLabel}>RECIPIENT INFO</Text>
+              <Text style={styles.fieldLabel}>RECEIVER INFO</Text>
               <View style={styles.fieldSection}>
                 <TextInput
                   style={styles.minimalInput}
-                  placeholder="Recipient Name"
+                  placeholder="Receiver Name"
                   placeholderTextColor={theme.text.tertiary}
                   value={recipientName}
                   onChangeText={setRecipientName}

@@ -6,6 +6,7 @@ export interface WalletSummary {
   totalEarned: number;
   pendingWithdrawals: number;
   thisMonthEarned: number;
+  cashEarned?: number;
 }
 
 export interface WalletTransaction {

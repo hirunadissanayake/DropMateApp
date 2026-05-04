@@ -47,7 +47,6 @@ const TravelerEarningsScreen = () => {
   const { token } = useAuthStore();
 
   const [summary, setSummary] = useState<WalletSummary | null>(null);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -56,22 +55,17 @@ const TravelerEarningsScreen = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   
-  // Transaction detail modal state
-  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
-  
   // Saved bank accounts
   const [bankAccounts, setBankAccounts] = useState<BankDetail[]>([]);
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [summaryData, txData, bankData] = await Promise.all([
+      const [summaryData, bankData] = await Promise.all([
         walletService.getWalletSummary(token!),
-        walletService.getTransactionHistory(token!),
         bankService.getBankDetails(token!),
       ]);
       setSummary(summaryData);
-      setTransactions(txData);
       setBankAccounts(bankData);
 
       // Auto-select default or first bank
@@ -193,72 +187,75 @@ const TravelerEarningsScreen = () => {
           </LinearGradient>
 
           <View style={styles.contentBody}>
-            {/* Dashboard Stats */}
-            <View style={styles.statsRow}>
-              <View style={styles.statBox}>
-                 <Text style={styles.statLabel}>This Month</Text>
-                 <Text style={styles.statValue}>{formatLKR(summary?.thisMonthEarned || 0)}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statBox}>
-                 <Text style={styles.statLabel}>Lifetime Earned</Text>
-                 <Text style={styles.statValue}>{formatLKR(summary?.totalEarned || 0)}</Text>
-              </View>
-            </View>
-
-            {/* Activity Section */}
-            <View style={styles.activityHeader}>
-               <Text style={styles.activityTitle}>Earnings History</Text>
-            </View>
-
-            <View style={styles.transactionsList}>
-              {transactions.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyIconCircle}>
-                    <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : "#FFFFFF"} strokeWidth="1.5">
-                       <Circle cx="12" cy="12" r="10" /><Path d="M12 8v8M8 12h8" />
+            {/* Dashboard Stats Grid */}
+            <View style={styles.statsGrid}>
+              <View style={styles.statsCol}>
+                <View style={styles.statCard}>
+                  <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(59,130,246,0.1)' : '#EFF6FF' }]}>
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><Path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5a2 2 0 0 1 0-4h16z" />
                     </Svg>
                   </View>
-                  <Text style={styles.emptyText}>No earnings yet</Text>
-                  <Text style={styles.emptySubText}>Completed deliveries will show up here</Text>
+                  <Text style={styles.statCardLabel}>Card Payments</Text>
+                  <Text style={styles.statCardValue} numberOfLines={1} adjustsFontSizeToFit>{formatLKR((summary?.totalEarned || 0) - (summary?.cashEarned || 0)).replace('LKR ', '')}</Text>
                 </View>
-              ) : (
-                transactions.map((tx) => (
-                  <TouchableOpacity 
-                    key={tx.id} 
-                    style={styles.transactionItem}
-                    onPress={() => setSelectedTx(tx)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.txIconBg, { 
-                      backgroundColor: tx.type === 'DELIVERY_EARNED' 
-                        ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5') 
-                        : (theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFF1F2')
-                    }]}>
-                      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
-                        stroke={tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : theme.primary) : '#EF4444'} strokeWidth="2.5">
-                        {tx.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
-                      </Svg>
-                    </View>
-                    
-                    <View style={styles.txMain}>
-                      <Text style={styles.txDesc} numberOfLines={1}>{tx.description || 'Earnings'}</Text>
-                      <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
-                      {tx.status === 'PENDING' && <Text style={styles.pendingText}>Processing</Text>}
-                    </View>
-   
-                    <View style={styles.txRight}>
-                      <Text style={[styles.txAmount, { 
-                        color: tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : '#059669') : theme.text.primary
-                      }]}>
-                        {tx.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(tx.amount).replace('LKR ', '')}
-                      </Text>
-                      <Text style={styles.txCurrency}>LKR</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              )}
+
+                <View style={[styles.statCard, { marginTop: 12 }]}>
+                  <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(234,179,8,0.1)' : '#FEF3C7' }]}>
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Circle cx="12" cy="12" r="10" /><Path d="M12 6v12M9 9h6M9 15h6" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.statCardLabel}>Cash Collection</Text>
+                  <Text style={styles.statCardValue} numberOfLines={1} adjustsFontSizeToFit>{formatLKR(summary?.cashEarned || 0).replace('LKR ', '')}</Text>
+                </View>
+              </View>
+
+              <View style={styles.statsCol}>
+                <View style={styles.statCard}>
+                  <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5' }]}>
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M23 6l-9.5 9.5-5-5L1 18" />
+                      <Path d="M17 6h6v6" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.statCardLabel}>This Month</Text>
+                  <Text style={styles.statCardValue} numberOfLines={1} adjustsFontSizeToFit>{formatLKR(summary?.thisMonthEarned || 0).replace('LKR ', '')}</Text>
+                </View>
+
+                <View style={[styles.statCard, { marginTop: 12 }]}>
+                  <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(139,92,246,0.1)' : '#F3E8FF' }]}>
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.statCardLabel}>Lifetime Total</Text>
+                  <Text style={styles.statCardValue} numberOfLines={1} adjustsFontSizeToFit>{formatLKR(summary?.totalEarned || 0).replace('LKR ', '')}</Text>
+                </View>
+              </View>
             </View>
+
+            {/* View Earnings History Button */}
+            <TouchableOpacity 
+              style={styles.viewHistoryBtn}
+              onPress={() => navigation.navigate('EarningsHistory' as never)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.viewHistoryLeft}>
+                <View style={[styles.historyIconBg, { backgroundColor: theme.isDark ? 'rgba(59,130,246,0.1)' : '#EFF6FF' }]}>
+                  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <Path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </Svg>
+                </View>
+                <View>
+                  <Text style={styles.viewHistoryTitle}>Earnings History</Text>
+                  <Text style={styles.viewHistorySub}>View all past transactions</Text>
+                </View>
+              </View>
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <Path d="M9 18l6-6-6-6" />
+              </Svg>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -349,102 +346,6 @@ const TravelerEarningsScreen = () => {
               </ScrollView>
             </View>
           </KeyboardAvoidingView>
-        </Modal>
-   
-        {/* Transaction Detail Modal */}
-        <Modal visible={!!selectedTx} animationType="fade" transparent onRequestClose={() => setSelectedTx(null)}>
-          <TouchableOpacity 
-            style={styles.modalOverlay} 
-            activeOpacity={1} 
-            onPress={() => setSelectedTx(null)}
-          >
-            <View style={styles.detailSheet}>
-              <View style={styles.modalIndicator} />
-              
-              <View style={styles.detailHeader}>
-                <View style={[styles.txIconBgLarge, { 
-                  backgroundColor: selectedTx?.type === 'DELIVERY_EARNED' 
-                    ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5') 
-                    : (theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFF1F2')
-                }]}>
-                  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" 
-                    stroke={selectedTx?.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : theme.primary) : '#EF4444'} strokeWidth="2.5">
-                    {selectedTx?.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
-                  </Svg>
-                </View>
-                <Text style={styles.detailType}>
-                  {selectedTx?.type === 'DELIVERY_EARNED' ? 'Delivery Earnings' : 'Withdrawal Payout'}
-                </Text>
-                <Text style={[styles.detailAmount, { 
-                   color: selectedTx?.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : theme.primary) : theme.text.primary
-                }]}>
-                  {selectedTx?.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(selectedTx?.amount || 0)}
-                </Text>
-                
-                <View style={[styles.detailStatusBadge, { 
-                  backgroundColor: selectedTx?.status === 'COMPLETED' 
-                    ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#DCFCE7') 
-                    : selectedTx?.status === 'PENDING' 
-                    ? (theme.isDark ? 'rgba(234, 179, 8, 0.1)' : '#FEF3C7') 
-                    : (theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2')
-                }]}>
-                  <Text style={[styles.detailStatusText, { 
-                    color: selectedTx?.status === 'COMPLETED' 
-                      ? (theme.isDark ? '#3DD9A4' : '#166534') 
-                      : selectedTx?.status === 'PENDING' 
-                      ? (theme.isDark ? '#EAB308' : '#92400E') 
-                      : '#EF4444'
-                  }]}>
-                    {selectedTx?.status}
-                  </Text>
-                </View>
-              </View>
-   
-              <View style={styles.detailBody}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Date & Time</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedTx ? new Date(selectedTx.createdAt).toLocaleString('en-LK', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    }) : ''}
-                  </Text>
-                </View>
-                
-                <View style={styles.detailDivider} />
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Description</Text>
-                  <Text style={styles.detailValue}>{selectedTx?.description || 'No description provided'}</Text>
-                </View>
-  
-                <View style={styles.detailDivider} />
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Transaction ID</Text>
-                  <Text style={styles.detailValueSmall}>{selectedTx?.id}</Text>
-                </View>
-                
-                {selectedTx?.parcelId && (
-                  <>
-                    <View style={styles.detailDivider} />
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Related Parcel ID</Text>
-                      <Text style={styles.detailValueSmall}>{selectedTx.parcelId}</Text>
-                    </View>
-                  </>
-                )}
-              </View>
-   
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedTx(null)}>
-                <Text style={styles.closeBtnText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
         </Modal>
         </>
       )}
@@ -546,125 +447,84 @@ function makeStyles(theme: AppTheme) {
       paddingHorizontal: 16,
       marginTop: -20,
     },
-    statsRow: {
+    statsGrid: {
       flexDirection: 'row',
-      backgroundColor: theme.card,
-      borderRadius: 24,
-      padding: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.05,
-      shadowRadius: 15,
-      elevation: 4,
+      gap: 12,
       marginBottom: 32,
-      borderWidth: 1,
-      borderColor: theme.border,
     },
-    statBox: { flex: 1, alignItems: 'center' },
-    statDivider: { width: 1, height: '100%', backgroundColor: theme.border },
-    statLabel: { 
-      fontSize: 11, 
-      color: theme.text.tertiary, 
-      fontFamily: Typography.bold, 
-      textTransform: 'uppercase',
-      marginBottom: 6
+    statsCol: {
+      flex: 1,
     },
-    statValue: { 
-      fontSize: 15, 
-      color: theme.text.primary, 
-      fontFamily: Typography.bold 
-    },
-    activityHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
-      paddingHorizontal: 4,
-    },
-    activityTitle: { 
-      fontSize: 18, 
-      fontFamily: Typography.bold, 
-      color: theme.text.primary 
-    },
-    transactionsList: { flex: 1 },
-    transactionItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
+    statCard: {
       backgroundColor: theme.card,
       borderRadius: 20,
-      marginBottom: 12,
+      padding: 16,
       borderWidth: 1,
       borderColor: theme.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.03,
+      shadowRadius: 10,
+      elevation: 2,
+      marginTop: 50,
     },
-    txIconBg: {
+    statIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    statCardLabel: {
+      fontSize: 12,
+      color: theme.text.secondary,
+      fontFamily: Typography.medium,
+      marginBottom: 4,
+    },
+    statCardValue: {
+      fontSize: 20,
+      color: theme.text.primary,
+      fontFamily: Typography.extraBold,
+      letterSpacing: -0.5,
+    },
+    viewHistoryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.card,
+      padding: 16,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.03,
+      shadowRadius: 10,
+      elevation: 2,
+    },
+    viewHistoryLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
+    historyIconBg: {
       width: 44,
       height: 44,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 16,
     },
-    txMain: { flex: 1 },
-    txDesc: { 
-      fontSize: 14, 
-      fontFamily: Typography.bold, 
-      color: theme.text.primary,
-      marginBottom: 2
-    },
-    txDate: { 
-      fontSize: 12, 
-      color: theme.text.tertiary, 
-      fontFamily: Typography.medium 
-    },
-    pendingText: {
-      fontSize: 11,
-      color: '#EAB308',
+    viewHistoryTitle: {
+      fontSize: 16,
       fontFamily: Typography.bold,
-      marginTop: 2
-    },
-    txRight: { alignItems: 'flex-end' },
-    txAmount: { 
-      fontSize: 15, 
-      fontFamily: Typography.bold,
-      marginBottom: 2
-    },
-    txCurrency: { 
-      fontSize: 10, 
-      fontFamily: Typography.bold, 
-      color: theme.text.tertiary 
-    },
-    emptyState: { 
-      alignItems: 'center', 
-      paddingVertical: 50,
-      paddingHorizontal: 30,
-      backgroundColor: theme.card,
-      borderRadius: 32,
-      marginTop: 10,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    emptyIconCircle: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : theme.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    emptyText: { 
-      fontSize: 18, 
-      fontFamily: Typography.bold, 
       color: theme.text.primary,
-      marginBottom: 8
+      marginBottom: 2,
     },
-    emptySubText: { 
-      fontSize: 14, 
-      color: theme.text.tertiary, 
+    viewHistorySub: {
+      fontSize: 13,
       fontFamily: Typography.medium,
-      textAlign: 'center',
-      lineHeight: 20,
+      color: theme.text.secondary,
     },
     // Modal Styles
     modalOverlay: { 
@@ -828,96 +688,6 @@ function makeStyles(theme: AppTheme) {
       fontSize: 14,
       fontFamily: Typography.bold,
       color: theme.primary
-    },
-    detailSheet: {
-      backgroundColor: theme.card,
-      borderTopLeftRadius: 40,
-      borderTopRightRadius: 40,
-      padding: 32,
-      width: '100%',
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    detailHeader: {
-      alignItems: 'center',
-      marginBottom: 32,
-    },
-    txIconBgLarge: {
-      width: 64,
-      height: 64,
-      borderRadius: 22,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 16,
-    },
-    detailType: {
-      fontSize: 12,
-      color: theme.text.tertiary,
-      fontFamily: Typography.bold,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-      marginBottom: 8,
-    },
-    detailAmount: {
-      fontSize: 32,
-      fontFamily: Typography.bold,
-      color: theme.text.primary,
-      marginBottom: 12,
-    },
-    detailStatusBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 8,
-    },
-    detailStatusText: {
-      fontSize: 10,
-      fontFamily: Typography.extraBold,
-      textTransform: 'uppercase',
-    },
-    detailBody: {
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
-      borderRadius: 24,
-      padding: 24,
-      marginBottom: 32,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    detailRow: {
-      marginBottom: 0,
-    },
-    detailLabel: {
-      fontSize: 11,
-      color: theme.text.tertiary,
-      fontFamily: Typography.bold,
-      marginBottom: 6,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    detailValue: {
-      fontSize: 15,
-      color: theme.text.primary,
-      fontFamily: Typography.bold,
-    },
-    detailValueSmall: {
-      fontSize: 12,
-      color: theme.text.secondary,
-      fontFamily: Typography.medium,
-    },
-    detailDivider: {
-      height: 1,
-      backgroundColor: theme.border,
-      marginVertical: 16,
-    },
-    closeBtn: {
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
-      paddingVertical: 16,
-      borderRadius: 16,
-      alignItems: 'center',
-    },
-    closeBtnText: {
-      fontSize: 15,
-      fontFamily: Typography.bold,
-      color: theme.text.primary,
     },
   });
 }

@@ -15,13 +15,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import BackButton from '../components/common/BackButton';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as paymentService from '../services/paymentService';
 import * as authService from '../services/authService';
 import CustomAlert from '../components/common/CustomAlert';
 import { ENDPOINTS } from '../utils/endPoints';
+
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
 
 // Import PayHere SDK
 import PayHere from '@payhere/payhere-mobilesdk-reactnative';
@@ -34,6 +37,8 @@ export default function PaymentScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'Payment'>>();
   const { parcelId, amount } = route.params;
   const { token, user, setUser } = useAuthStore();
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState('');
@@ -183,7 +188,7 @@ export default function PaymentScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <BackButton onPress={() => navigation.goBack()} />
@@ -223,7 +228,7 @@ export default function PaymentScreen() {
              </View>
              
              <View style={styles.infoBox}>
-                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="2">
                    <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
                 </Svg>
                 <Text style={styles.infoText}>
@@ -241,7 +246,7 @@ export default function PaymentScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient 
-              colors={isProcessing ? ['#CBD5E1', '#94A3B8'] : [BRAND_GREEN, BRAND_DARK]} 
+              colors={isProcessing ? (theme.isDark ? ['#334155', '#1E293B'] : ['#CBD5E1', '#94A3B8']) : [BRAND_GREEN, BRAND_DARK]} 
               style={styles.payGradient}
             >
               {isProcessing ? (
@@ -265,6 +270,7 @@ export default function PaymentScreen() {
 
       <CustomAlert
         visible={alertConfig.visible}
+        theme={theme}
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
@@ -276,127 +282,129 @@ export default function PaymentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  safeArea: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  headerTitle: { 
-    fontSize: 18, 
-    fontFamily: Typography.bold, 
-    color: '#0F172A' 
-  },
-  scrollContent: { padding: 24 },
-  summaryCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 32,
-  },
-  summaryLabel: { 
-    fontSize: 11, 
-    fontFamily: Typography.bold, 
-    color: '#94A3B8',
-    letterSpacing: 1,
-    marginBottom: 8
-  },
-  parcelId: { 
-    fontSize: 20, 
-    fontFamily: Typography.bold, 
-    color: '#1E293B',
-    marginBottom: 20
-  },
-  divider: { 
-    height: 1, 
-    backgroundColor: '#E2E8F0', 
-    marginBottom: 20,
-    borderStyle: 'dashed'
-  },
-  priceRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    marginBottom: 12 
-  },
-  priceLabel: { fontSize: 14, fontFamily: Typography.medium, color: '#64748B' },
-  priceValue: { fontSize: 14, fontFamily: Typography.bold, color: '#1E293B' },
-  totalLabel: { fontSize: 16, fontFamily: Typography.bold, color: '#0F172A' },
-  totalValue: { fontSize: 22, fontFamily: Typography.bold, color: BRAND_GREEN },
-  trustSection: { alignItems: 'center' },
-  trustText: { 
-    fontSize: 11, 
-    fontFamily: Typography.bold, 
-    color: '#94A3B8',
-    letterSpacing: 1,
-    marginBottom: 16
-  },
-  methodRow: { 
-    flexDirection: 'row', 
-    gap: 10, 
-    marginBottom: 32 
-  },
-  methodIcon: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
-  },
-  methodIconText: { fontSize: 10, fontFamily: Typography.bold, color: '#475569' },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
-    alignItems: 'center'
-  },
-  infoText: { 
-    flex: 1, 
-    fontSize: 13, 
-    color: '#64748B', 
-    fontFamily: Typography.medium,
-    lineHeight: 18
-  },
-  footer: { 
-    padding: 24, 
-    borderTopWidth: 1, 
-    borderTopColor: '#F1F5F9',
-    backgroundColor: '#FFFFFF'
-  },
-  payButton: { 
-    borderRadius: 20, 
-    overflow: 'hidden',
-    marginBottom: 16
-  },
-  payButtonDisabled: { opacity: 0.8 },
-  payGradient: { 
-    paddingVertical: 18, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  payBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  payButtonText: { 
-    color: '#FFFFFF', 
-    fontSize: 16, 
-    fontFamily: Typography.bold 
-  },
-  processingRow: { flexDirection: 'row', alignItems: 'center' },
-  processingText: { color: '#FFFFFF', fontSize: 14, fontFamily: Typography.medium },
-  secureNote: { 
-    textAlign: 'center', 
-    fontSize: 11, 
-    fontFamily: Typography.bold, 
-    color: '#94A3B8',
-    letterSpacing: 1
-  },
-});
+function makeStyles(theme: AppTheme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    safeArea: { flex: 1 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    headerTitle: { 
+      fontSize: 24, 
+      fontFamily: Typography.bold, 
+      color: theme.text.primary 
+    },
+    scrollContent: { padding: 24 },
+    summaryCard: {
+      backgroundColor: theme.card,
+      borderRadius: 24,
+      padding: 24,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: 32,
+    },
+    summaryLabel: { 
+      fontSize: 11, 
+      fontFamily: Typography.bold, 
+      color: theme.text.tertiary,
+      letterSpacing: 1,
+      marginBottom: 8
+    },
+    parcelId: { 
+      fontSize: 20, 
+      fontFamily: Typography.bold, 
+      color: theme.text.primary,
+      marginBottom: 20
+    },
+    divider: { 
+      height: 1, 
+      backgroundColor: theme.border, 
+      marginBottom: 20,
+      borderStyle: 'dashed'
+    },
+    priceRow: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      marginBottom: 12 
+    },
+    priceLabel: { fontSize: 14, fontFamily: Typography.medium, color: theme.text.secondary },
+    priceValue: { fontSize: 14, fontFamily: Typography.bold, color: theme.text.primary },
+    totalLabel: { fontSize: 16, fontFamily: Typography.bold, color: theme.text.primary },
+    totalValue: { fontSize: 22, fontFamily: Typography.bold, color: theme.primary },
+    trustSection: { alignItems: 'center' },
+    trustText: { 
+      fontSize: 11, 
+      fontFamily: Typography.bold, 
+      color: theme.text.tertiary,
+      letterSpacing: 1,
+      marginBottom: 16
+    },
+    methodRow: { 
+      flexDirection: 'row', 
+      gap: 10, 
+      marginBottom: 32 
+    },
+    methodIcon: {
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.border
+    },
+    methodIconText: { fontSize: 10, fontFamily: Typography.bold, color: theme.text.secondary },
+    infoBox: {
+      flexDirection: 'row',
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+      padding: 16,
+      borderRadius: 16,
+      gap: 12,
+      alignItems: 'center'
+    },
+    infoText: { 
+      flex: 1, 
+      fontSize: 13, 
+      color: theme.text.secondary, 
+      fontFamily: Typography.medium,
+      lineHeight: 18
+    },
+    footer: { 
+      padding: 24, 
+      borderTopWidth: 1, 
+      borderTopColor: theme.border,
+      backgroundColor: theme.background
+    },
+    payButton: { 
+      borderRadius: 20, 
+      overflow: 'hidden',
+      marginBottom: 16
+    },
+    payButtonDisabled: { opacity: 0.8 },
+    payGradient: { 
+      paddingVertical: 18, 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    },
+    payBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    payButtonText: { 
+      color: '#FFFFFF', 
+      fontSize: 16, 
+      fontFamily: Typography.bold 
+    },
+    processingRow: { flexDirection: 'row', alignItems: 'center' },
+    processingText: { color: '#FFFFFF', fontSize: 14, fontFamily: Typography.medium },
+    secureNote: { 
+      textAlign: 'center', 
+      fontSize: 11, 
+      fontFamily: Typography.bold, 
+      color: theme.text.tertiary,
+      letterSpacing: 1
+    },
+  });
+}
