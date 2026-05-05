@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Pressable,
+  FlatList,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as notificationService from '../services/notificationService';
@@ -94,8 +96,10 @@ const NotificationIcon = ({ type }: { type: string }) => {
       );
     case 'PAYMENT_RECEIVED':
       return (
-        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <Path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <Rect x="2" y="6" width="20" height="12" rx="2" />
+          <Circle cx="12" cy="12" r="3" />
+          <Path d="M6 12h.01M18 12h.01" />
         </Svg>
       );
     default:
@@ -126,6 +130,80 @@ const getIconBgColor = (type: string, theme: AppTheme) => {
   }
 };
 
+// ─── Memoized Notification Row ──────────────────────────────────────────────
+type NotificationRowProps = {
+  item: any;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  styles: any;
+  theme: AppTheme;
+  onPress: (id: string) => void;
+  onLongPress: (id: string) => void;
+  onDelete: (id: string) => void;
+};
+
+const NotificationRow = React.memo(({ item, isSelectionMode, isSelected, styles, theme, onPress, onLongPress, onDelete }: NotificationRowProps) => {
+  const bgColor = getIconBgColor(item.type, theme);
+  return (
+    <View style={{ paddingHorizontal: 20 }}>
+      <Swipeable
+        renderRightActions={() => (
+          <View style={{ width: 100, height: '100%' }}>
+            <TouchableOpacity style={styles.deleteSwipeAction} onPress={() => onDelete(item.id)}>
+              <View style={styles.deleteIconContainer}>
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                  <Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                </Svg>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+        friction={2}
+        rightThreshold={40}
+        enabled={!isSelectionMode}
+      >
+        <Pressable
+          onPress={() => onPress(item.id)}
+          onLongPress={() => onLongPress(item.id)}
+          delayLongPress={200}
+          style={({ pressed }) => [
+            styles.notificationCard,
+            !item.isRead && styles.unreadCard,
+            isSelected && styles.selectedCard,
+            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+          ]}
+        >
+          <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
+            <NotificationIcon type={item.type} />
+          </View>
+          <View style={styles.contentContainer}>
+            <View style={styles.titleRow}>
+              <Text style={[styles.itemTitle, !item.isRead && styles.unreadText]}>{item.title}</Text>
+              {!item.isRead && !isSelectionMode && <View style={styles.unreadDot} />}
+            </View>
+            <Text style={styles.itemBody}>{item.body}</Text>
+            <View style={styles.footerRow}>
+              <Text style={styles.itemTime}>{formatDate(item.createdAt)}</Text>
+              {item.isRead ? null : <Text style={styles.newBadge}>New</Text>}
+            </View>
+          </View>
+          {isSelectionMode && (
+            <View style={styles.checkboxContainer}>
+              <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
+                {isSelected && (
+                  <Svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="4">
+                    <Path d="M20 6L9 17l-5-5" />
+                  </Svg>
+                )}
+              </View>
+            </View>
+          )}
+        </Pressable>
+      </Swipeable>
+    </View>
+  );
+});
+
 const NotificationsScreen = () => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
@@ -135,33 +213,71 @@ const NotificationsScreen = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkAlertVisible, setBulkAlertVisible] = useState(false);
 
-  const fetchNotifications = async () => {
+  // Flatten notifications for FlatList with headers
+  const flattenedData = useMemo(() => {
+    const groups = groupNotifications(notifications);
+    const flattened: any[] = [];
+    groups.forEach(([title, items], index) => {
+        flattened.push({ viewType: 'header', title, isFirst: index === 0 });
+        items.forEach(item => {
+            flattened.push({ viewType: 'item', ...item });
+        });
+    });
+    return flattened;
+  }, [notifications]);
+
+  const fetchNotifications = async (pageNum = 1) => {
     if (!token) return;
     try {
-      const data = await notificationService.getNotifications(token);
-      setNotifications(data.notifications);
+      const data = await notificationService.getNotifications(token, pageNum);
+      if (pageNum === 1) {
+        setNotifications(data.notifications);
+      } else {
+        setNotifications(prev => [...prev, ...data.notifications]);
+      }
       setUnreadCount(data.unreadCount);
+      setHasMore(data.hasMore);
+      setPage(pageNum);
     } catch (error) {
       console.error('Fetch notifications error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchNotifications();
+      setPage(1);
+      setHasMore(true);
+      fetchNotifications(1);
     }, [token])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchNotifications();
+    setPage(1);
+    setHasMore(true);
+    fetchNotifications(1);
+  };
+
+  const loadMore = () => {
+    if (!hasMore || loadingMore || loading) return;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    fetchNotifications(nextPage);
   };
 
   const handleMarkAsRead = async (id: string) => {
@@ -212,12 +328,77 @@ const NotificationsScreen = () => {
     }
   };
 
-  const renderRightActions = (id: string) => {
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setBulkAlertVisible(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      await Promise.all(selectedIds.map(id => notificationService.deleteNotification(token, id)));
+      
+      const updated = notifications.filter(n => !selectedIds.includes(n.id));
+      setNotifications(updated);
+      setUnreadCount(updated.filter(n => !n.isRead).length);
+      
+      Toast.show({ type: 'success', text1: `${selectedIds.length} notifications deleted` });
+      setSelectedIds([]);
+      setIsSelectionMode(false);
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Failed to delete some notifications' });
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkAlertVisible(false);
+    }
+  };
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      if (next.length === 0) setIsSelectionMode(false);
+      return next;
+    });
+  }, []);
+
+  const handlePressItem = useCallback((id: string) => {
+    if (isSelectionMode) {
+      toggleSelection(id);
+    } else {
+      handleMarkAsRead(id);
+    }
+  }, [isSelectionMode, toggleSelection]);
+
+  const handleLongPressItem = useCallback((id: string) => {
+    if (!isSelectionMode) {
+      setIsSelectionMode(true);
+      setSelectedIds([id]);
+    }
+  }, [isSelectionMode]);
+
+  const handleDeleteItem = useCallback((id: string) => {
+    setSelectedId(id);
+    setAlertVisible(true);
+  }, []);
+
+  const handleSelectAll = (items: Notification[]) => {
+    const allIds = items.map(i => i.id);
+    const areAllSelected = allIds.every(id => selectedIds.includes(id));
+    
+    if (areAllSelected) {
+      setSelectedIds(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedIds(prev => [...new Set([...prev, ...allIds])]);
+    }
+  };
+
+  const renderRightActions = useCallback((id: string) => {
     return (
       <View style={{ width: 100, height: '100%' }}>
         <TouchableOpacity 
             style={styles.deleteSwipeAction} 
-            onPress={() => handleDelete(id)}
+            onPress={() => handleDeleteItem(id)}
         >
             <View style={styles.deleteIconContainer}>
                 <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
@@ -227,7 +408,7 @@ const NotificationsScreen = () => {
         </TouchableOpacity>
       </View>
     );
-  };
+  }, [handleDeleteItem, styles]);
 
   return (
     <View style={styles.container}>
@@ -242,96 +423,113 @@ const NotificationsScreen = () => {
           <SafeAreaView edges={['top']} style={styles.stickyHeader}>
             <View style={styles.headerActionRow}>
               <View style={styles.headerLeft}>
-                <BackButton onPress={() => navigation.goBack()} />
+                <BackButton onPress={() => {
+                    if (isSelectionMode) {
+                        setIsSelectionMode(false);
+                        setSelectedIds([]);
+                    } else {
+                        navigation.goBack();
+                    }
+                }} />
               </View>
-              <Text style={styles.headerTitleCenter}>Notifications</Text>
-              <View style={styles.headerRight} />
+              
+              <View style={styles.headerTitleContainer}>
+                {isSelectionMode ? (
+                    <Text style={styles.headerTitleCenter}>{selectedIds.length} Selected</Text>
+                ) : (
+                    <Text style={styles.headerTitleCenter}>Notifications</Text>
+                )}
+              </View>
+
+              <View style={styles.headerRight}>
+                 {isSelectionMode ? (
+                    <TouchableOpacity 
+                        onPress={handleBulkDelete}
+                        disabled={selectedIds.length === 0 || isBulkDeleting}
+                        style={styles.headerDeleteBtn}
+                    >
+                        {isBulkDeleting ? (
+                            <ActivityIndicator color="#EF4444" size="small" />
+                        ) : (
+                            <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
+                                <Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                            </Svg>
+                        )}
+                    </TouchableOpacity>
+                 ) : null}
+              </View>
             </View>
           </SafeAreaView>
 
-          <ScrollView
+          <FlatList
+            data={flattenedData}
+            keyExtractor={(item, index) => item.viewType === 'header' ? `header-${item.title}` : item.id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={notifications.length === 0 ? { flex: 1, justifyContent: 'center' } : styles.scrollContent}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
             }
-            contentContainerStyle={notifications.length === 0 ? { flex: 1, justifyContent: 'center' } : styles.scrollContent}
-          >
-            <LinearGradient 
-              colors={theme.isDark ? ['rgba(61, 217, 164, 0.05)', 'rgba(61, 217, 164, 0.02)', theme.background] : ['#E6F5EF', '#F0FDF4', theme.background]} 
-              style={styles.backgroundGradient} 
-            />
+            ListHeaderComponent={
+              <LinearGradient 
+                colors={theme.isDark ? ['rgba(61, 217, 164, 0.05)', 'rgba(61, 217, 164, 0.02)', theme.background] : ['#E6F5EF', '#F0FDF4', theme.background]} 
+                style={styles.backgroundGradient} 
+              />
+            }
+            renderItem={({ item }) => {
+              if (item.viewType === 'header') {
+                return (
+                  <View style={[styles.groupHeaderRow, !item.isFirst && { marginTop: 20 }, { paddingHorizontal: 20 }]}>
+                    <Text style={styles.groupHeader}>{item.title}</Text>
+                    {item.isFirst && notifications.some(n => !n.isRead) && (
+                      <TouchableOpacity onPress={handleMarkAllRead}>
+                        <Text style={styles.groupMarkAllText}>Mark all read</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              }
 
-              {notifications.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyIconCircle}>
-                    <LinearGradient 
-                      colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F1F5F9', '#E2E8F0']} 
-                      style={styles.emptyGradient}
-                    >
-                      <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : theme.text.tertiary} strokeWidth="1.5">
-                          <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
-                      </Svg>
-                    </LinearGradient>
-                  </View>
-                  <Text style={styles.emptyText}>No notifications yet</Text>
-                  <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
+              return (
+                <NotificationRow
+                  item={item}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedIds.includes(item.id)}
+                  styles={styles}
+                  theme={theme}
+                  onPress={handlePressItem}
+                  onLongPress={handleLongPressItem}
+                  onDelete={handleDeleteItem}
+                />
+              );
+            }}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={theme.primary} />
                 </View>
-              ) : (
-              <View style={styles.contentPadding}>
-              <View style={styles.listContainer}>
-                {groupNotifications(notifications).map(([groupName, items], index) => (
-                  <View key={groupName} style={styles.groupSection}>
-                    <View style={styles.groupHeaderRow}>
-                      <Text style={styles.groupHeader}>{groupName}</Text>
-                      {index === 0 && notifications.some(n => !n.isRead) && (
-                        <TouchableOpacity onPress={handleMarkAllRead}>
-                          <Text style={styles.groupMarkAllText}>Mark all read</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                    {items.map((item) => {
-                      const bgColor = getIconBgColor(item.type, theme);
-                      return (
-                        <Swipeable
-                          key={item.id}
-                          renderRightActions={() => renderRightActions(item.id)}
-                          friction={2}
-                          rightThreshold={40}
-                        >
-                          <TouchableOpacity
-                            style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
-                            onPress={() => handleMarkAsRead(item.id)}
-                            activeOpacity={0.9}
-                          >
-                            <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
-                              <NotificationIcon type={item.type} />
-                            </View>
-                            
-                            <View style={styles.contentContainer}>
-                              <View style={styles.titleRow}>
-                                <Text style={[styles.itemTitle, !item.isRead && styles.unreadText]}>
-                                  {item.title}
-                                </Text>
-                                {!item.isRead && <View style={styles.unreadDot} />}
-                              </View>
-                              <Text style={styles.itemBody}>
-                                {item.body}
-                              </Text>
-                              <View style={styles.footerRow}>
-                                <Text style={styles.itemTime}>{formatDate(item.createdAt)}</Text>
-                                {item.isRead ? null : <Text style={styles.newBadge}>New</Text>}
-                              </View>
-                            </View>
-                          </TouchableOpacity>
-                        </Swipeable>
-                      );
-                    })}
-                  </View>
-                ))}
-                  </View>
+              ) : !hasMore && notifications.length > 0 ? (
+                <Text style={styles.endText}>No more notifications</Text>
+              ) : null
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconCircle}>
+                  <LinearGradient 
+                    colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F1F5F9', '#E2E8F0']} 
+                    style={styles.emptyGradient}
+                  >
+                    <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : theme.text.tertiary} strokeWidth="1.5">
+                      <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                    </Svg>
+                  </LinearGradient>
                 </View>
-              )}
-            </ScrollView>
+                <Text style={styles.emptyText}>No notifications yet</Text>
+                <Text style={styles.emptySubText}>We'll notify you when something important happens</Text>
+              </View>
+            }
+          />
 
           <CustomAlert
             visible={alertVisible}
@@ -343,6 +541,18 @@ const NotificationsScreen = () => {
             loading={deleting}
             onConfirm={confirmDelete}
             onCancel={() => setAlertVisible(false)}
+          />
+
+          <CustomAlert
+            visible={bulkAlertVisible}
+            theme={theme}
+            title="Delete Selected"
+            message={`Are you sure you want to delete ${selectedIds.length} notifications? This action cannot be undone.`}
+            type="warning"
+            confirmText="Delete All"
+            loading={isBulkDeleting}
+            onConfirm={confirmBulkDelete}
+            onCancel={() => setBulkAlertVisible(false)}
           />
         </>
       )}
@@ -369,8 +579,16 @@ function makeStyles(theme: AppTheme) {
       width: 44,
       alignItems: 'flex-start',
     },
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+    },
     headerRight: {
       width: 44,
+      alignItems: 'flex-end',
+    },
+    headerDeleteBtn: {
+        padding: 4,
     },
     headerTitleCenter: {
      fontSize: 28,
@@ -542,6 +760,62 @@ function makeStyles(theme: AppTheme) {
       color: theme.text.tertiary,
       textAlign: 'center',
       lineHeight: 24,
+      paddingHorizontal: 20
+    },
+    selectedCard: {
+        borderColor: theme.primary,
+        backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.05)' : '#F0FDF4',
+    },
+    checkboxContainer: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 50, // Circular checkbox for a more modern look
+        borderWidth: 2,
+        borderColor: theme.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.card,
+    },
+    checkboxActive: {
+        backgroundColor: theme.primary,
+        borderColor: theme.primary,
+    },
+    bulkFooter: {
+        position: 'absolute',
+        bottom: Platform.OS === 'ios' ? 40 : 20,
+        left: 20,
+        right: 20,
+        backgroundColor: 'transparent',
+    },
+    bulkDeleteBtn: {
+        backgroundColor: '#EF4444',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        borderRadius: 20,
+        shadowColor: '#EF4444',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    bulkDeleteText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontFamily: Typography.bold,
+    },
+    endText: {
+        textAlign: 'center',
+        paddingVertical: 20,
+        fontSize: 13,
+        fontFamily: Typography.medium,
+        color: theme.text.tertiary,
     },
   });
 }

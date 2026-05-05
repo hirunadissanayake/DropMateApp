@@ -55,6 +55,9 @@ const ShipmentsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [activeGallery, setActiveGallery] = useState<{ images: string[], index: number } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [isCancelAlertVisible, setIsCancelAlertVisible] = useState(false);
   const [isDeleteAlertVisible, setIsDeleteAlertVisible] = useState(false);
   const [cancellingParcelId, setCancellingParcelId] = useState<string | null>(null);
@@ -64,28 +67,45 @@ const ShipmentsScreen = () => {
 
   const s = makeStyles(theme);
 
-  const fetchParcels = async () => {
+  const fetchParcels = async (pageNum = 1) => {
     if (!token) return;
     try {
-      const data = await parcelService.getMyParcels(token);
-      setParcels(data);
+      const data = await parcelService.getMyParcels(token, pageNum);
+      if (pageNum === 1) {
+        setParcels(data.parcels);
+      } else {
+        setParcels(prev => [...prev, ...data.parcels]);
+      }
+      setHasMore(data.hasMore);
+      setPage(pageNum);
     } catch (error) {
       console.error('Fetch parcels error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchParcels();
+      setPage(1);
+      setHasMore(true);
+      fetchParcels(1);
     }, [token])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchParcels();
+    setPage(1);
+    setHasMore(true);
+    fetchParcels(1);
+  };
+
+  const loadMore = () => {
+    if (!hasMore || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchParcels(page + 1);
   };
 
   const getStatusColor = (status: string) => {
@@ -117,7 +137,9 @@ const ShipmentsScreen = () => {
         text1: 'Parcel Cancelled',
         text2: 'Your parcel has been cancelled successfully.',
       });
-      fetchParcels();
+      setPage(1);
+      setHasMore(true);
+      fetchParcels(1);
     } catch (error) {
       console.error('Cancel parcel error:', error);
     } finally {
@@ -143,7 +165,9 @@ const ShipmentsScreen = () => {
         text1: 'Parcel Deleted',
         text2: 'The parcel record has been permanently removed.',
       });
-      fetchParcels();
+      setPage(1);
+      setHasMore(true);
+      fetchParcels(1);
     } catch (error) {
       console.error('Delete parcel error:', error);
     } finally {
@@ -340,6 +364,17 @@ const ShipmentsScreen = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} colors={[theme.primary]} />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={theme.primary} />
+              </View>
+            ) : !hasMore && parcels.length > 0 ? (
+              <Text style={s.endText}>No more shipments</Text>
+            ) : null
           }
           ListEmptyComponent={
             <View style={s.emptyContainer}>
@@ -795,6 +830,13 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   fullImage: {
     width: width,
     height: '100%',
+  },
+  endText: {
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontSize: 13,
+    fontFamily: Typography.medium,
+    color: theme.text.tertiary,
   },
 });
 

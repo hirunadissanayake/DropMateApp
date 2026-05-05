@@ -15,20 +15,21 @@ export interface Notification {
 export interface NotificationResponse {
   notifications: Notification[];
   unreadCount: number;
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }
 
-export const getNotifications = async (token: string): Promise<NotificationResponse> => {
+export const getNotifications = async (token: string, page = 1, limit = 10): Promise<NotificationResponse> => {
   try {
     const response = await axios.get(ENDPOINTS.NOTIFICATIONS.GET_ALL, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
+      params: { page, limit },
     });
     return response.data;
   } catch (error: any) {
-    if (error.response) {
-      throw error.response.data;
-    }
+    if (error.response) throw error.response.data;
     throw error;
   }
 };

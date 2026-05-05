@@ -13,6 +13,7 @@ import {
   Platform,
   RefreshControl,
   Dimensions,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -210,7 +211,7 @@ const TravelerEarningsScreen = () => {
               <SafeAreaView edges={['top']}>
                 <View style={styles.headerRow}>
                   <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-                  <Text style={styles.headerTitle}>Earnings</Text>
+                  <Text style={styles.headerTitle}>My Wallet</Text>
                   <View style={{ width: 40 }} />
                 </View>
 
@@ -344,8 +345,9 @@ const TravelerEarningsScreen = () => {
                   {/* Card Payments */}
                   <View style={styles.statCard}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(59,130,246,0.1)' : '#EFF6FF' }]}>
-                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><Path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5a2 2 0 0 1 0-4h16z" />
+                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <Rect x="2" y="5" width="20" height="14" rx="2" />
+                        <Path d="M2 10h20" />
                       </Svg>
                     </View>
                     <Text style={styles.statCardLabel}>Online Earned</Text>
@@ -363,8 +365,10 @@ const TravelerEarningsScreen = () => {
                   {/* Cash Collection */}
                   <View style={[styles.statCard, { marginTop: 12 }]}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(234,179,8,0.1)' : '#FEF3C7' }]}>
-                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <Circle cx="12" cy="12" r="10" /><Path d="M12 6v12M9 9h6M9 15h6" />
+                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <Rect x="2" y="6" width="20" height="12" rx="2" />
+                        <Circle cx="12" cy="12" r="3" />
+                        <Path d="M6 12h.01M18 12h.01" />
                       </Svg>
                     </View>
                     <Text style={styles.statCardLabel}>Cash Collection</Text>
@@ -405,8 +409,12 @@ const TravelerEarningsScreen = () => {
                   {/* Lifetime Total */}
                   <View style={[styles.statCard, { marginTop: 12 }]}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(139,92,246,0.1)' : '#F3E8FF' }]}>
-                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M6 9V2h12v7" />
+                        <Path d="M6 5H2v4c0 2.21 1.79 4 4 4" />
+                        <Path d="M18 5h4v4c0 2.21-1.79 4-4 4" />
+                        <Path d="M12 13v7" />
+                        <Path d="M8 22h8" />
                       </Svg>
                     </View>
                     <Text style={styles.statCardLabel}>Lifetime Total</Text>
@@ -468,8 +476,8 @@ const TravelerEarningsScreen = () => {
                 activeOpacity={0.8}
               >
                 <View style={styles.viewHistoryLeft}>
-                  <View style={[styles.historyIconBg, { backgroundColor: theme.isDark ? 'rgba(59,130,246,0.1)' : '#EFF6FF' }]}>
-                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <View style={[styles.historyIconBg, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.15)' : '#D1FAE5' }]}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#006C52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <Path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </Svg>
                   </View>
@@ -488,9 +496,19 @@ const TravelerEarningsScreen = () => {
           </ScrollView>
 
           {/* ── Withdrawal Modal ──────────────────────────────────────── */}
-          <Modal visible={showWithdrawModal} animationType="slide" transparent>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
-              <View style={styles.modalSheet}>
+          <Modal visible={showWithdrawModal} animationType="slide" transparent onRequestClose={() => setShowWithdrawModal(false)}>
+            <TouchableOpacity 
+              style={styles.modalOverlay} 
+              activeOpacity={1} 
+              onPress={() => setShowWithdrawModal(false)}
+            >
+              <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+                style={{ flex: 1, justifyContent: 'flex-end' }}
+                pointerEvents="box-none"
+              >
+                <TouchableWithoutFeedback onPress={() => {}}>
+                  <View style={styles.modalSheet}>
                 <View style={styles.modalHeader}>
                   <View style={styles.modalIndicator} />
                   <Text style={styles.modalTitle}>Withdrawal Request</Text>
@@ -569,9 +587,11 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.cancelBtnText}>Back</Text>
                   </TouchableOpacity>
                 </ScrollView>
-              </View>
+                </View>
+              </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
-          </Modal>
+          </TouchableOpacity>
+        </Modal>
         </>
       )}
     </View>
@@ -801,7 +821,7 @@ function makeStyles(theme: AppTheme) {
       marginBottom: 12,
     },
     statCardLabel: { fontSize: 12, color: theme.text.secondary, fontFamily: Typography.medium, marginBottom: 4 },
-    statCardValue: { fontSize: 20, color: theme.text.primary, fontFamily: Typography.extraBold, letterSpacing: -0.5 },
+    statCardValue: { fontSize: 18, color: theme.text.primary, fontFamily: Typography.extraBold, letterSpacing: -0.5 },
 
     // ── Total Payout Card ────────────────────────────────────────────────────
     totalPayoutCard: {
@@ -852,7 +872,7 @@ function makeStyles(theme: AppTheme) {
       gap: 6,
     },
     totalPayoutAmount: {
-      fontSize: 22,
+      fontSize: 18,
       fontFamily: Typography.extraBold,
       color: theme.primary,
       letterSpacing: -0.5,

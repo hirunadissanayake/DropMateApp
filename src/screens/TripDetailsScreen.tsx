@@ -82,8 +82,8 @@ const TripDetailsScreen = () => {
       
       if (user?.roleActive === 'CUSTOMER') {
         try {
-          const parcels = await parcelService.getMyParcels(token!);
-          const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
+          const res = await parcelService.getMyParcels(token!);
+          const pendingParcels = res.parcels.filter((p: any) => p.status === 'PENDING');
           const available = pendingParcels.filter(
             (p: any) => !response.requestedParcelIds?.includes(p.id)
           );
@@ -102,8 +102,8 @@ const TripDetailsScreen = () => {
   const handleRequestPress = async () => {
     setRequestingMatch(true);
     try {
-      const parcels = await parcelService.getMyParcels(token!);
-      const pendingParcels = parcels.filter((p: any) => p.status === 'PENDING');
+      const res = await parcelService.getMyParcels(token!);
+      const pendingParcels = res.parcels.filter((p: any) => p.status === 'PENDING');
       const availableParcels = pendingParcels.filter(
         (p: any) => !trip.requestedParcelIds?.includes(p.id)
       );

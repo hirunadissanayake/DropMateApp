@@ -89,12 +89,19 @@ export const getParcelDetails = async (token: string, id: string) => {
   }
 };
 
-export const getMyParcels = async (token: string) => {
+export const getMyParcels = async (token: string, page = 1, limit = 10) => {
   try {
     const response = await axios.get(ENDPOINTS.PARCELS.MY_PARCELS, {
       headers: { Authorization: `Bearer ${token}` },
+      params: { page, limit },
     });
-    return response.data;
+    return response.data as {
+      parcels: any[];
+      total: number;
+      page: number;
+      limit: number;
+      hasMore: boolean;
+    };
   } catch (error: any) {
     throw error.response?.data || error;
   }
