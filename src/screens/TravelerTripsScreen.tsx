@@ -258,6 +258,8 @@ const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
     year: 'numeric',
   });
 
+  const usedCapacity = trip.parcels?.reduce((sum: number, p: any) => sum + (p.weight || 0), 0) || 0;
+
   const getParcelStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'PENDING': return '#F59E0B';
@@ -341,7 +343,9 @@ const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
               <Rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
               <Path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </Svg>
-            <Text style={styles.footerText}>{trip.capacityKg ?? 0} kg</Text>
+            <Text style={styles.footerText}>
+              {Math.max(0, (trip.capacityKg ?? 0) - usedCapacity).toFixed(1)} / {trip.capacityKg ?? 0} kg
+            </Text>
           </View>
         </View>
         <View style={styles.infoCol}>
@@ -643,7 +647,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 6,
   },
   footerText: {
-    fontSize: 13,
+    fontSize: 12,
     color: theme.text.secondary,
     fontFamily: Typography.bold,
   },

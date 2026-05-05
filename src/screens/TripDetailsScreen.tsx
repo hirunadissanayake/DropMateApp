@@ -151,10 +151,10 @@ const TripDetailsScreen = () => {
   };
 
   const submitMatchRequest = async (parcelId: string) => {
+    setIsParcelModalVisible(false);
     setRequestingMatch(true);
     try {
       await deliveryService.requestMatch(token!, { parcelId, tripId });
-      setIsParcelModalVisible(false);
       
       setTrip((prev: any) => {
         const updatedRequestedIds = [...(prev.requestedParcelIds || []), parcelId];

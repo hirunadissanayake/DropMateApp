@@ -62,6 +62,7 @@ const ParcelDetailsScreen = () => {
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [otpType, setOtpType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
   const [processingOtp, setProcessingOtp] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -295,7 +296,8 @@ const ParcelDetailsScreen = () => {
           confirmText: 'OK',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
-            fetchDetails();
+            setActionLoading(true);
+            fetchDetails().finally(() => setActionLoading(false));
           }
         });
       } else {
@@ -309,7 +311,8 @@ const ParcelDetailsScreen = () => {
           confirmText: 'OK',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
-            fetchDetails();
+            setActionLoading(true);
+            fetchDetails().finally(() => setActionLoading(false));
           }
         });
       }
@@ -623,19 +626,29 @@ const ParcelDetailsScreen = () => {
           {/* Traveler Lifecycle Actions */}
           {isTraveler && (
             <View style={styles.actionSection}>
-              {parcel.status === 'MATCHED' && (
-                <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiatePickup}>
+              {actionLoading ? (
+                <TouchableOpacity style={[styles.primaryActionButton, { opacity: 0.7 }]} disabled>
                   <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
-                    <Text style={styles.actionButtonText}>Confirm Pickup</Text>
+                    <ActivityIndicator color="#FFFFFF" />
                   </LinearGradient>
                 </TouchableOpacity>
-              )}
-              {parcel.status === 'PICKED_UP' && (
-                <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiateDelivery}>
-                  <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
-                    <Text style={styles.actionButtonText}>Complete Delivery</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+              ) : (
+                <>
+                  {parcel.status === 'MATCHED' && (
+                    <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiatePickup}>
+                      <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                        <Text style={styles.actionButtonText}>Confirm Pickup</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                  {parcel.status === 'PICKED_UP' && (
+                    <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiateDelivery}>
+                      <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                        <Text style={styles.actionButtonText}>Complete Delivery</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
               {parcel.status === 'DELIVERED' && (
                 <View style={styles.completedBadge}>

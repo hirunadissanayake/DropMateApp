@@ -467,7 +467,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
                   navigation.navigate('Announcements');
                   toggleActions();
                 }}>
-                <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
+                <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
                   <Path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
                   <Path d="M12 8v4" />
                   <Path d="M12 16h.01" />
@@ -486,7 +486,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
                   navigation.navigate('Notifications');
                   toggleActions();
                 }}>
-                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.text.primary} strokeWidth="2">
+                <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
                   <Path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" />
                   <Path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" />
                 </Svg>
@@ -790,40 +790,32 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.5,
   },
   notificationBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.card,
-    alignItems: 'center',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC',
     justifyContent: 'center',
-    shadowColor: theme.shadowColor,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: theme.isDark ? 0.3 : 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-    borderWidth: theme.isDark ? 1 : 0,
-    borderColor: theme.border,
+    alignItems: 'center',
   },
   notifBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -8,
+    right: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#EF4444',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: theme.card,
+    borderColor: theme.background,
   },
   dropdownActions: {
     position: 'absolute',
     top: 55,
     right: 0,
     backgroundColor: theme.isDark ? theme.card : '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 8,
     gap: 12,
     zIndex: 1000,
@@ -837,7 +829,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   notifBadgeText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: Typography.bold,
   },
   scrollContent: {

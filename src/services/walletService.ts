@@ -3,26 +3,38 @@ import { ENDPOINTS } from '../utils/endPoints';
 
 export interface WalletSummary {
   walletBalance: number;
+  todayEarned: number;
+  todayCashCollection: number;
   totalEarned: number;
+  cashEarned: number;
+  periodEarned: number;
+  periodCashEarnings: number;
+  periodOnlineEarnings: number;
   pendingWithdrawals: number;
-  thisMonthEarned: number;
-  cashEarned?: number;
+  totalWithdrawn: number;
 }
 
 export interface WalletTransaction {
   id: string;
-  type: 'DELIVERY_EARNED' | 'WITHDRAWAL';
+  type: 'DELIVERY_EARNED' | 'WITHDRAWAL' | 'PLATFORM_FEE_DEDUCTION';
   amount: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   description: string | null;
   parcelId: string | null;
   createdAt: string;
+  parcel?: {
+    price: number | null;
+    platformFee: number | null;
+    travelerPayout: number | null;
+    paymentMethod: 'ONLINE' | 'CASH_ON_PICKUP' | 'CASH_ON_DELIVERY' | null;
+  } | null;
 }
 
-export const getWalletSummary = async (token: string): Promise<WalletSummary> => {
+export const getWalletSummary = async (token: string, filters?: { startDate?: string; endDate?: string }): Promise<WalletSummary> => {
   try {
     const response = await axios.get(ENDPOINTS.WALLET.SUMMARY, {
       headers: { Authorization: `Bearer ${token}` },
+      params: filters,
     });
     return response.data;
   } catch (error: any) {
@@ -30,10 +42,11 @@ export const getWalletSummary = async (token: string): Promise<WalletSummary> =>
   }
 };
 
-export const getTransactionHistory = async (token: string): Promise<WalletTransaction[]> => {
+export const getTransactionHistory = async (token: string, filters?: { startDate?: string; endDate?: string; limit?: number }): Promise<WalletTransaction[]> => {
   try {
     const response = await axios.get(ENDPOINTS.WALLET.TRANSACTIONS, {
       headers: { Authorization: `Bearer ${token}` },
+      params: filters,
     });
     return response.data;
   } catch (error: any) {
