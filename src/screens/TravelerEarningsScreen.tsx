@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as walletService from '../services/walletService';
@@ -35,7 +35,7 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const { width } = Dimensions.get('window');
 
-type FilterPeriod = 'Today' | 'Last 30 Days' | 'Total' | 'Custom';
+type FilterPeriod = 'Today' | 'Last 30 Days' | 'All' | 'Custom';
 
 const formatLKR = (amount: number) =>
   `LKR ${amount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -78,7 +78,7 @@ const TravelerEarningsScreen = () => {
   const fetchData = async () => {
     if (!loading) setIsFetching(true);
     try {
-      const filters = activePreset === 'Total' ? {} : {
+      const filters = activePreset === 'All' ? {} : {
         startDate: dayjs(startDate).format('YYYY-MM-DD'),
         endDate: dayjs(endDate).format('YYYY-MM-DD'),
       };
@@ -210,42 +210,43 @@ const TravelerEarningsScreen = () => {
               <SafeAreaView edges={['top']}>
                 <View style={styles.headerRow}>
                   <BackButton color="#FFFFFF" onPress={() => navigation.goBack()} />
-                  <Text style={styles.headerTitle}>My Wallet</Text>
+                  <Text style={styles.headerTitle}>Earnings</Text>
                   <View style={{ width: 40 }} />
                 </View>
 
                 <View style={styles.balanceContainer}>
-                  <Text style={styles.balanceLabel}>Available for Payout</Text>
+                  <Text style={styles.balanceLabel}>Available Payout</Text>
                   <Text style={styles.balanceAmount}>{formatLKR(summary?.walletBalance || 0)}</Text>
-
-                  <TouchableOpacity
-                    style={[styles.withdrawMainBtn, (summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT && { opacity: 0.5 }]}
-                    onPress={() => (summary?.walletBalance || 0) >= CONFIG.MIN_WITHDRAWAL_AMOUNT && setShowWithdrawModal(true)}
-                    activeOpacity={(summary?.walletBalance || 0) >= CONFIG.MIN_WITHDRAWAL_AMOUNT ? 0.8 : 1}
-                  >
-                    <Text style={styles.withdrawMainText}>Request Payout</Text>
-                  </TouchableOpacity>
-
-                  {(summary?.walletBalance || 0) < 0 ? (
+                  
+                  {(summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT ? (
                     <View style={{ alignItems: 'center' }}>
-                      <View style={styles.warningBox}>
-                        <Text style={styles.blockWarning}>
-                          Warning: Your balance is negative. Reaching LKR {Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD)} negative will result in an account block.
-                        </Text>
+                      <View style={styles.withdrawDisabledBtn}>
+                        <Text style={styles.withdrawDisabledText}>Minimum {formatLKR(CONFIG.MIN_WITHDRAWAL_AMOUNT)} required to withdraw</Text>
                       </View>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.withdrawMainBtn}
+                      onPress={() => setShowWithdrawModal(true)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.withdrawMainText}>Withdraw Funds</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {(summary?.walletBalance || 0) < 0 && (
+                    <View style={styles.warningBox}>
+                      <Text style={styles.blockWarning}>
+                        Balance is negative. Auto-block at {formatLKR(Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD))}
+                      </Text>
                       <TouchableOpacity
-                        style={styles.topUpButtonSmall}
+                        style={styles.topUpButtonSecondary}
                         onPress={() => navigation.navigate('TopUp' as never)}
-                        activeOpacity={0.8}
                       >
-                        <Text style={styles.topUpButtonSmallText}>Top Up Wallet</Text>
+                        <Text style={styles.topUpButtonSecondaryText}>Top Up Now</Text>
                       </TouchableOpacity>
                     </View>
-                  ) : (summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT ? (
-                    <Text style={styles.minPayoutWarning}>
-                      Minimum LKR {CONFIG.MIN_WITHDRAWAL_AMOUNT} required for payout
-                    </Text>
-                  ) : null}
+                  )}
                 </View>
               </SafeAreaView>
             </LinearGradient>
@@ -254,40 +255,66 @@ const TravelerEarningsScreen = () => {
 
               {/* ── Date Range Pickers ───────────────────────────────── */}
               <View style={styles.datePickerContainer}>
-                <View style={styles.datePickerRow}>
+                <View style={styles.filterHeader}>
+                  <View style={styles.filterTitleRow}>
+                    <View style={styles.filterIconBox}>
+                      <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
+                        <Path d="M3 6h18M7 12h10M10 18h4" />
+                      </Svg>
+                    </View>
+                    <Text style={styles.filterTitle}>Quick Filters</Text>
+                  </View>
+                  <View style={styles.presetRow}>
+                    {(['Today', 'Last 30 Days', 'All'] as FilterPeriod[]).map((p) => (
+                      <TouchableOpacity
+                        key={p}
+                        style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
+                        onPress={() => setPreset(p)}
+                      >
+                        <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.dateButtonGrid}>
                   <TouchableOpacity 
                     style={styles.dateButton} 
                     onPress={() => setStartDatePickerVisibility(true)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.dateButtonLabel}>Start Date</Text>
-                    <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
+                    <View style={styles.dateIconBox}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                        <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                      </Svg>
+                    </View>
+                    <View>
+                      <Text style={styles.dateButtonLabel}>From</Text>
+                      <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
+                    </View>
                   </TouchableOpacity>
                   
-                  <View style={styles.dateSeparator}>
-                    <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                      <Path d="M5 12h14" />
+                  <View style={styles.dateArrowBox}>
+                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
+                      <Path d="M5 12h14M12 5l7 7-7 7" />
                     </Svg>
                   </View>
 
                   <TouchableOpacity 
                     style={styles.dateButton} 
                     onPress={() => setEndDatePickerVisibility(true)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.dateButtonLabel}>End Date</Text>
-                    <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
+                    <View style={styles.dateIconBox}>
+                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                        <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                      </Svg>
+                    </View>
+                    <View>
+                      <Text style={styles.dateButtonLabel}>To</Text>
+                      <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
+                    </View>
                   </TouchableOpacity>
-                </View>
-
-                <View style={styles.presetRow}>
-                  {(['Today', 'Last 30 Days', 'Total'] as FilterPeriod[]).map((p) => (
-                    <TouchableOpacity
-                      key={p}
-                      style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
-                      onPress={() => setPreset(p)}
-                    >
-                      <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
-                    </TouchableOpacity>
-                  ))}
                 </View>
               </View>
 
@@ -362,7 +389,7 @@ const TravelerEarningsScreen = () => {
                       </Svg>
                     </View>
                     <Text style={styles.statCardLabel}>
-                      {activePreset === 'Today' ? 'Today Earned' : activePreset === 'Total' ? 'Total Earned' : 'Period Earned'}
+                      {activePreset === 'Today' ? 'Today Earned' : activePreset === 'All' ? 'Total Earned' : 'Period Earned'}
                     </Text>
                     <View style={{ minHeight: 32, justifyContent: 'center' }}>
                       {isFetching ? (
@@ -556,7 +583,7 @@ function makeStyles(theme: AppTheme) {
     container: { flex: 1, backgroundColor: theme.background },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
     heroSection: {
-      paddingBottom: 40,
+      paddingBottom: 24,
       borderBottomLeftRadius: 32,
       borderBottomRightRadius: 32,
     },
@@ -565,45 +592,57 @@ function makeStyles(theme: AppTheme) {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingVertical: 12,
+      paddingVertical: 8,
     },
-    headerTitle: { fontSize: 28, fontFamily: Typography.extraBold, color: '#FFFFFF' },
-    balanceContainer: { alignItems: 'center', marginTop: 20, paddingHorizontal: 20 },
-    balanceLabel: { fontSize: 14, color: 'rgba(255,255,255,0.7)', fontFamily: Typography.medium, marginBottom: 8 },
-    balanceAmount: { fontSize: 36, color: '#FFFFFF', fontFamily: Typography.bold, marginBottom: 24, letterSpacing: -1 },
+    headerTitle: { fontSize: 24, fontFamily: Typography.extraBold, color: '#FFFFFF' },
+    balanceContainer: { alignItems: 'center', marginTop: 12, paddingHorizontal: 20 },
+    balanceLabel: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontFamily: Typography.medium, marginBottom: 8 },
+    balanceAmount: { fontSize: 36, color: '#FFFFFF', fontFamily: Typography.bold, letterSpacing: -1, marginBottom: 16 },
     withdrawMainBtn: {
       backgroundColor: '#FFFFFF',
-      paddingHorizontal: 40,
-      paddingVertical: 14,
+      paddingHorizontal: 32,
+      paddingVertical: 12,
       borderRadius: 100,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
       elevation: 4,
     },
-    withdrawMainText: { color: theme.primary, fontFamily: Typography.bold, fontSize: 15 },
-    minPayoutWarning: { color: 'rgba(255,255,255,0.8)', fontFamily: Typography.medium, fontSize: 11, marginTop: 10 },
-    warningBox: {
-      backgroundColor: 'rgba(239,68,68,0.15)',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 12,
-      marginTop: 14,
-      borderWidth: 1,
-      borderColor: 'rgba(239,68,68,0.3)',
-    },
-    blockWarning: { color: '#FECACA', fontFamily: Typography.bold, fontSize: 11, textAlign: 'center' },
-    topUpButtonSmall: {
-      marginTop: 12,
-      paddingHorizontal: 20,
+    withdrawMainText: { color: theme.primary, fontFamily: Typography.bold, fontSize: 14 },
+    withdrawDisabledBtn: {
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      paddingHorizontal: 24,
       paddingVertical: 10,
+      borderRadius: 100,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    withdrawDisabledText: { color: 'rgba(255,255,255,0.6)', fontFamily: Typography.medium, fontSize: 12 },
+    minPayoutWarning: { color: 'rgba(255,255,255,0.8)', fontFamily: Typography.medium, fontSize: 11 },
+    warningBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(239,68,68,0.2)',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 14,
+      marginTop: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(239,68,68,0.4)',
+      gap: 12,
+      width: '100%',
+    },
+    blockWarning: { color: '#FECACA', fontFamily: Typography.bold, fontSize: 10, flex: 1 },
+    topUpButtonSecondary: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
       backgroundColor: 'rgba(255,255,255,0.15)',
-      borderRadius: 12,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.3)',
     },
-    topUpButtonSmallText: { color: '#FFFFFF', fontFamily: Typography.bold, fontSize: 13 },
+    topUpButtonSecondaryText: { color: '#FFFFFF', fontFamily: Typography.bold, fontSize: 11 },
 
     contentBody: { paddingHorizontal: 16, marginTop: -20 },
 
@@ -616,18 +655,57 @@ function makeStyles(theme: AppTheme) {
       borderWidth: 1,
       borderColor: theme.border,
       marginTop: 10,
+      shadowColor: theme.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.isDark ? 0.3 : 0.05,
+      shadowRadius: 10,
+      elevation: 4,
     },
-    datePickerRow: {
+    filterHeader: {
+      marginBottom: 16,
+    },
+    filterTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
+      marginBottom: 12,
+      gap: 8,
+    },
+    filterIconBox: {
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      backgroundColor: theme.isDark ? 'rgba(0, 108, 82, 0.15)' : 'rgba(0, 108, 82, 0.05)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    filterTitle: {
+      fontSize: 14,
+      fontFamily: Typography.bold,
+      color: theme.text.primary,
+    },
+    dateButtonGrid: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     dateButton: {
       flex: 1,
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC',
-      borderRadius: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+      borderRadius: 14,
       padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: 12,
+    },
+    dateIconBox: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+      justifyContent: 'center',
+      alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.border,
     },
@@ -636,32 +714,39 @@ function makeStyles(theme: AppTheme) {
       fontFamily: Typography.bold,
       color: theme.text.tertiary,
       textTransform: 'uppercase',
-      marginBottom: 4,
+      marginBottom: 1,
     },
     dateButtonValue: {
-      fontSize: 13,
-      fontFamily: Typography.bold,
+      fontSize: 11,
+      fontFamily: Typography.extraBold,
       color: theme.text.primary,
     },
-    dateSeparator: {
-      paddingHorizontal: 4,
+    dateArrowBox: {
+      width: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     presetRow: {
       flexDirection: 'row',
-      marginTop: 12,
-      gap: 8,
+      gap: 6,
     },
     presetChip: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 100,
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
       borderWidth: 1,
       borderColor: theme.border,
+      alignItems: 'center',
     },
     presetChipActive: {
       backgroundColor: theme.primary,
       borderColor: theme.primary,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
     presetChipText: {
       fontSize: 11,

@@ -19,7 +19,7 @@ import {
   RefreshControl,
   Linking,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -91,9 +91,11 @@ const ParcelDetailsScreen = () => {
   const isTraveler = parcel?.matchedTrip?.travelerId && user ? String(user.id) === String(parcel.matchedTrip.travelerId) : false;
 
 
-  useEffect(() => {
-    fetchDetails();
-  }, [parcelId]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchDetails();
+    }, [parcelId, token])
+  );
 
   const fetchDetails = async () => {
     try {

@@ -13,7 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import * as walletService from '../services/walletService';
@@ -118,40 +118,66 @@ export default function EarningsHistoryScreen() {
 
         {/* ── Date Range Pickers ───────────────────────────────── */}
         <View style={styles.datePickerContainer}>
-          <View style={styles.datePickerRow}>
+          <View style={styles.filterHeader}>
+            <View style={styles.filterTitleRow}>
+              <View style={styles.filterIconBox}>
+                <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
+                  <Path d="M3 6h18M7 12h10M10 18h4" />
+                </Svg>
+              </View>
+              <Text style={styles.filterTitle}>Quick Filters</Text>
+            </View>
+            <View style={styles.presetRow}>
+              {(['Today', 'Last 30 Days', 'Total'] as FilterPeriod[]).map((p) => (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
+                  onPress={() => setPreset(p)}
+                >
+                  <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.dateButtonGrid}>
             <TouchableOpacity 
               style={styles.dateButton} 
               onPress={() => setStartDatePickerVisibility(true)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.dateButtonLabel}>Start Date</Text>
-              <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
+              <View style={styles.dateIconBox}>
+                <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                  <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                </Svg>
+              </View>
+              <View>
+                <Text style={styles.dateButtonLabel}>From</Text>
+                <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
+              </View>
             </TouchableOpacity>
             
-            <View style={styles.dateSeparator}>
-              <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                <Path d="M5 12h14" />
+            <View style={styles.dateArrowBox}>
+              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
+                <Path d="M5 12h14M12 5l7 7-7 7" />
               </Svg>
             </View>
 
             <TouchableOpacity 
               style={styles.dateButton} 
               onPress={() => setEndDatePickerVisibility(true)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.dateButtonLabel}>End Date</Text>
-              <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
+              <View style={styles.dateIconBox}>
+                <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                  <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                </Svg>
+              </View>
+              <View>
+                <Text style={styles.dateButtonLabel}>To</Text>
+                <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.presetRow}>
-            {(['Today', 'Last 30 Days', 'Total'] as FilterPeriod[]).map((p) => (
-              <TouchableOpacity
-                key={p}
-                style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
-                onPress={() => setPreset(p)}
-              >
-                <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
-              </TouchableOpacity>
-            ))}
           </View>
         </View>
 
@@ -415,61 +441,107 @@ function makeStyles(theme: AppTheme) {
     // ── Date Range Pickers ──────────────────────────────────────────────────
     datePickerContainer: {
       backgroundColor: theme.card,
-      borderRadius: 20,
+      borderRadius: 24,
       padding: 16,
       margin: 16,
       marginBottom: 8,
       borderWidth: 1,
       borderColor: theme.border,
+      shadowColor: theme.shadowColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: theme.isDark ? 0.3 : 0.05,
+      shadowRadius: 10,
+      elevation: 4,
     },
-    datePickerRow: {
+    filterHeader: {
+      marginBottom: 16,
+    },
+    filterTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
+      marginBottom: 12,
+      gap: 8,
+    },
+    filterIconBox: {
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      backgroundColor: theme.isDark ? 'rgba(0, 108, 82, 0.15)' : 'rgba(0, 108, 82, 0.05)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    filterTitle: {
+      fontSize: 14,
+      fontFamily: Typography.bold,
+      color: theme.text.primary,
+    },
+    dateButtonGrid: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     dateButton: {
       flex: 1,
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC',
-      borderRadius: 12,
-      padding: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+      borderRadius: 14,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: 12,
+    },
+    dateIconBox: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+      justifyContent: 'center',
+      alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.border,
     },
     dateButtonLabel: {
-      fontSize: 9,
+      fontSize: 10,
       fontFamily: Typography.bold,
       color: theme.text.tertiary,
       textTransform: 'uppercase',
-      marginBottom: 2,
+      marginBottom: 1,
     },
     dateButtonValue: {
-      fontSize: 12,
-      fontFamily: Typography.bold,
+      fontSize: 11,
+      fontFamily: Typography.extraBold,
       color: theme.text.primary,
     },
-    dateSeparator: {
-      paddingHorizontal: 2,
+    dateArrowBox: {
+      width: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     presetRow: {
       flexDirection: 'row',
-      marginTop: 12,
-      gap: 8,
+      gap: 6,
     },
     presetChip: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 100,
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
       borderWidth: 1,
       borderColor: theme.border,
+      alignItems: 'center',
     },
     presetChipActive: {
       backgroundColor: theme.primary,
       borderColor: theme.primary,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
     presetChipText: {
-      fontSize: 10,
+      fontSize: 11,
       fontFamily: Typography.bold,
       color: theme.text.secondary,
     },

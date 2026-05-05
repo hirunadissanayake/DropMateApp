@@ -222,9 +222,8 @@ export default function PaymentScreen() {
              <Text style={styles.trustText}>ACCEPTED PAYMENT METHODS</Text>
              <View style={styles.methodRow}>
                 <View style={styles.methodIcon}><Text style={styles.methodIconText}>VISA</Text></View>
-                <View style={styles.methodIcon}><Text style={styles.methodIconText}>MC</Text></View>
-                <View style={styles.methodIcon}><Text style={styles.methodIconText}>AMEX</Text></View>
-                <View style={styles.methodIcon}><Text style={styles.methodIconText}>M-CASH</Text></View>
+                <View style={styles.methodIcon}><Text style={styles.methodIconText}>Master Card</Text></View>
+                
              </View>
              
              <View style={styles.infoBox}>
