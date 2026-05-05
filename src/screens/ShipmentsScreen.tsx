@@ -314,6 +314,12 @@ const ShipmentsScreen = () => {
     );
   }
 
+  const filteredParcels = parcels.filter(p => {
+    const status = p.status.toUpperCase();
+    const isHistoryStatus = status === 'DELIVERED';
+    return activeTab === 'history' ? isHistoryStatus : !isHistoryStatus;
+  });
+
   return (
     <View style={s.container}>
       <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
@@ -353,11 +359,7 @@ const ShipmentsScreen = () => {
         </View>
 
         <FlatList
-          data={parcels.filter(p => {
-            const status = p.status.toUpperCase();
-            const isHistoryStatus = status === 'DELIVERED';
-            return activeTab === 'history' ? isHistoryStatus : !isHistoryStatus;
-          })}
+          data={filteredParcels}
           renderItem={renderParcelItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={s.listContent}
@@ -372,7 +374,7 @@ const ShipmentsScreen = () => {
               <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={theme.primary} />
               </View>
-            ) : !hasMore && parcels.length > 0 ? (
+            ) : !hasMore && filteredParcels.length > 0 ? (
               <Text style={s.endText}>No more shipments</Text>
             ) : null
           }

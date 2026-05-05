@@ -151,7 +151,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     }
     try {
       const data = await parcelService.getMyParcels(token);
-      const active = data.filter((p: any) => {
+      const active = data.parcels.filter((p: any) => {
         const s = p.status?.toUpperCase();
         return s === 'PENDING' || s === 'IN_TRANSIT' || s === 'MATCHED';
       });
@@ -208,7 +208,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
       
       if (userData.isCustomerApproved && userData.roleActive === 'CUSTOMER') {
         const pData = await parcelService.getMyParcels(token);
-        const active = pData.filter((p: any) => {
+        const active = pData.parcels.filter((p: any) => {
           const s = p.status?.toUpperCase();
           return s === 'PENDING' || s === 'IN_TRANSIT' || s === 'MATCHED';
         });
