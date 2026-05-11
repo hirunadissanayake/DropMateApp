@@ -45,11 +45,16 @@ const VerificationScreen = ({ navigation, route }: any) => {
   };
 
   const handlePickImage = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
-    Alert.alert('Upload Image', 'Choose a source', [
-      { text: 'Camera', onPress: () => pickUsingCamera(field) },
-      { text: 'Gallery', onPress: () => pickUsingGallery(field) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    if (field === 'selfie') {
+      // Force live camera capture for selfie to ensure authenticity.
+      pickUsingCamera(field);
+    } else {
+      Alert.alert('Upload Document', 'Choose a source', [
+        { text: 'Camera', onPress: () => pickUsingCamera(field) },
+        { text: 'Gallery', onPress: () => pickUsingGallery(field) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
   };
 
   const pickUsingGallery = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
@@ -60,6 +65,7 @@ const VerificationScreen = ({ navigation, route }: any) => {
       Toast.show({ type: 'error', text1: 'Gallery Error', text2: err.message || 'Could not open gallery.' });
     }
   };
+
 
   const pickUsingCamera = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
     try {
@@ -162,6 +168,21 @@ const VerificationScreen = ({ navigation, route }: any) => {
             </Text>
           </View>
 
+          {/* Instructions Box */}
+          <View style={s.instructionsBox}>
+            <View style={s.instructionHeader}>
+              <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <Path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M12 16V12" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M12 8H12.01" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+              <Text style={s.instructionHeaderText}>Important Instructions</Text>
+            </View>
+            <Text style={s.instructionText}>
+              • If the selfie or ID image is blurry, dark, or not clear, your verification will be rejected.
+            </Text>
+          </View>
+
           <View style={s.section}>
             <Text style={s.sectionHeader}>Personal Identification</Text>
 
@@ -194,9 +215,9 @@ const VerificationScreen = ({ navigation, route }: any) => {
               </View>
 
               <View style={s.selfieTextContent}>
-                <Text style={s.uploadTitle}>Upload Selfie</Text>
+                <Text style={s.uploadTitle}>Take Selfie</Text>
                 <Text style={s.uploadSubtitle}>
-                  {data.selfie ? 'Selfie selected successfully' : 'Take a clear photo of your face facing the camera.'}
+                  {data.selfie ? 'Selfie captured successfully' : 'Take a clear, live photo of your face facing the camera.'}
                 </Text>
               </View>
 
@@ -381,6 +402,32 @@ const makeStyles = (theme: AppTheme) =>
       fontFamily: Typography.bold,
       paddingLeft: 4,
       letterSpacing: 0.5,
+    },
+    instructionsBox: {
+      backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.08)' : '#FEF2F2',
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 32,
+      borderWidth: 1,
+      borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2',
+    },
+    instructionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+      gap: 10,
+    },
+    instructionHeaderText: {
+      fontSize: 15,
+      fontFamily: Typography.bold,
+      color: '#ef4444',
+      letterSpacing: -0.2,
+    },
+    instructionText: {
+      fontSize: 13,
+      color: theme.text.secondary,
+      fontFamily: Typography.regular,
+      lineHeight: 20,
     },
     // ── Selfie Card
     selfieCard: {

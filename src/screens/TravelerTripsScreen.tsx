@@ -384,12 +384,20 @@ const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
                 return 0;
               })
               .map((p: any) => (
-              <View key={p.id} style={styles.parcelStatusRow}>
+              <TouchableOpacity 
+                key={p.id} 
+                style={styles.parcelStatusRow}
+                onPress={() => navigation.navigate('ParcelDetails', { parcelId: p.id })}
+                activeOpacity={0.7}
+              >
                 <View style={[styles.statusDotSmall, { backgroundColor: getParcelStatusColor(p.status) }]} />
                 <Text style={[styles.parcelStatusText, { color: getParcelStatusColor(p.status) }]} numberOfLines={1}>
                   {p.name}: {p.status.replace('_', ' ')}
                 </Text>
-              </View>
+                <Svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
+                  <Path d="M9 18l6-6-6-6" />
+                </Svg>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -658,7 +666,12 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   parcelStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+    marginBottom: 4,
   },
   statusDotSmall: {
     width: 6,

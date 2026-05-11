@@ -341,7 +341,7 @@ const TripDetailsScreen = () => {
                        )}
                      </View>
                      <Text style={styles.itiCity}>{trip.fromLocation}</Text>
-                     <Text style={styles.itiDate}>{dayjs(trip.travelDate).format('dddd, MMMM DD')}</Text>
+                     <Text style={styles.itiVehicleText}>{trip.vehicleType || 'Car'}</Text>
                    </View>
 
                    <View style={[styles.itiPoint, { marginTop: 30 }]}>
@@ -358,12 +358,6 @@ const TripDetailsScreen = () => {
                        )}
                      </View>
                      <Text style={styles.itiCity}>{trip.toLocation}</Text>
-                     <View style={styles.itiFooter}>
-                       <View style={styles.itiVehicleBadge}>
-                         <Text style={styles.itiVehicleText}>{trip.vehicleType || 'Car'}</Text>
-                       </View>
-                       <Text style={styles.itiTimeText}>{trip.travelTime || 'Flexible Time'}</Text>
-                     </View>
                     </View>
                   </View>
                 </View>
@@ -872,10 +866,11 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 8,
   },
   itiVehicleText: {
-    fontSize: 10,
+    fontSize: 12,
     color: theme.text.secondary,
-    fontFamily: Typography.bold,
-    textTransform: 'uppercase',
+    fontFamily: Typography.medium,
+    marginTop: 2,
+    
   },
   itiTimeText: {
     fontSize: 12,

@@ -20,6 +20,8 @@ import { useAuthStore } from '../store/authStore';
 import * as notificationService from '../services/notificationService';
 import { Notification } from '../services/notificationService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import BackButton from '../components/common/BackButton';
 import CustomAlert from '../components/common/CustomAlert';
@@ -207,7 +209,7 @@ const NotificationRow = React.memo(({ item, isSelectionMode, isSelected, styles,
 const NotificationsScreen = () => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { token } = useAuthStore();
   const { setUnreadCount } = useNotificationStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -223,6 +225,7 @@ const NotificationsScreen = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [bulkAlertVisible, setBulkAlertVisible] = useState(false);
+  const isProcessingRef = React.useRef(false);
 
   // Flatten notifications for FlatList with headers
   const flattenedData = useMemo(() => {
@@ -285,11 +288,12 @@ const NotificationsScreen = () => {
     try {
       await notificationService.markAsRead(token, id);
       
-      const updated = notifications.map(n => n.id === id ? { ...n, isRead: true } : n);
-      setNotifications(updated);
-      
-      const unreadCount = updated.filter(n => !n.isRead).length;
-      setUnreadCount(unreadCount);
+      setNotifications(prev => {
+        const updated = prev.map(n => n.id === id ? { ...n, isRead: true } : n);
+        const unreadCount = updated.filter(n => !n.isRead).length;
+        setUnreadCount(unreadCount);
+        return updated;
+      });
     } catch (error) {
       console.error('Mark as read error:', error);
     }
@@ -362,13 +366,30 @@ const NotificationsScreen = () => {
     });
   }, []);
 
-  const handlePressItem = useCallback((id: string) => {
+  const handlePressItem = useCallback(async (id: string) => {
+    if (isProcessingRef.current) return;
+    
     if (isSelectionMode) {
       toggleSelection(id);
-    } else {
-      handleMarkAsRead(id);
+      return;
     }
-  }, [isSelectionMode, toggleSelection]);
+
+    const notification = notifications.find(n => n.id === id);
+    if (!notification) return;
+
+    if (notification.isRead) return;
+
+    isProcessingRef.current = true;
+    try {
+      await handleMarkAsRead(id);
+    } catch (error) {
+      console.error('Handle notification press error:', error);
+    } finally {
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 500);
+    }
+  }, [isSelectionMode, toggleSelection, notifications, handleMarkAsRead]);
 
   const handleLongPressItem = useCallback((id: string) => {
     if (!isSelectionMode) {
@@ -546,10 +567,10 @@ const NotificationsScreen = () => {
           <CustomAlert
             visible={bulkAlertVisible}
             theme={theme}
-            title="Delete Selected"
-            message={`Are you sure you want to delete ${selectedIds.length} notifications? This action cannot be undone.`}
+            title={selectedIds.length === 1 ? "Delete Notification" : "Delete Selected"}
+            message={`Are you sure you want to delete ${selectedIds.length === 1 ? 'this' : selectedIds.length} notification${selectedIds.length === 1 ? '' : 's'}? This action cannot be undone.`}
             type="warning"
-            confirmText="Delete All"
+            confirmText={selectedIds.length === 1 ? "Delete" : "Delete All"}
             loading={isBulkDeleting}
             onConfirm={confirmBulkDelete}
             onCancel={() => setBulkAlertVisible(false)}

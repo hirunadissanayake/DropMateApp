@@ -31,16 +31,17 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(58);
   const [loading, setLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const setAuth = useAuthStore((state) => state.setAuth);
-  const clearRegistrationData = useRegistrationStore((state) => state.clearData);
+  const { clearData: clearRegistrationData, data: registrationData } = useRegistrationStore();
   const { theme } = useTheme();
 
   // Countdown timer
   useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+      const interval = setInterval(() => setTimer((t: number) => t - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [timer]);
@@ -54,6 +55,37 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleResend = async () => {
+    if (timer > 0 || isResending) return;
+    
+    setIsResending(true);
+    try {
+      let response;
+      if (flow === 'FORGOT_PASSWORD') {
+        response = await authService.forgotPassword(phoneNumber);
+      } else {
+        // For registration flow, we use the storage data
+        response = await authService.requestOtp(registrationData);
+      }
+      
+      Toast.show({
+        type: 'success',
+        text1: 'OTP Sent',
+        text2: response?.message || 'A new verification code has been sent.'
+      });
+      setTimer(58);
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Resend Failed',
+        text2: error.message || 'Could not resend code. Please try again.'
+      });
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const handleVerify = async (providedOtp?: string) => {
@@ -206,8 +238,16 @@ const VerifyOTPScreen = ({ navigation, route }: any) => {
               </View>
               <View style={s.resendContainer}>
                 <Text style={s.resendLabel}>Didn't receive the code? </Text>
-                <TouchableOpacity onPress={() => setTimer(58)}>
-                  <Text style={s.resendButton}>Resend OTP</Text>
+                <TouchableOpacity 
+                  onPress={handleResend}
+                  disabled={timer > 0 || isResending}
+                >
+                  <Text style={[
+                    s.resendButton, 
+                    (timer > 0 || isResending) && { color: theme.text.tertiary, opacity: 0.5 }
+                  ]}>
+                    {isResending ? 'Sending...' : 'Resend OTP'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
