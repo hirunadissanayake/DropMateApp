@@ -40,6 +40,7 @@ export interface RequestAlertData {
   fromLocation?: string;
   toLocation?: string;
   senderName?: string;
+  senderRating?: string | number;
   offerPrice?: string;
   paymentMethod?: string;
   remainingSeconds?: number;
@@ -300,6 +301,14 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                     </View>
                     <Text style={styles.verifiedText}>Verified Reliable Sender</Text>
                  </View>
+                  {data?.senderRating && Number(data.senderRating) > 0 && (
+                    <View style={styles.ratingBadge}>
+                      <Svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B">
+                        <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+                      </Svg>
+                      <Text style={styles.ratingValue}>{Number(data.senderRating).toFixed(1)}</Text>
+                    </View>
+                  )}
               </View>
 
               {/* Premium Actions */}
@@ -768,6 +777,24 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontSize: 13,
     color: theme.text.tertiary,
     marginTop: 2,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: theme.isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(245, 158, 11, 0.2)' : '#FEF3C7',
+  },
+  ratingValue: {
+    fontSize: 12,
+    color: '#F59E0B',
+    fontFamily: Typography.bold,
   },
   actions: {
     flexDirection: 'row',
