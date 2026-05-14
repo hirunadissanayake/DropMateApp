@@ -651,37 +651,39 @@ const TravelerHomeScreen = ({navigation}: any) => {
           </View>
         </View>
 
-        <View style={s.tipsSection}>
-          <Text style={s.sectionHeader}>Traveler Tips</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 16, paddingRight: 24, paddingBottom: 20}}>
-            <View style={s.tipCard}>
-              <View style={s.tipImagePlaceholder}>
-                  <LinearGradient colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
-                  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" style={{opacity: 0.5}}>
-                    <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        <View style={s.exploreSection}>
+          <Text style={s.sectionHeader}>Explore DropMate</Text>
+          <View style={s.exploreBannerCard}>
+            <LinearGradient
+              colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F0FDF4', '#DCFCE7']}
+              style={s.exploreGradient}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
+              <View style={s.exploreInfo}>
+                <Text style={s.exploreTitle}>How DropMate Works?</Text>
+                <Text style={s.exploreDesc}>Learn how to maximize your traveler earnings and provide secure delivery.</Text>
+                <TouchableOpacity 
+                  style={s.exploreLinkBtn}
+                  activeOpacity={0.8}
+                  onPress={() => bannerService.openLink('https://www.dropmate.lk')}
+                >
+                  <Text style={s.exploreLinkText}>Learn More</Text>
+                  <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
+                    <Path d="M5 12h14M12 5l7 7-7 7" />
                   </Svg>
-                  <View style={s.tipBadge}><Text style={s.tipBadgeText}>Efficiency</Text></View>
+                </TouchableOpacity>
               </View>
-              <View style={s.tipContent}>
-                <Text style={s.tipTitle}>Maximize Earnings</Text>
-                <Text style={s.tipSubtitle}>Batch multiple deliveries</Text>
-              </View>
-            </View>
-
-            <View style={s.tipCard}>
-              <View style={s.tipImagePlaceholder}>
-                  <LinearGradient colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#E2F3ED', '#C3E8DA']} style={StyleSheet.absoluteFillObject} />
-                  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" style={{opacity: 0.5}}>
-                    <Path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              <View style={s.exploreIconBox}>
+                <View style={s.iconCircle}>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <Circle cx="12" cy="12" r="10" />
+                    <Path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />
                   </Svg>
-                  <View style={s.tipBadge}><Text style={s.tipBadgeText}>Quality</Text></View>
+                </View>
               </View>
-              <View style={s.tipContent}>
-                <Text style={s.tipTitle}>Maintain 5-Stars</Text>
-                <Text style={s.tipSubtitle}>Get priority access</Text>
-              </View>
-            </View>
-          </ScrollView>
+            </LinearGradient>
+          </View>
         </View>
 
         <View style={{height: 100}} />
@@ -988,56 +990,76 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.medium,
     lineHeight: 16,
   },
-  tipsSection: {
-    paddingLeft: 24,
+  exploreSection: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
-  tipCard: {
-    width: width * 0.6,
-    backgroundColor: theme.card,
+  exploreBannerCard: {
     borderRadius: 20,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: theme.border,
-    overflow: 'hidden',
+    backgroundColor: theme.card,
     shadowColor: theme.shadowColor,
     shadowOffset: {width: 0, height: 4},
-    shadowOpacity: theme.isDark ? 0.3 : 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOpacity: theme.isDark ? 0.3 : 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  tipImagePlaceholder: {
-    height: 120,
-    backgroundColor: theme.isDark ? '#1E293B' : '#F8FAFC',
-    justifyContent: 'center',
+  exploreGradient: {
+    flexDirection: 'row',
+    padding: 16,
     alignItems: 'center',
   },
-  tipBadge: {
-    position: 'absolute',
-    bottom: 12,
-    left: 12,
-    backgroundColor: theme.background,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    opacity: 0.9,
+  exploreInfo: {
+    flex: 1,
+    paddingRight: 8,
   },
-  tipBadgeText: {
-    fontSize: 10,
-    color: theme.text.primary,
-    fontFamily: Typography.bold,
-  },
-  tipContent: {
-    padding: 16,
-  },
-  tipTitle: {
+  exploreTitle: {
     fontSize: 16,
     color: theme.text.primary,
     fontFamily: Typography.bold,
     marginBottom: 4,
   },
-  tipSubtitle: {
-    fontSize: 13,
+  exploreDesc: {
+    fontSize: 12,
     color: theme.text.secondary,
     fontFamily: Typography.medium,
+    lineHeight: 16,
+    marginBottom: 12,
+    opacity: 0.8,
+  },
+  exploreLinkBtn: {
+    backgroundColor: theme.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  exploreLinkText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontFamily: Typography.bold,
+  },
+  exploreIconBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
 

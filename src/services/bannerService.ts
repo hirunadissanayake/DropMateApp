@@ -35,16 +35,18 @@ export const openLink = async (url: string) => {
   console.log('Formatted URL:', formattedUrl);
 
   try {
+    // For standard web links, we can usually try to open them directly 
+    // because Linking.canOpenURL is sometimes unreliable on newer Android versions
+    if (formattedUrl.startsWith('http')) {
+      await Linking.openURL(formattedUrl);
+      return;
+    }
+
     const supported = await Linking.canOpenURL(formattedUrl);
-    console.log('Is URL supported:', supported);
     if (supported) {
       await Linking.openURL(formattedUrl);
     } else {
       console.warn(`Don't know how to open URI: ${formattedUrl}`);
-      // Try opening anyway as a last resort for standard web links
-      if (formattedUrl.startsWith('http')) {
-        await Linking.openURL(formattedUrl);
-      }
     }
   } catch (error) {
     console.error('Error opening link:', error);

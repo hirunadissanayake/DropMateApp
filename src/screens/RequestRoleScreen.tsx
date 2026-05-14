@@ -283,7 +283,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 0.3,
   },
   roleValue: {
-    fontSize: 20,
+    fontSize: 17,
     color: theme.text.primary,
     fontFamily: Typography.extraBold,
     marginTop: 2,

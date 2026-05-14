@@ -110,7 +110,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   return (
     <View style={s.container}>
-      {label && <Text style={s.label}>{label}</Text>}
+      {label && (
+        <Text style={s.label}>
+          {label.split('*').map((part, index, array) => (
+            <React.Fragment key={index}>
+              {part}
+              {index < array.length - 1 && <Text style={{ color: '#EF4444' }}>*</Text>}
+            </React.Fragment>
+          ))}
+        </Text>
+      )}
       
       <TouchableOpacity
         style={[

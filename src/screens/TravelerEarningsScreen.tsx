@@ -20,6 +20,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
+import { useIsFocused } from '@react-navigation/native';
 import * as walletService from '../services/walletService';
 import { WalletSummary, WalletTransaction } from '../services/walletService';
 import * as bankService from '../services/bankService';
@@ -51,6 +52,7 @@ const TravelerEarningsScreen = () => {
   const styles = makeStyles(theme);
   const navigation = useNavigation();
   const { token } = useAuthStore();
+  const isFocused = useIsFocused();
 
   const [summary, setSummary] = useState<WalletSummary | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -107,6 +109,11 @@ const TravelerEarningsScreen = () => {
   };
 
   useFocusEffect(useCallback(() => {
+    StatusBar.setBarStyle('light-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('transparent');
+      StatusBar.setTranslucent(true);
+    }
     fetchData();
   }, [token, startDate, endDate, activePreset]));
 
@@ -191,7 +198,7 @@ const TravelerEarningsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
+      {isFocused && <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />}
 
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
@@ -203,7 +210,7 @@ const TravelerEarningsScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.isDark ? theme.primary : '#fff'} colors={[theme.primary]} />}
           >
-            {/* ── Hero Header ─────────────────────────────────────────── */}
+            {/*Hero Header*/}
             <LinearGradient
               colors={theme.isDark ? ['#05100C', '#0D1F18'] : [theme.primary, theme.primaryDark]}
               style={styles.heroSection}

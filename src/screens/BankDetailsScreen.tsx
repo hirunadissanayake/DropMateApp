@@ -345,7 +345,7 @@ const BankDetailsScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Account Number *</Text>
+                <Text style={styles.inputLabel}>Account Number <Text style={{ color: '#EF4444' }}>*</Text></Text>
                 <TextInput
                   style={[styles.modalInput, errors.accountNumber && styles.inputError]}
                   placeholder="Enter account number"
@@ -358,7 +358,7 @@ const BankDetailsScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Account Holder Name *</Text>
+                <Text style={styles.inputLabel}>Account Holder Name <Text style={{ color: '#EF4444' }}>*</Text></Text>
                 <TextInput
                   style={[styles.modalInput, errors.accountHolderName && styles.inputError]}
                   placeholder="Name as in bank book"
@@ -370,7 +370,7 @@ const BankDetailsScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Branch Name *</Text>
+                <Text style={styles.inputLabel}>Branch Name <Text style={{ color: '#EF4444' }}>*</Text></Text>
                 <TextInput
                   style={[styles.modalInput, errors.branchName && styles.inputError]}
                   placeholder="e.g. Colombo 07"

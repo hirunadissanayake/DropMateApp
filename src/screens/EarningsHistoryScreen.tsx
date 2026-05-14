@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
   RefreshControl,
   TouchableWithoutFeedback,
   Pressable,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -35,6 +38,8 @@ const formatDate = (dateStr: string) => {
 
 type FilterPeriod = 'Today' | 'Last 30 Days' | 'Total' | 'Custom';
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function EarningsHistoryScreen() {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
@@ -55,6 +60,44 @@ export default function EarningsHistoryScreen() {
   const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
   
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
+
+  // Swipe to close logic
+  const panY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only trigger if swiping down and not scrolling up
+        return gestureState.dy > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          panY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          // Close modal
+          setSelectedTx(null);
+        } else {
+          // Reset position
+          Animated.spring(panY, {
+            toValue: 0,
+            damping: 20,
+            stiffness: 150,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  useEffect(() => {
+    if (selectedTx) {
+      panY.setValue(0);
+    }
+  }, [selectedTx]);
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -263,11 +306,17 @@ export default function EarningsHistoryScreen() {
       </SafeAreaView>
 
       {/* Transaction Detail Modal */}
-      <Modal visible={!!selectedTx} animationType="fade" transparent onRequestClose={() => setSelectedTx(null)}>
+      <Modal visible={!!selectedTx} animationType="slide" transparent onRequestClose={() => setSelectedTx(null)}>
         <View style={styles.modalOverlay}>
           <Pressable style={styles.modalBackground} onPress={() => setSelectedTx(null)} />
           
-          <View style={styles.detailSheet}>
+          <Animated.View 
+            style={[
+              styles.detailSheet,
+              { transform: [{ translateY: panY }] }
+            ]}
+            {...panResponder.panHandlers}
+          >
             <View style={styles.modalIndicator} />
             
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
@@ -412,7 +461,7 @@ export default function EarningsHistoryScreen() {
                 <Text style={styles.closeBtnText}>Close</Text>
               </TouchableOpacity>
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 

@@ -9,6 +9,7 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
@@ -18,6 +19,9 @@ import * as walletService from '../services/walletService';
 import { WalletTransaction } from '../services/walletService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import BackButton from '../components/common/BackButton';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
+import { useIsFocused } from '@react-navigation/native';
 
 const BRAND_GREEN = '#00875A';
 const BRAND_LIGHT = '#E6F5EF';
@@ -42,6 +46,11 @@ const WalletScreen = () => {
   };
 
   useFocusEffect(useCallback(() => {
+    StatusBar.setBarStyle('light-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('transparent');
+      StatusBar.setTranslucent(true);
+    }
     fetchTransactions();
   }, [token]));
 
@@ -61,9 +70,11 @@ const WalletScreen = () => {
     });
   };
 
+  const isFocused = useIsFocused();
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      {isFocused && <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={BRAND_GREEN} />

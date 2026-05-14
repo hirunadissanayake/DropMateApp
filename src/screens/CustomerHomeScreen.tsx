@@ -543,14 +543,18 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         {/* Explore Card */}
         <View style={s.section}>
           <Text style={s.sectionHeader}>Explore DropMate</Text>
-          <TouchableOpacity style={s.exploreCard} activeOpacity={0.9}>
+          <View style={s.exploreCard}>
             <View style={s.exploreContainer}>
               <View style={s.exploreContent}>
                 <Text style={s.exploreTitle}>How it works?</Text>
                 <Text style={s.exploreDesc}>Learn how DropMate connects you with travelers for faster delivery.</Text>
-                <View style={s.exploreBtn}>
+                <TouchableOpacity 
+                  style={s.exploreBtn}
+                  activeOpacity={0.7}
+                  onPress={() => bannerService.openLink('https://www.dropmate.lk')}
+                >
                   <Text style={s.exploreBtnText}>Learn More</Text>
-                </View>
+                </TouchableOpacity>
               </View>
               <View style={s.exploreIconBox}>
                 <Svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -559,7 +563,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 </Svg>
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 100 }} />
