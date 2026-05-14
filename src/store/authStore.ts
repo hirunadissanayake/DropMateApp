@@ -24,8 +24,8 @@ interface User {
   isBlocked: boolean;
   blockReason: string | null;
   roleActive: 'CUSTOMER' | 'TRAVELER' | null;
-  rating: number;
-  trustScore: number;
+  travelerRating: number;
+  customerRating: number;
   walletBalance: number;
   createdAt: string;
   updatedAt: string;

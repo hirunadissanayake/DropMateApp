@@ -29,6 +29,8 @@ import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
 import * as tripService from '../services/tripService';
 import * as deliveryService from '../services/deliveryService';
+import * as reviewService from '../services/reviewService';
+import RatingModal from '../components/common/RatingModal';
 import dayjs from 'dayjs';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomAlert from '../components/common/CustomAlert';
@@ -65,6 +67,15 @@ const ParcelDetailsScreen = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Rating State
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [ratingConfig, setRatingConfig] = useState({
+    title: '',
+    subtitle: '',
+    revieweeId: ''
+  });
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   // Custom Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -313,6 +324,12 @@ const ParcelDetailsScreen = () => {
           confirmText: 'OK',
           onConfirm: () => {
             setAlertConfig(prev => ({ ...prev, visible: false }));
+            setRatingConfig({
+              title: 'Rate the Sender',
+              subtitle: `How was your experience with ${parcel.sender?.name || 'the sender'}?`,
+              revieweeId: parcel.senderId
+            });
+            setRatingModalVisible(true);
             setActionLoading(true);
             fetchDetails().finally(() => setActionLoading(false));
           }
@@ -330,6 +347,43 @@ const ParcelDetailsScreen = () => {
       });
     } finally {
       setProcessingOtp(false);
+    }
+  };
+
+  const handleRateSubmit = async (rating: number, comment: string) => {
+    setRatingSubmitting(true);
+    try {
+      await reviewService.createReview(token!, {
+        rating,
+        comment,
+        parcelId,
+        revieweeId: ratingConfig.revieweeId
+      });
+      setRatingModalVisible(false);
+      
+      // Refresh details to update the button status
+      await fetchDetails();
+
+      setAlertConfig({
+        visible: true,
+        title: "Success",
+        message: "Thank you for your rating!",
+        type: 'success',
+        confirmText: 'OK',
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+        }
+      });
+    } catch (error: any) {
+      setAlertConfig({
+        visible: true,
+        title: "Error",
+        message: error.message || "Failed to submit rating.",
+        type: 'error',
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+    } finally {
+      setRatingSubmitting(false);
     }
   };
 
@@ -748,6 +802,34 @@ const ParcelDetailsScreen = () => {
                   </TouchableOpacity>
                 )}
               </View>
+
+              {parcel.status === 'DELIVERED' && !parcel.reviews?.some((r: any) => r.reviewerId === user?.id) && (
+                <TouchableOpacity 
+                  style={[styles.primaryActionButton, { marginTop: 16 }]} 
+                  onPress={() => {
+                    setRatingConfig({
+                      title: 'Rate your Traveler',
+                      subtitle: `How was your experience with ${parcel.matchedTrip.traveler?.name}?`,
+                      revieweeId: parcel.matchedTrip.traveler?.id
+                    });
+                    setRatingModalVisible(true);
+                  }}
+                >
+                  <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
+                    {ratingSubmitting ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.actionButtonText}>Rate Traveler ⭐</Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+
+              {parcel.status === 'DELIVERED' && parcel.reviews?.some((r: any) => r.reviewerId === user?.id) && (
+                <View style={[styles.completedBadge, { marginTop: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#F59E0B' }]}>
+                  <Text style={[styles.completedText, { color: '#F59E0B', fontSize: 13 }]}>Rating Submitted ⭐</Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -781,6 +863,34 @@ const ParcelDetailsScreen = () => {
                    </TouchableOpacity>
                 )}
               </View>
+
+              {parcel.status === 'DELIVERED' && !parcel.reviews?.some((r: any) => r.reviewerId === user?.id) && (
+                <TouchableOpacity 
+                  style={[styles.primaryActionButton, { marginTop: 16 }]} 
+                  onPress={() => {
+                    setRatingConfig({
+                      title: 'Rate the Sender',
+                      subtitle: `How was your experience with ${parcel.sender?.name}?`,
+                      revieweeId: parcel.senderId
+                    });
+                    setRatingModalVisible(true);
+                  }}
+                >
+                  <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
+                    {ratingSubmitting ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.actionButtonText}>Rate Sender ⭐</Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+
+              {parcel.status === 'DELIVERED' && parcel.reviews?.some((r: any) => r.reviewerId === user?.id) && (
+                <View style={[styles.completedBadge, { marginTop: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#10B981' }]}>
+                  <Text style={[styles.completedText, { color: '#10B981', fontSize: 13 }]}>Rating Submitted ⭐</Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -832,6 +942,14 @@ const ParcelDetailsScreen = () => {
         confirmText={alertConfig.confirmText}
         onConfirm={alertConfig.onConfirm}
         onCancel={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
+      />
+
+      <RatingModal
+        visible={ratingModalVisible}
+        title={ratingConfig.title}
+        subtitle={ratingConfig.subtitle}
+        onClose={() => setRatingModalVisible(false)}
+        onSubmit={handleRateSubmit}
       />
 
       {/* TRIP SELECTION MODAL */}

@@ -267,6 +267,14 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 <View style={s.activeDot} />
                 <Text style={s.modeText}>Customer</Text>
               </View>
+              {!!(user && user.customerRating && user.customerRating > 0) && (
+                <View style={s.ratingBadge}>
+                  <Svg width="10" height="10" viewBox="0 0 24 24" fill="#F59E0B">
+                    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+                  </Svg>
+                  <Text style={s.ratingValue}>{Number(user.customerRating).toFixed(1)}</Text>
+                </View>
+              )}
             </View>
             <Text style={s.userName} numberOfLines={1}>{user?.name || 'Guest'}</Text>
           </View>
@@ -714,6 +722,22 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: theme.isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(245, 158, 11, 0.2)' : '#FEF3C7',
+  },
+  ratingValue: {
+    fontSize: 10,
+    color: '#F59E0B',
+    fontFamily: Typography.bold,
   },
   headerRightActions: {
     flexDirection: 'row',

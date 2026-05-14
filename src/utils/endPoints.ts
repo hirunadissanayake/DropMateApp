@@ -75,4 +75,8 @@ export const ENDPOINTS = {
   BANNERS: {
     GET: (screen?: string) => `${BASE_URL}/api/banners${screen ? `?screen=${screen}` : ''}`,
   },
+  REVIEWS: {
+    CREATE: `${BASE_URL}/api/reviews`,
+    GET_USER_REVIEWS: (userId: string) => `${BASE_URL}/api/reviews/user/${userId}`,
+  },
 };
