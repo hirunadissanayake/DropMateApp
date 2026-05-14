@@ -8,7 +8,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Typography } from '../../constants/Typography';
 import { useTheme } from '../../context/ThemeContext';
@@ -294,6 +294,30 @@ const renderIcon = (routeName: string, isFocused: boolean, theme: AppTheme) => {
         />
         <Path
           d="M13.73 21a2 2 0 0 1-3.46 0"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    );
+  }
+  if (routeName === 'My Wallet') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill={fillColor}>
+        <Rect
+          x="2"
+          y="5"
+          width="20"
+          height="14"
+          rx="2"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M2 10h20M7 15h.01M17 15h.01"
           stroke={color}
           strokeWidth={sw}
           strokeLinecap="round"

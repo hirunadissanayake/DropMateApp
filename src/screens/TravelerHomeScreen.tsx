@@ -143,6 +143,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [pendingRequestData, setPendingRequestData] = useState<RequestAlertData | null>(null);
   const requestModalVisibleRef = useRef(false);
+  const requestQueueRef = useRef<RequestAlertData[]>([]);
+  const currentMatchIdRef = useRef<string | null>(null);
 
 
   const fetchUserProfile = async () => {
@@ -161,15 +163,58 @@ const TravelerHomeScreen = ({navigation}: any) => {
     return `${BASE_URL}/${url.replace(/\\/g, '/')}`;
   };
 
+  // Show a request in the modal (or queue it if modal is already busy)
+  const showOrQueueRequest = useCallback((requestData: RequestAlertData, shouldPlaySound: boolean = true) => {
+    // Skip if this exact match is already being shown
+    if (currentMatchIdRef.current === requestData.matchId) return;
+
+    if (requestModalVisibleRef.current) {
+      // Modal is already showing a request — queue this one (if not already queued)
+      const alreadyQueued = requestQueueRef.current.some(r => r.matchId === requestData.matchId);
+      if (!alreadyQueued) {
+        requestQueueRef.current.push(requestData);
+        console.log('Request queued:', requestData.matchId, 'Queue length:', requestQueueRef.current.length);
+      }
+      return;
+    }
+
+    // Show immediately
+    currentMatchIdRef.current = requestData.matchId;
+    setPendingRequestData(requestData);
+    if (shouldPlaySound) playAlertSound();
+    requestModalVisibleRef.current = true;
+    setRequestModalVisible(true);
+  }, [playAlertSound]);
+
+  // After handling current request, show next from queue
+  const showNextQueuedRequest = useCallback(() => {
+    // Don't show next if modal is already showing something (race condition guard)
+    if (requestModalVisibleRef.current) return;
+
+    if (requestQueueRef.current.length > 0) {
+      const next = requestQueueRef.current.shift()!;
+      console.log('Showing next queued request:', next.matchId, 'Remaining in queue:', requestQueueRef.current.length);
+      currentMatchIdRef.current = next.matchId;
+      setPendingRequestData(next);
+      playAlertSound();
+      requestModalVisibleRef.current = true;
+      setRequestModalVisible(true);
+    }
+  }, [playAlertSound]);
+
   const fetchPendingRequests = useCallback(async () => {
     if (!token) return;
     try {
       const data = await deliveryService.getPendingMatches(token);
       const matches = Array.isArray(data) ? data : data?.matches || data?.pendingMatches || [];
 
-      if (matches.length > 0 && !requestModalVisibleRef.current) {
-        const match = matches[0];
+      for (const match of matches) {
         const parcel = match.parcel || match;
+        const matchId = match.id || match._id;
+
+        // Skip if this match is already being shown or already queued
+        if (currentMatchIdRef.current === matchId) continue;
+        if (requestQueueRef.current.some(r => r.matchId === matchId)) continue;
 
         const formattedPhotos = (parcel.imageUrls || [])
           .map((url: string) => formatImageUrl(url))
@@ -187,13 +232,13 @@ const TravelerHomeScreen = ({navigation}: any) => {
 
         if (remainingSeconds <= 0) {
           if (token) {
-            await deliveryService.expireMatch(token, match.id || match._id);
+            await deliveryService.expireMatch(token, matchId);
           }
-          return;
+          continue;
         }
 
-        setPendingRequestData({
-          matchId: match.id || match._id,
+        showOrQueueRequest({
+          matchId,
           parcelPhotos: formattedPhotos,
           parcelTitle: parcel.name || parcel.title || 'New Delivery Request',
           parcelWeight: parcel.weight ? `${parcel.weight} kg` : undefined,
@@ -204,15 +249,11 @@ const TravelerHomeScreen = ({navigation}: any) => {
           paymentMethod: parcel.paymentMethod,
           remainingSeconds: remainingSeconds,
         });
-
-        playAlertSound();
-        requestModalVisibleRef.current = true;
-        setRequestModalVisible(true);
       }
     } catch (error) {
       console.log('Error fetching pending requests:', error);
     }
-  }, [token, playAlertSound]);
+  }, [token, showOrQueueRequest]);
 
   const handleAcceptRequest = useCallback(
     async (matchId: string) => {
@@ -220,6 +261,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
       try {
         await deliveryService.acceptMatch(token, matchId);
         stopAlertSound();
+        currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
         setRequestModalVisible(false);
         setPendingRequestData(null);
@@ -229,6 +271,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
           text2: 'The sender has been notified. Good luck!',
         });
         if (token) fetchUnreadCount(token);
+        // Show next queued request after a short delay for smooth UX
+        setTimeout(() => showNextQueuedRequest(), 600);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -238,7 +282,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         throw error;
       }
     },
-    [token, stopAlertSound],
+    [token, stopAlertSound, showNextQueuedRequest],
   );
 
   const handleDeclineRequest = useCallback(
@@ -247,6 +291,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
       try {
         await deliveryService.rejectMatchWithReason(token, matchId, reason);
         stopAlertSound();
+        currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
         setRequestModalVisible(false);
         setPendingRequestData(null);
@@ -256,6 +301,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
           text2: 'The sender has been notified.',
         });
         if (token) fetchUnreadCount(token);
+        // Show next queued request after a short delay
+        setTimeout(() => showNextQueuedRequest(), 600);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -265,7 +312,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         throw error;
       }
     },
-    [token, stopAlertSound],
+    [token, stopAlertSound, showNextQueuedRequest],
   );
 
   const handleExpireRequest = useCallback(
@@ -274,6 +321,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
       try {
         await deliveryService.expireMatch(token, matchId);
         stopAlertSound();
+        currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
         setRequestModalVisible(false);
         setPendingRequestData(null);
@@ -282,13 +330,17 @@ const TravelerHomeScreen = ({navigation}: any) => {
           text1: '⏰ Request Expired',
           text2: 'You did not respond in time.',
         });
+        // Show next queued request after a short delay
+        setTimeout(() => showNextQueuedRequest(), 600);
       } catch (error: any) {
         console.log('Expire match error:', error);
         requestModalVisibleRef.current = false;
         setRequestModalVisible(false);
+        // Still try to show next queued request
+        setTimeout(() => showNextQueuedRequest(), 600);
       }
     },
-    [token, stopAlertSound],
+    [token, stopAlertSound, showNextQueuedRequest],
   );
 
   useEffect(() => {
@@ -317,7 +369,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         return;
       }
 
-      setPendingRequestData({
+      const requestData: RequestAlertData = {
         matchId: fcmData.matchId,
         parcelPhotos,
         parcelTitle: fcmData.parcelTitle || 'New Delivery Request',
@@ -328,18 +380,15 @@ const TravelerHomeScreen = ({navigation}: any) => {
         offerPrice: fcmData.offerPrice?.toString(),
         paymentMethod: fcmData.paymentMethod,
         remainingSeconds,
-      });
+      };
 
-      if (fcmData.origin === 'foreground') playAlertSound();
-
-      requestModalVisibleRef.current = true;
-      setRequestModalVisible(true);
+      showOrQueueRequest(requestData, fcmData.origin === 'foreground');
     });
 
     return () => {
       setDeliveryRequestListener(null);
     };
-  }, [token, fetchPendingRequests]);
+  }, [token, fetchPendingRequests, showOrQueueRequest]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {

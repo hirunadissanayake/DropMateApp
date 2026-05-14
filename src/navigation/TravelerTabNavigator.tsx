@@ -6,7 +6,7 @@ import TravelerHomeScreen from '../screens/TravelerHomeScreen';
 import TravelerTripsScreen from '../screens/TravelerTripsScreen';
 import FindParcelsScreen from '../screens/FindParcelsScreen';
 import TravelerProfileScreen from '../screens/TravelerProfileScreen';
-import RequestsScreen from '../screens/RequestsScreen';
+import TravelerEarningsScreen from '../screens/TravelerEarningsScreen';
 import CustomerTabBar from '../components/navigation/CustomerTabBar';
 import { useAuthStore } from '../store/authStore';
 
@@ -29,7 +29,7 @@ const TravelerTabNavigator = () => {
         {isApproved && (
           <>
             <Tab.Screen name="My Trips" component={TravelerTripsScreen} />
-            <Tab.Screen name="Requests" component={RequestsScreen} />
+            <Tab.Screen name="My Wallet" component={TravelerEarningsScreen} />
           </>
         )}
         <Tab.Screen name="Profile" component={TravelerProfileScreen} />
