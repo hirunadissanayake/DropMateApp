@@ -65,9 +65,9 @@ const TravelerEarningsScreen = () => {
   const [endDate, setEndDate] = useState<Date>(dayjs().toDate());
   const [activePreset, setActivePreset] = useState<FilterPeriod>('Last 30 Days');
   
-  // Date picker visibility
   const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
 
   // Withdrawal modal state
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -261,10 +261,14 @@ const TravelerEarningsScreen = () => {
 
             <View style={styles.contentBody}>
 
-              {/* ── Date Range Pickers ───────────────────────────────── */}
+              {/* Date Range Pickers */}
               <View style={styles.datePickerContainer}>
-                <View style={styles.filterHeader}>
-                  <View style={styles.filterTitleRow}>
+                <TouchableOpacity 
+                  style={[styles.filterTitleRow, { justifyContent: 'space-between', marginBottom: isFiltersExpanded ? 12 : 0 }]}
+                  onPress={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={styles.filterIconBox}>
                       <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                         <Path d="M3 6h18M7 12h10M10 18h4" />
@@ -272,58 +276,68 @@ const TravelerEarningsScreen = () => {
                     </View>
                     <Text style={styles.filterTitle}>Quick Filters</Text>
                   </View>
-                  <View style={styles.presetRow}>
-                    {(['Today', 'Last 30 Days', 'All'] as FilterPeriod[]).map((p) => (
-                      <TouchableOpacity
-                        key={p}
-                        style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
-                        onPress={() => setPreset(p)}
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5" style={{ transform: [{ rotate: isFiltersExpanded ? '180deg' : '0deg' }] }}>
+                    <Path d="M6 9l6 6 6-6" />
+                  </Svg>
+                </TouchableOpacity>
+
+                {isFiltersExpanded && (
+                  <>
+                    <View style={styles.presetRow}>
+                      {(['Today', 'Last 30 Days', 'All'] as FilterPeriod[]).map((p) => (
+                        <TouchableOpacity
+                          key={p}
+                          style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
+                          onPress={() => setPreset(p)}
+                        >
+                          <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <View style={{ height: 16 }} />
+
+                    <View style={styles.dateButtonGrid}>
+                      <TouchableOpacity 
+                        style={styles.dateButton} 
+                        onPress={() => setStartDatePickerVisibility(true)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
+                        <View style={styles.dateIconBox}>
+                          <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                          </Svg>
+                        </View>
+                        <View>
+                          <Text style={styles.dateButtonLabel}>From</Text>
+                          <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
+                        </View>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+                      
+                      <View style={styles.dateArrowBox}>
+                        <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
+                          <Path d="M5 12h14M12 5l7 7-7 7" />
+                        </Svg>
+                      </View>
 
-                <View style={styles.dateButtonGrid}>
-                  <TouchableOpacity 
-                    style={styles.dateButton} 
-                    onPress={() => setStartDatePickerVisibility(true)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.dateIconBox}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                        <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
-                      </Svg>
+                      <TouchableOpacity 
+                        style={styles.dateButton} 
+                        onPress={() => setEndDatePickerVisibility(true)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.dateIconBox}>
+                          <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
+                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                          </Svg>
+                        </View>
+                        <View>
+                          <Text style={styles.dateButtonLabel}>To</Text>
+                          <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
+                        </View>
+                      </TouchableOpacity>
                     </View>
-                    <View>
-                      <Text style={styles.dateButtonLabel}>From</Text>
-                      <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
-                    </View>
-                  </TouchableOpacity>
-                  
-                  <View style={styles.dateArrowBox}>
-                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
-                      <Path d="M5 12h14M12 5l7 7-7 7" />
-                    </Svg>
-                  </View>
-
-                  <TouchableOpacity 
-                    style={styles.dateButton} 
-                    onPress={() => setEndDatePickerVisibility(true)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.dateIconBox}>
-                      <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                        <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
-                      </Svg>
-                    </View>
-                    <View>
-                      <Text style={styles.dateButtonLabel}>To</Text>
-                      <Text style={styles.dateButtonValue}>{dayjs(endDate).format('DD MMM YYYY')}</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                  </>
+                )}
               </View>
 
               <DateTimePickerModal
@@ -346,7 +360,7 @@ const TravelerEarningsScreen = () => {
                 maximumDate={new Date()}
               />
 
-              {/* ── Stats Grid ───────────────────────────────────────── */}
+              {/* Stats Grid */}
               <View style={styles.statsGrid}>
                 <View style={styles.statsCol}>
                   {/* Card Payments */}
@@ -970,7 +984,7 @@ function makeStyles(theme: AppTheme) {
     viewHistoryTitle: { fontSize: 16, fontFamily: Typography.bold, color: theme.text.primary, marginBottom: 2 },
     viewHistorySub: { fontSize: 13, fontFamily: Typography.medium, color: theme.text.secondary },
 
-    // ── Modal ────────────────────────────────────────────────────────────────
+    // Modal 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
     modalSheet: {
       backgroundColor: theme.card,
