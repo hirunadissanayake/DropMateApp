@@ -101,3 +101,13 @@ export const updateTripCapacity = async (token: string, id: string, capacityKg: 
     throw error.response?.data || error;
   }
 };
+export const toggleTripStatus = async (token: string, id: string) => {
+  try {
+    const response = await axios.patch(ENDPOINTS.TRIPS.TOGGLE_STATUS(id), {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};

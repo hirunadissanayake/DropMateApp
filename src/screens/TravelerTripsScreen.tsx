@@ -137,6 +137,26 @@ const TravelerTripsScreen = () => {
     });
     setAlertVisible(true);
   };
+  const handleToggleTripStatus = async (tripId: string, currentStatus: string) => {
+    // Optimistic Update
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+    setTrips(prev => prev.map(trip => trip.id === tripId ? { ...trip, status: newStatus } : trip));
+
+    // Instant Feedback
+    Toast.show({ 
+      type: 'success', 
+      text1: newStatus === 'ACTIVE' ? 'Trip Activated' : 'Trip Deactivated',
+      text2: newStatus === 'ACTIVE' ? 'Customers can now find this trip.' : 'Customers can no longer find this trip.'
+    });
+
+    try {
+      await tripService.toggleTripStatus(token!, tripId);
+    } catch (err: any) {
+      // Rollback on Error
+      setTrips(prev => prev.map(trip => trip.id === tripId ? { ...trip, status: currentStatus } : trip));
+      Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not update trip status' });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -222,7 +242,8 @@ const TravelerTripsScreen = () => {
                 trip={trip} 
                 theme={theme}
                 onCancel={() => handleCancelTrip(trip.id)} 
-                onDelete={() => handleDeleteTrip(trip.id)} 
+                onDelete={() => handleDeleteTrip(trip.id)}
+                onToggleStatus={() => handleToggleTripStatus(trip.id, trip.status)}
               />
             ))}
             <View style={{ height: 100 }} />
@@ -246,12 +267,12 @@ const TravelerTripsScreen = () => {
   );
 };
 
-const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
+const TripCard = ({ trip, theme, onCancel, onDelete, onToggleStatus }: any) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [isExpanded, setIsExpanded] = useState(false);
   const styles = makeStyles(theme);
   
-  const statusColor = trip.status === 'ACTIVE' ? '#10B981' : trip.status === 'COMPLETED' ? '#3B82F6' : '#EF4444';
+  const statusColor = trip.status === 'ACTIVE' ? '#10B981' : trip.status === 'DEACTIVATED' ? '#64748B' : trip.status === 'COMPLETED' ? '#3B82F6' : '#EF4444';
   const date = new Date(trip.travelDate).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -302,26 +323,39 @@ const TripCard = ({ trip, theme, onCancel, onDelete }: any) => {
           </View>
         </View>
         <View style={styles.headerRightCol}>
-          <View style={[styles.statusBadge, { backgroundColor: trip.isExpired ? (theme.isDark ? 'rgba(148, 163, 184, 0.1)' : '#64748B15') : statusColor + '15' }]}>
-            <Text style={[styles.statusText, { color: trip.isExpired ? theme.text.tertiary : statusColor }]}>
-              {trip.isExpired ? 'EXPIRED' : trip.status}
-            </Text>
+          <View style={styles.statusRow}>
+            {trip.status !== 'CANCELLED' && trip.status !== 'HISTORY' && trip.status !== 'COMPLETED' && !trip.isExpired && (
+                <TouchableOpacity 
+                   style={[styles.toggleBtn, trip.status === 'DEACTIVATED' && styles.toggleBtnOff]}
+                   onPress={onToggleStatus}
+                   activeOpacity={0.8}
+                >
+                  <View style={[styles.toggleDot, trip.status === 'DEACTIVATED' && styles.toggleDotOff]} />
+                </TouchableOpacity>
+            )}
+            <View style={[styles.statusBadge, { backgroundColor: trip.isExpired ? (theme.isDark ? 'rgba(148, 163, 184, 0.1)' : '#64748B15') : statusColor + '15' }]}>
+              <Text style={[styles.statusText, { color: trip.isExpired ? theme.text.tertiary : statusColor }]}>
+                {trip.isExpired ? 'EXPIRED' : trip.status}
+              </Text>
+            </View>
           </View>
-          {canCancel && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          )}
-          {canDelete && (
-            <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} activeOpacity={0.7}>
-              <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <Path d="M3 6h18" />
-                <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <Path d="M10 11v6" />
-                <Path d="M14 11v6" />
-              </Svg>
-            </TouchableOpacity>
-          )}
+          <View style={styles.actionsRow}>
+            {canCancel && (
+              <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            )}
+            {canDelete && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} activeOpacity={0.7}>
+                <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <Path d="M3 6h18" />
+                  <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <Path d="M10 11v6" />
+                  <Path d="M14 11v6" />
+                </Svg>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
       
@@ -609,7 +643,39 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   headerRightCol: {
     alignItems: 'flex-end',
+    gap: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  toggleBtn: {
+    width: 36,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 2,
+    justifyContent: 'center',
+  },
+  toggleBtnOff: {
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+  },
+  toggleDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'flex-end',
+  },
+  toggleDotOff: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#94A3B8',
   },
   cancelBtn: {
     paddingVertical: 6,
