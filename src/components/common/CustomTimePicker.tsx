@@ -53,6 +53,8 @@ const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
       onConfirm={handleConfirm}
       onCancel={onClose}
       themeVariant={theme?.isDark ? "dark" : "light"}
+      display="spinner"
+      is24Hour={false}
     />
   );
 };
