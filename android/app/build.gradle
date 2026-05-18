@@ -92,6 +92,22 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (project.hasProperty('DROPMATE_RELEASE_STORE_FILE')) {
+                storeFile file(DROPMATE_RELEASE_STORE_FILE)
+                
+                // Read passwords from local.properties if they exist there
+                def localProps = new Properties()
+                def localPropsFile = rootProject.file('local.properties')
+                if (localPropsFile.exists()) {
+                    localProps.load(new FileInputStream(localPropsFile))
+                }
+                
+                storePassword localProps.getProperty('DROPMATE_RELEASE_STORE_PASSWORD') ?: DROPMATE_RELEASE_STORE_PASSWORD
+                keyAlias DROPMATE_RELEASE_KEY_ALIAS
+                keyPassword localProps.getProperty('DROPMATE_RELEASE_KEY_PASSWORD') ?: DROPMATE_RELEASE_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
@@ -100,7 +116,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
