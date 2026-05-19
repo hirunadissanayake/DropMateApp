@@ -13,6 +13,7 @@ import {
   RefreshControl,
   Dimensions,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -278,6 +279,19 @@ const TravelerProfileScreen = () => {
               </View>
               <Text style={styles.logoutText}>Sign Out Account</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.deleteAccountBtn}
+              onPress={() => Linking.openURL('https://www.dropmate.lk/delete-account')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.deleteAccountIconBox}>
+                 <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? '#FDA4AF' : '#E11D48'} strokeWidth="2">
+                    <Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                 </Svg>
+              </View>
+              <Text style={styles.deleteAccountText}>Request Account Deletion</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 120 }} />
@@ -465,6 +479,31 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     fontFamily: Typography.bold,
+  },
+  deleteAccountBtn: {
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(225, 29, 72, 0.3)' : '#FECDD3',
+    backgroundColor: theme.isDark ? 'rgba(225, 29, 72, 0.05)' : '#FFF1F2',
+    gap: 10,
+  },
+  deleteAccountIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: theme.isDark ? 'rgba(225, 29, 72, 0.1)' : '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAccountText: {
+    color: theme.isDark ? '#FDA4AF' : '#E11D48',
+    fontSize: 14,
+    fontFamily: Typography.semiBold,
   },
 });
 
