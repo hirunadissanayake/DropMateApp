@@ -35,6 +35,7 @@ import * as bannerService from '../services/bannerService';
 import { BASE_URL } from '../utils/endPoints';
 
 const { width } = Dimensions.get('window');
+const BANNER_HEIGHT = Math.round(width * 6 / 16);
 
 // ── Icons for toggle ──
 const SunIcon = ({ color }: { color: string }) => (
@@ -800,7 +801,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   bannerTouch: {
     width: '100%',
-    height: 180,
+    height: BANNER_HEIGHT,
     borderRadius: 12,
     overflow: 'hidden',
   },
