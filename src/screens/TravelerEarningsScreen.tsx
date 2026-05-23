@@ -513,7 +513,7 @@ const TravelerEarningsScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={{ height: 60 }} />
+            <View style={{ height: 90 }} />
           </ScrollView>
 
           {/* ── Withdrawal Modal ──────────────────────────────────────── */}

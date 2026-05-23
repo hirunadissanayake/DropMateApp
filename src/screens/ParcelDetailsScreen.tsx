@@ -757,7 +757,20 @@ const ParcelDetailsScreen = () => {
                     </View>
                   </View>
                   
-                  {isSender && (
+                  {/* Customer (Sender) view logic */}
+                  {isSender && match.requestedBy === 'TRAVELER' && (
+                    <View style={styles.requestActions}>
+                      <TouchableOpacity style={[styles.actionButton, styles.rejectBtn]} onPress={() => handleRejectMatch(match.id)}>
+                        <Text style={styles.rejectBtnText}>Decline</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.actionButton, styles.acceptBtn]} onPress={() => handleAcceptMatch(match.id)}>
+                        <Text style={styles.acceptBtnText}>Accept</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Traveler view logic */}
+                  {!isSender && match.travelerId === user?.id && match.requestedBy === 'CUSTOMER' && (
                     <View style={styles.requestActions}>
                       <TouchableOpacity style={[styles.actionButton, styles.rejectBtn]} onPress={() => handleRejectMatch(match.id)}>
                         <Text style={styles.rejectBtnText}>Decline</Text>
@@ -1271,6 +1284,8 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   emptyText: { color: theme.text.tertiary, fontFamily: Typography.medium },
   modalLoading: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', borderRadius: 32 },
   loadingText: { color: '#FFFFFF', marginTop: 12, fontFamily: Typography.bold },
+  requestedStatusBadge: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: theme.isDark ? 'rgba(59, 130, 246, 0.1)' : '#EFF6FF', borderRadius: 12, alignSelf: 'center' },
+  requestedStatusText: { color: '#3B82F6', fontSize: 13, fontFamily: Typography.bold },
 });
 
 export default ParcelDetailsScreen;

@@ -55,6 +55,10 @@ class MainApplication : Application(), ReactApplication {
       val importance = NotificationManager.IMPORTANCE_HIGH
       val channel = NotificationChannel("delivery_requests", name, importance).apply {
         description = descriptionText
+        enableVibration(true)
+        vibrationPattern = longArrayOf(0, 500, 200, 500)
+        setBypassDnd(true)
+        setShowBadge(true)
       }
       
       // Set custom sound for background notifications

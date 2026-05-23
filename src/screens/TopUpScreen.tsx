@@ -12,6 +12,8 @@ import {
   Platform,
   Dimensions,
   RefreshControl,
+  PermissionsAndroid,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Typography } from '../constants/Typography';
@@ -21,6 +23,7 @@ import * as walletService from '../services/walletService';
 import * as bankService from '../services/bankService';
 import Toast from 'react-native-toast-message';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { requestGalleryPermission } from '../utils/galleryPermission';
 import { AppTheme } from '../constants/Colors';
 import { useTheme } from '../context/ThemeContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -80,6 +83,8 @@ const TopUpScreen = ({ navigation }: any) => {
   }, [refreshUser]);
 
   const selectImage = async () => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) return;
     const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
     if (result.assets && result.assets.length > 0) {
       setSlipUri(result.assets[0].uri || null);

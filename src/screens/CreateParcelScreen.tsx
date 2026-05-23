@@ -24,6 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { requestGalleryPermission } from '../utils/galleryPermission';
 import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
 import Toast from 'react-native-toast-message';
@@ -147,6 +148,8 @@ const CreateParcelScreen = () => {
 
   const pickImageFromGallery = async () => {
     try {
+      const hasPermission = await requestGalleryPermission();
+      if (!hasPermission) return;
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,

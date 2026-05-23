@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
+  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -379,8 +380,8 @@ const SignupScreen = ({ navigation, route }: any) => {
                 </View>
                 <Text style={s.termsText}>
                   I agree to the{' '}
-                  <Text style={s.termsBold}>Terms & Conditions</Text> and{' '}
-                  <Text style={s.termsBold}>privacy policy</Text> of DropMate.
+                  <Text style={s.termsBold} onPress={() => Linking.openURL('https://www.dropmate.lk/terms')}>Terms & Conditions</Text> and{' '}
+                  <Text style={s.termsBold} onPress={() => Linking.openURL('https://www.dropmate.lk/privacy')}>Privacy Policy</Text> of DropMate.
                 </Text>
               </TouchableOpacity>
 

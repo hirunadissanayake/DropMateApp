@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle, G, Rect } from 'react-native-svg';
@@ -69,6 +70,8 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
   const [showGallery, setShowGallery] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [customReason, setCustomReason] = useState('');
 
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -131,8 +134,13 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
       ]).start();
       pulseAnim.setValue(1);
     }
+    
+    // Reset "Other" state when modal closes or opens new data
+    setIsOtherSelected(false);
+    setCustomReason('');
+    
     return () => clearInterval(timerRef.current!);
-  }, [visible]);
+  }, [visible, data]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -150,12 +158,23 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
     }
   };
 
-  const handleConfirmDecline = async (reason: string) => {
+  const handleConfirmDecline = async (reason: string, isFromOtherField: boolean = false) => {
     if (!data) return;
+
+    if (reason === 'Other reasons' && !isFromOtherField) {
+      setIsOtherSelected(true);
+      return;
+    }
+
+    const finalReason = isFromOtherField ? customReason : reason;
+    if (isFromOtherField && !finalReason.trim()) return;
+
     setIsDeclining(true);
     try {
-      await onDecline(data.matchId, reason);
+      await onDecline(data.matchId, finalReason);
       setShowReasonModal(false);
+      setIsOtherSelected(false);
+      setCustomReason('');
     } finally {
       setIsDeclining(false);
     }
@@ -301,7 +320,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                     </View>
                     <Text style={styles.verifiedText}>Verified Reliable Sender</Text>
                  </View>
-                  {data?.senderRating && Number(data.senderRating) > 0 && (
+                  {!!data?.senderRating && Number(data.senderRating) > 0 && (
                     <View style={styles.ratingBadge}>
                       <Svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B">
                         <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
@@ -363,15 +382,45 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
             </View>
             
             <View style={styles.reasonList}>
-              {DECLINE_REASONS.map((r) => (
-                <TouchableOpacity 
-                  key={r.value} 
-                  style={styles.reasonItem}
-                  onPress={() => handleConfirmDecline(r.label)}
-                >
-                  <Text style={styles.reasonItemText}>{r.label}</Text>
-                </TouchableOpacity>
-              ))}
+              {!isOtherSelected ? (
+                DECLINE_REASONS.map((r) => (
+                  <TouchableOpacity 
+                    key={r.value} 
+                    style={styles.reasonItem}
+                    onPress={() => handleConfirmDecline(r.label)}
+                  >
+                    <Text style={styles.reasonItemText}>{r.label}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.otherInputWrapper}>
+                  <TextInput
+                    style={styles.otherTextInput}
+                    placeholder="Type your reason here..."
+                    placeholderTextColor={theme.text.tertiary}
+                    value={customReason}
+                    onChangeText={setCustomReason}
+                    multiline
+                    autoFocus
+                    maxLength={150}
+                  />
+                  <View style={styles.otherActions}>
+                    <TouchableOpacity 
+                      style={styles.backReasonBtn}
+                      onPress={() => setIsOtherSelected(false)}
+                    >
+                      <Text style={styles.backReasonText}>Back</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.submitOtherBtn, !customReason.trim() && { opacity: 0.5 }]}
+                      disabled={!customReason.trim() || isDeclining}
+                      onPress={() => handleConfirmDecline('', true)}
+                    >
+                      <Text style={styles.submitOtherText}>Confirm Decline</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
             
             {isDeclining && (
@@ -446,7 +495,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingBottom: 20,
   },
   premiumBanner: {
-     borderRadius: 24,
+     borderRadius: 15,
      overflow: 'hidden',
      marginBottom: 20,
      elevation: 5,
@@ -494,9 +543,9 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   timerContainer: {
      alignItems: 'flex-end',
      backgroundColor: 'rgba(0,0,0,0.15)',
-     paddingHorizontal: 15,
-     paddingVertical: 10,
-     borderRadius: 18,
+     paddingHorizontal: 10,
+     paddingVertical: 8,
+     borderRadius: 15,
      borderWidth: 1,
      borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -507,7 +556,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
      letterSpacing: 1,
   },
   timerValue: {
-     fontSize: 20,
+     fontSize: 18,
      fontFamily: Typography.bold,
      color: '#FFF',
      marginTop: -2,
@@ -529,7 +578,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   imageSection: {
     width: '100%',
     height: 240,
-    borderRadius: 28,
+    borderRadius: 15,
     overflow: 'hidden',
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
     marginBottom: 20,
@@ -558,7 +607,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 30,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
@@ -612,7 +661,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   infoGrid: {
     flexDirection: 'row',
     backgroundColor: theme.card,
-    borderRadius: 24,
+    borderRadius: 15,
     padding: 10,
     borderWidth: 1,
     borderColor: theme.border,
@@ -621,7 +670,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   infoBox: {
     flex: 1,
     padding: 12,
-    borderRadius: 18,
+    borderRadius: 15,
     alignItems: 'center',
   },
   infoLabel: {
@@ -656,7 +705,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     padding: 24,
     backgroundColor: theme.card,
-    borderRadius: 28,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: theme.border,
     shadowColor: '#000',
@@ -730,7 +779,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.card,
     padding: 16,
-    borderRadius: 22,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: theme.border,
     marginBottom: 32,
@@ -738,7 +787,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   avatarPill: {
     width: 48,
     height: 48,
-    borderRadius: 18,
+    borderRadius: 15,
     backgroundColor: theme.isDark ? 'rgba(61, 217, 164, 0.1)' : '#F0FDF4',
     justifyContent: 'center',
     alignItems: 'center',
@@ -804,7 +853,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   declineBtn: {
     flex: 1,
     height: 64,
-    borderRadius: 20,
+    borderRadius: 15,
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
     borderWidth: 1.5,
     borderColor: theme.border,
@@ -819,7 +868,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   acceptBtn: {
     flex: 1.8,
     height: 64,
-    borderRadius: 20,
+    borderRadius: 15,
     overflow: 'hidden',
     shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 10 },
@@ -856,7 +905,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   reasonSheet: {
     backgroundColor: theme.card,
-    borderRadius: 36,
+    borderRadius: 16,
     padding: 28,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 20 },
@@ -911,6 +960,51 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  otherInputWrapper: {
+    gap: 16,
+  },
+  otherTextInput: {
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
+    borderRadius: 20,
+    padding: 20,
+    minHeight: 120,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    fontFamily: Typography.medium,
+    color: theme.text.primary,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+  },
+  otherActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  backReasonBtn: {
+    flex: 1,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#F1F5F9',
+  },
+  backReasonText: {
+    fontFamily: Typography.bold,
+    fontSize: 15,
+    color: theme.text.secondary,
+  },
+  submitOtherBtn: {
+    flex: 2,
+    height: 56,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+  },
+  submitOtherText: {
+    fontFamily: Typography.bold,
+    fontSize: 15,
+    color: '#FFF',
   },
   galleryOverlay: {
     flex: 1,

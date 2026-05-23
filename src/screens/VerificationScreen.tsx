@@ -21,6 +21,7 @@ import Svg, { Path } from 'react-native-svg';
 import PrimaryButton from '../components/common/PrimaryButton';
 import ScreenHeader from '../components/common/ScreenHeader';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { requestGalleryPermission } from '../utils/galleryPermission';
 import { useRegistrationStore } from '../store/registrationStore';
 import { useAuthStore } from '../store/authStore';
 import * as authService from '../services/authService';
@@ -59,6 +60,8 @@ const VerificationScreen = ({ navigation, route }: any) => {
 
   const pickUsingGallery = async (field: 'selfie' | 'nicFront' | 'nicBack') => {
     try {
+      const hasPermission = await requestGalleryPermission();
+      if (!hasPermission) return;
       const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
       if (result.assets && result.assets[0]) updateData({ [field]: result.assets[0] });
     } catch (err: any) {

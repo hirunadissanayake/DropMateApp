@@ -8,9 +8,32 @@ import {
   AuthorizationStatus 
 } from '@react-native-firebase/messaging';
 import { updateFcmToken } from './notificationService';
-import { Platform } from 'react-native';
+import { Platform, PermissionsAndroid } from 'react-native';
 
 export const requestUserPermission = async () => {
+  // Handle Android 13+ (API 33+) explicit permission
+  if (Platform.OS === 'android' && Platform.Version >= 33) {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        {
+          title: 'Notification Permission',
+          message: 'DropMate needs permission to send you delivery requests and updates.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Notification permission denied');
+        return false;
+      }
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  }
+
   const messaging = getMessaging();
   const authStatus = await requestPermission(messaging);
   const enabled =
