@@ -84,7 +84,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   const { unreadCount: announcementUnread } = useAnnouncementStore();
   const { theme, isDark, toggleTheme } = useTheme();
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
@@ -126,7 +126,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
   useEffect(() => {
     const interval = setInterval(() => {
       let nextIndex = currentIndexRef.current + 1;
-      
+
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ x: nextIndex * width, animated: true });
       }
@@ -206,7 +206,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
     try {
       const userData = await authService.getMe(token);
       setUser(userData);
-      
+
       if (userData.isCustomerApproved && userData.roleActive === 'CUSTOMER') {
         const pData = await parcelService.getMyParcels(token);
         const active = pData.parcels.filter((p: any) => {
@@ -247,8 +247,8 @@ const CustomerHomeScreen = ({ navigation }: any) => {
 
       {/* Modern Header */}
       <View style={s.headerContainer}>
-        <TouchableOpacity 
-          style={s.headerLeft} 
+        <TouchableOpacity
+          style={s.headerLeft}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Profile')}
         >
@@ -262,7 +262,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
             )}
           </View>
           <View style={{ flexShrink: 1 }}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={s.greetingText}>{getGreeting()},</Text>
               <View style={s.modeIndicator}>
                 <View style={s.activeDot} />
@@ -298,8 +298,8 @@ const CustomerHomeScreen = ({ navigation }: any) => {
 
           {showActions && (
             <View style={s.dropdownActions}>
-              <TouchableOpacity 
-                style={s.notificationBtn} 
+              <TouchableOpacity
+                style={s.notificationBtn}
                 activeOpacity={0.7}
                 onPress={() => {
                   toggleTheme();
@@ -307,14 +307,14 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 }}
               >
                 {isDark ? (
-                    <SunIcon color={theme.primary} />
-                  ) : (
-                    <MoonIcon color={theme.primary} />
-                  )}
+                  <SunIcon color={theme.primary} />
+                ) : (
+                  <MoonIcon color={theme.primary} />
+                )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={s.notificationBtn} 
+              <TouchableOpacity
+                style={s.notificationBtn}
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.navigate('Announcements');
@@ -332,8 +332,8 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={s.notificationBtn} 
+              <TouchableOpacity
+                style={s.notificationBtn}
                 activeOpacity={0.7}
                 onPress={() => {
                   navigation.navigate('Notifications');
@@ -355,13 +355,13 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             colors={[theme.primary]}
             tintColor={theme.primary}
           />
@@ -382,8 +382,8 @@ const CustomerHomeScreen = ({ navigation }: any) => {
           >
             {extendedBanners.map((banner) => (
               <View key={banner.id} style={s.bannerWrapper}>
-                <TouchableOpacity 
-                  activeOpacity={0.9} 
+                <TouchableOpacity
+                  activeOpacity={0.9}
                   onPress={() => {
                     console.log('Banner pressed:', banner.id, 'Link:', banner.link);
                     if (banner.link) {
@@ -398,12 +398,12 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                     colors={banner.colors || (isDark ? ['#006C52', '#064E3B'] : ['#008766', '#006C52'])}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={s.bannerCard}
+                    style={[s.bannerCard, banner.imageUrl ? { padding: 0 } : null]}
                   >
                     {banner.imageUrl && (
-                      <Image 
-                        source={{uri: formatImageUrl(banner.imageUrl)}} 
-                        style={StyleSheet.absoluteFillObject}
+                      <Image
+                        source={{ uri: formatImageUrl(banner.imageUrl) }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}
                         resizeMode="cover"
                       />
                     )}
@@ -429,9 +429,9 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 extrapolate: 'clamp',
               });
               return (
-                <Animated.View 
-                  key={i} 
-                  style={[s.dot, { width: dotWidth, opacity, backgroundColor: theme.primary }]} 
+                <Animated.View
+                  key={i}
+                  style={[s.dot, { width: dotWidth, opacity, backgroundColor: theme.primary }]}
                 />
               );
             })}
@@ -442,18 +442,18 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         {!user?.isCustomerApproved && (
           <View style={s.verificationCard}>
             <View style={s.verificationIconBox}>
-               <Svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
-                  <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  <Circle cx="12" cy="11" r="3" />
-                  <Path d="M7 16c0-1.5 2.239-3 5-3s5 1.5 5 3" />
-               </Svg>
+              <Svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
+                <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <Circle cx="12" cy="11" r="3" />
+                <Path d="M7 16c0-1.5 2.239-3 5-3s5 1.5 5 3" />
+              </Svg>
             </View>
             <Text style={s.verificationTitle}>Profile Under Review</Text>
             <Text style={s.verificationDesc}>
               Your verification is currently in progress. This usually takes 24 to 28 hours. We'll notify you as soon as your account is approved!
             </Text>
             <View style={s.statusBadgePending}>
-               <Text style={s.statusTextPending}>Pending Approval</Text>
+              <Text style={s.statusTextPending}>Pending Approval</Text>
             </View>
           </View>
         )}
@@ -462,35 +462,35 @@ const CustomerHomeScreen = ({ navigation }: any) => {
         {user?.isCustomerApproved && (
           <>
             <View style={s.customerActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={s.primaryAction}
                 onPress={() => navigation.navigate('CreateParcel')}
               >
                 <View style={s.actionIconCircle}>
-                   {renderServiceIcon('package', theme.primary, 28)}
+                  {renderServiceIcon('package', theme.primary, 28)}
                 </View>
                 <View style={s.actionTextContent}>
                   <Text style={s.actionLabel}>Send a Parcel</Text>
                   <Text style={s.actionDesc}>Reliable peer-to-peer delivery</Text>
                 </View>
                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
-                   <Path d="M9 18l6-6-6-6" />
+                  <Path d="M9 18l6-6-6-6" />
                 </Svg>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={s.secondaryAction}
                 onPress={() => navigation.navigate('Find Travelers')}
               >
                 <View style={s.actionIconCircle}>
-                   {renderServiceIcon('map', theme.primary, 24)}
+                  {renderServiceIcon('map', theme.primary, 24)}
                 </View>
                 <View style={s.actionTextContent}>
                   <Text style={s.actionLabel}>Discover Trips</Text>
                   <Text style={s.actionDesc}>Find travelers headed your way</Text>
                 </View>
                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
-                   <Path d="M9 18l6-6-6-6" />
+                  <Path d="M9 18l6-6-6-6" />
                 </Svg>
               </TouchableOpacity>
             </View>
@@ -511,17 +511,17 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                   <ActivityIndicator color={theme.primary} />
                 </View>
               ) : activeParcels.length > 0 ? (
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
                   contentContainerStyle={s.horizontalScroll}
                 >
                   {activeParcels.map((parcel) => (
-                    <ActiveOrderCard 
+                    <ActiveOrderCard
                       key={parcel.id}
                       theme={theme}
-                      id={`#${parcel.id.slice(-6).toUpperCase()}`} 
-                      status={parcel.status} 
+                      id={`#${parcel.id.slice(-6).toUpperCase()}`}
+                      status={parcel.status}
                       from={parcel.fromLocation}
                       to={parcel.toLocation}
                       time={dayjs(parcel.createdAt).format('MMM DD')}
@@ -531,7 +531,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                   ))}
                 </ScrollView>
               ) : (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={s.emptyCard}
                   onPress={() => navigation.navigate('CreateParcel')}
                 >
@@ -557,7 +557,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
               <View style={s.exploreContent}>
                 <Text style={s.exploreTitle}>How it works?</Text>
                 <Text style={s.exploreDesc}>Learn how DropMate connects you with travelers for faster delivery.</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={s.exploreBtn}
                   activeOpacity={0.7}
                   onPress={() => bannerService.openLink('https://www.dropmate.lk')}
@@ -601,7 +601,7 @@ const ActiveOrderCard = ({ id, status, from, to, time, color, onPress, theme }: 
           </View>
         </View>
       </View>
-      
+
       <View style={s.routeContainer}>
         <View style={s.routeIcons}>
           <View style={[s.routeDot, { backgroundColor: theme.primary }]} />
@@ -628,13 +628,13 @@ const ActiveOrderCard = ({ id, status, from, to, time, color, onPress, theme }: 
 };
 
 const renderServiceIcon = (name: string, color: string, size = 24) => {
-  if(name === 'package') return (
+  if (name === 'package') return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <Path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <Path d="M3.27 6.96L12 12.01l8.73-5.05" /><Path d="M12 22.08V12" />
     </Svg>
   );
-  if(name === 'map') return (
+  if (name === 'map') return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" /><Circle cx="12" cy="10" r="3" />
     </Svg>
@@ -812,6 +812,8 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   bannerContent: {
     flex: 1,
@@ -1095,7 +1097,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: theme.isDark ? theme.card : '#F8FAFC',
     borderRadius: 24,
     flexDirection: 'row',
-    padding: 24,
+    padding: Platform.OS === 'ios' ? 28 : 24,
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
@@ -1106,7 +1108,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     overflow: 'hidden',
   },
   exploreContent: {
-    flex: 1,
+    flexShrink: 1,
   },
   exploreTitle: {
     fontSize: 18,

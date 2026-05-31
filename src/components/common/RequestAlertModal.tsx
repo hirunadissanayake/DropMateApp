@@ -64,7 +64,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
 }) => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
-  
+
   const [timeLeft, setTimeLeft] = useState(EXPIRY_SECONDS);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
@@ -134,11 +134,11 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
       ]).start();
       pulseAnim.setValue(1);
     }
-    
+
     // Reset "Other" state when modal closes or opens new data
     setIsOtherSelected(false);
     setCustomReason('');
-    
+
     return () => clearInterval(timerRef.current!);
   }, [visible, data]);
 
@@ -196,33 +196,33 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-               {/* Premium Banner */}
-               <View style={styles.premiumBanner}>
-                 <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.bannerGradient} start={{x: 0, y: 0}} end={{x: 1, y: 0}}>
-                   <View style={styles.bannerContent}>
-                     <View style={styles.bannerLeft}>
-                        <View style={styles.liveIndicator}>
-                           <View style={styles.liveDot} />
-                           <Text style={styles.liveText}>NEW OPPORTUNITY</Text>
-                        </View>
-                        <Text style={styles.mainTitle}>Parcel Match Found!</Text>
-                     </View>
-                     <Animated.View style={[styles.timerContainer, isUrgent && { transform: [{ scale: pulseAnim }] }]}>
-                        <Text style={[styles.timerLabel, isUrgent && styles.urgentText]}>EXPIRES IN</Text>
-                        <Text style={[styles.timerValue, isUrgent && styles.urgentText]}>{formatTime(timeLeft)}</Text>
-                     </Animated.View>
-                   </View>
-                   {/* Progress bar */}
-                   <View style={styles.progressTrack}>
-                      <View style={[styles.progressBar, { width: `${progressWidth}%`, backgroundColor: isUrgent ? '#F87171' : '#FFF' }]} />
-                   </View>
-                 </LinearGradient>
-               </View>
+              {/* Premium Banner */}
+              <View style={styles.premiumBanner}>
+                <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <View style={styles.bannerContent}>
+                    <View style={styles.bannerLeft}>
+                      <View style={styles.liveIndicator}>
+                        <View style={styles.liveDot} />
+                        <Text style={styles.liveText}>NEW OPPORTUNITY</Text>
+                      </View>
+                      <Text style={styles.mainTitle}>Parcel Match Found!</Text>
+                    </View>
+                    <Animated.View style={[styles.timerContainer, isUrgent && { transform: [{ scale: pulseAnim }] }]}>
+                      <Text style={[styles.timerLabel, isUrgent && styles.urgentText]}>EXPIRES IN</Text>
+                      <Text style={[styles.timerValue, isUrgent && styles.urgentText]}>{formatTime(timeLeft)}</Text>
+                    </Animated.View>
+                  </View>
+                  {/* Progress bar */}
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressBar, { width: `${progressWidth}%`, backgroundColor: isUrgent ? '#F87171' : '#FFF' }]} />
+                  </View>
+                </LinearGradient>
+              </View>
 
               {/* Immersive Image Section */}
-              <TouchableOpacity 
-                activeOpacity={0.9} 
-                style={styles.imageSection} 
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.imageSection}
                 onPress={() => setShowGallery(true)}
               >
                 {data?.parcelPhotos && data.parcelPhotos.length > 0 ? (
@@ -243,9 +243,9 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                     <Text style={styles.placeholderText}>Package Preview Unavailable</Text>
                   </View>
                 )}
-                
+
                 <View style={styles.parcelInfoFloating}>
-                   <Text style={styles.parcelTitleText}>{data?.parcelTitle || 'Unnamed Parcel'}</Text>
+                  <Text style={styles.parcelTitleText}>{data?.parcelTitle || 'Unnamed Parcel'}</Text>
                 </View>
 
                 {data?.parcelPhotos && data.parcelPhotos.length > 0 && (
@@ -266,11 +266,11 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 <View style={styles.infoBox}>
                   <Text style={styles.infoLabel}>PAYMENT</Text>
                   <Text style={styles.infoValue}>
-                    {data?.paymentMethod === 'CASH_ON_PICKUP' || data?.paymentMethod === 'cash_pick_up' 
-                      ? 'Cash On Pickup' 
-                      : data?.paymentMethod === 'CASH_ON_DELIVERY' 
-                      ? 'Cash On Delivery' 
-                      : 'Online'}
+                    {data?.paymentMethod === 'CASH_ON_PICKUP' || data?.paymentMethod === 'cash_pick_up'
+                      ? 'Cash On Pickup'
+                      : data?.paymentMethod === 'CASH_ON_DELIVERY'
+                        ? 'Cash On Delivery'
+                        : 'Online'}
                   </Text>
                 </View>
                 <View style={[styles.infoBox, { borderLeftWidth: 1, borderLeftColor: theme.border }]}>
@@ -281,67 +281,67 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
 
               {/* Enhanced Route Visualization */}
               <View style={styles.routeSection}>
-                 <Text style={styles.sectionLabel}>DELIVERY ROUTE</Text>
-                 <View style={styles.routeCard}>
-                    <View style={styles.routeVisual}>
-                       <View style={styles.nodeTop}>
-                          <View style={styles.pulseRing} />
-                          <View style={styles.nodeInner} />
-                       </View>
-                       <View style={styles.nodeLine} />
-                       <View style={[styles.nodeBottom, { backgroundColor: '#EF4444' }]} />
+                <Text style={styles.sectionLabel}>DELIVERY ROUTE</Text>
+                <View style={styles.routeCard}>
+                  <View style={styles.routeVisual}>
+                    <View style={styles.nodeTop}>
+                      <View style={styles.pulseRing} />
+                      <View style={styles.nodeInner} />
                     </View>
-                    <View style={styles.routeDetails}>
-                       <View style={styles.point}>
-                          <Text style={styles.pointLabel}>Pickup</Text>
-                          <Text style={styles.pointValue} numberOfLines={1}>{data?.fromLocation || 'Unknown'}</Text>
-                       </View>
-                       <View style={[styles.point, { marginTop: 20 }]}>
-                          <Text style={styles.pointLabel}>Drop-off</Text>
-                          <Text style={styles.pointValue} numberOfLines={1}>{data?.toLocation || 'Unknown'}</Text>
-                       </View>
+                    <View style={styles.nodeLine} />
+                    <View style={[styles.nodeBottom, { backgroundColor: '#EF4444' }]} />
+                  </View>
+                  <View style={styles.routeDetails}>
+                    <View style={styles.point}>
+                      <Text style={styles.pointLabel}>Pickup</Text>
+                      <Text style={styles.pointValue} numberOfLines={1}>{data?.fromLocation || 'Unknown'}</Text>
                     </View>
-                 </View>
+                    <View style={[styles.point, { marginTop: 20 }]}>
+                      <Text style={styles.pointLabel}>Drop-off</Text>
+                      <Text style={styles.pointValue} numberOfLines={1}>{data?.toLocation || 'Unknown'}</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
 
               {/* Professional Sender Profile */}
               <View style={styles.profileCard}>
-                 <View style={styles.avatarPill}>
-                    <Text style={styles.avatarChar}>{data?.senderName?.charAt(0).toUpperCase() || 'U'}</Text>
-                 </View>
-                 <View style={styles.profileMeta}>
-                    <View style={styles.nameRow}>
-                       <Text style={styles.senderName}>{data?.senderName || 'DropMate User'}</Text>
-                       <View style={styles.verifiedBadge}>
-                          <Svg width="12" height="12" viewBox="0 0 24 24" fill="#FFF">
-                            <Path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-.997-6l7.07-7.071-1.414-1.414-5.656 5.657-2.829-2.829-1.414 1.414L11.003 16z"/>
-                          </Svg>
-                       </View>
-                    </View>
-                    <Text style={styles.verifiedText}>Verified Reliable Sender</Text>
-                 </View>
-                  {!!data?.senderRating && Number(data.senderRating) > 0 && (
-                    <View style={styles.ratingBadge}>
-                      <Svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B">
-                        <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+                <View style={styles.avatarPill}>
+                  <Text style={styles.avatarChar}>{data?.senderName?.charAt(0).toUpperCase() || 'U'}</Text>
+                </View>
+                <View style={styles.profileMeta}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.senderName}>{data?.senderName || 'DropMate User'}</Text>
+                    <View style={styles.verifiedBadge}>
+                      <Svg width="12" height="12" viewBox="0 0 24 24" fill="#FFF">
+                        <Path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-.997-6l7.07-7.071-1.414-1.414-5.656 5.657-2.829-2.829-1.414 1.414L11.003 16z" />
                       </Svg>
-                      <Text style={styles.ratingValue}>{Number(data.senderRating).toFixed(1)}</Text>
                     </View>
-                  )}
+                  </View>
+                  <Text style={styles.verifiedText}>Verified Reliable Sender</Text>
+                </View>
+                {!!data?.senderRating && Number(data.senderRating) > 0 && (
+                  <View style={styles.ratingBadge}>
+                    <Svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B">
+                      <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+                    </Svg>
+                    <Text style={styles.ratingValue}>{Number(data.senderRating).toFixed(1)}</Text>
+                  </View>
+                )}
               </View>
 
               {/* Premium Actions */}
               <View style={styles.actions}>
-                <TouchableOpacity 
-                  style={styles.declineBtn} 
+                <TouchableOpacity
+                  style={styles.declineBtn}
                   onPress={() => setShowReasonModal(true)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.declineBtnText}>Decline</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.acceptBtn} 
+                <TouchableOpacity
+                  style={styles.acceptBtn}
                   onPress={handleAccept}
                   disabled={isAccepting}
                   activeOpacity={0.8}
@@ -353,7 +353,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                       <>
                         <Text style={styles.acceptBtnText}>Confirm Delivery</Text>
                         <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" style={{ marginLeft: 8 }}>
-                           <Path d="M5 12h14M12 5l7 7-7 7" />
+                          <Path d="M5 12h14M12 5l7 7-7 7" />
                         </Svg>
                       </>
                     )}
@@ -371,21 +371,21 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
           <Animated.View style={styles.reasonSheet}>
             <View style={styles.reasonHeader}>
               <View>
-                 <Text style={styles.reasonTitle}>Decline Request</Text>
-                 <Text style={styles.reasonSubtitle}>Tell us why you're skipping this match.</Text>
+                <Text style={styles.reasonTitle}>Decline Request</Text>
+                <Text style={styles.reasonSubtitle}>Tell us why you're skipping this match.</Text>
               </View>
               <TouchableOpacity style={styles.closeReasonIcon} onPress={() => setShowReasonModal(false)}>
-                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
-                    <Path d="M18 6L6 18M6 6l12 12" />
-                 </Svg>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
+                  <Path d="M18 6L6 18M6 6l12 12" />
+                </Svg>
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.reasonList}>
               {!isOtherSelected ? (
                 DECLINE_REASONS.map((r) => (
-                  <TouchableOpacity 
-                    key={r.value} 
+                  <TouchableOpacity
+                    key={r.value}
                     style={styles.reasonItem}
                     onPress={() => handleConfirmDecline(r.label)}
                   >
@@ -405,13 +405,13 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                     maxLength={150}
                   />
                   <View style={styles.otherActions}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.backReasonBtn}
                       onPress={() => setIsOtherSelected(false)}
                     >
                       <Text style={styles.backReasonText}>Back</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[styles.submitOtherBtn, !customReason.trim() && { opacity: 0.5 }]}
                       disabled={!customReason.trim() || isDeclining}
                       onPress={() => handleConfirmDecline('', true)}
@@ -422,7 +422,7 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 </View>
               )}
             </View>
-            
+
             {isDeclining && (
               <View style={styles.loadingOver}>
                 <ActivityIndicator size="large" color={theme.primary} />
@@ -435,27 +435,27 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
       {/* Immersive Gallery */}
       <Modal visible={showGallery} transparent animationType="fade">
         <View style={styles.galleryOverlay}>
-          <TouchableOpacity 
-            style={styles.galleryClose} 
+          <TouchableOpacity
+            style={styles.galleryClose}
             onPress={() => setShowGallery(false)}
           >
             <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2">
               <Path d="M18 6L6 18M6 6l12 12" />
             </Svg>
           </TouchableOpacity>
-          
-          <ScrollView 
-            horizontal 
-            pagingEnabled 
+
+          <ScrollView
+            horizontal
+            pagingEnabled
             showsHorizontalScrollIndicator={false}
             style={styles.galleryScroll}
           >
             {data?.parcelPhotos?.map((url, index) => (
               <View key={index} style={styles.galleryItem}>
-                <Image 
-                  source={{ uri: url }} 
-                  style={styles.galleryImage} 
-                  resizeMode="contain" 
+                <Image
+                  source={{ uri: url }}
+                  style={styles.galleryImage}
+                  resizeMode="contain"
                 />
               </View>
             ))}
@@ -495,85 +495,85 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingBottom: 20,
   },
   premiumBanner: {
-     borderRadius: 15,
-     overflow: 'hidden',
-     marginBottom: 20,
-     elevation: 5,
-     shadowColor: theme.primary,
-     shadowOffset: { width: 0, height: 10 },
-     shadowOpacity: 0.2,
-     shadowRadius: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
   },
   bannerGradient: {
-     padding: 18,
-     paddingTop: 24,
+    padding: 18,
+    paddingTop: 24,
   },
   bannerContent: {
-     flexDirection: 'row',
-     justifyContent: 'space-between',
-     alignItems: 'center',
-     marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   bannerLeft: {
-     flex: 1,
+    flex: 1,
   },
   liveIndicator: {
-     flexDirection: 'row',
-     alignItems: 'center',
-     marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   liveDot: {
-     width: 6,
-     height: 6,
-     borderRadius: 3,
-     backgroundColor: '#FFF',
-     marginRight: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFF',
+    marginRight: 6,
   },
   liveText: {
-     fontSize: 10,
-     fontFamily: Typography.extraBold,
-     color: 'rgba(255,255,255,0.85)',
-     letterSpacing: 1.5,
+    fontSize: 10,
+    fontFamily: Typography.extraBold,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1.5,
   },
   mainTitle: {
-     fontSize: 22,
-     fontFamily: Typography.bold,
-     color: '#FFF',
+    fontSize: 22,
+    fontFamily: Typography.bold,
+    color: '#FFF',
   },
   timerContainer: {
-     alignItems: 'flex-end',
-     backgroundColor: 'rgba(0,0,0,0.15)',
-     paddingHorizontal: 10,
-     paddingVertical: 8,
-     borderRadius: 15,
-     borderWidth: 1,
-     borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   timerLabel: {
-     fontSize: 9,
-     fontFamily: Typography.extraBold,
-     color: 'rgba(255,255,255,0.7)',
-     letterSpacing: 1,
+    fontSize: 9,
+    fontFamily: Typography.extraBold,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 1,
   },
   timerValue: {
-     fontSize: 18,
-     fontFamily: Typography.bold,
-     color: '#FFF',
-     marginTop: -2,
+    fontSize: 18,
+    fontFamily: Typography.bold,
+    color: '#FFF',
+    marginTop: -2,
   },
   urgentText: {
-     color: '#FFD1D1',
+    color: '#FFD1D1',
   },
   progressTrack: {
-     height: 3,
-     width: '100%',
-     backgroundColor: 'rgba(255,255,255,0.15)',
-     borderRadius: 2,
-     overflow: 'hidden',
+    height: 3,
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
   progressBar: {
-     height: '100%',
-     borderRadius: 2,
+    height: '100%',
+    borderRadius: 2,
   },
   imageSection: {
     width: '100%',
@@ -590,7 +590,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     height: '100%',
   },
   imageOverlay: {
-     ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFillObject,
   },
   expandIcon: {
     position: 'absolute',
@@ -629,26 +629,26 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: -0.2,
   },
   parcelInfoFloating: {
-     position: 'absolute',
-     bottom: 18,
-     left: 20,
-     right: 20,
+    position: 'absolute',
+    bottom: 18,
+    left: 20,
+    right: 20,
   },
   parcelCategory: {
-     backgroundColor: 'rgba(255,255,255,0.15)',
-     alignSelf: 'flex-start',
-     paddingHorizontal: 10,
-     paddingVertical: 4,
-     borderRadius: 8,
-     marginBottom: 6,
-     borderWidth: 0.5,
-     borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 6,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   categoryText: {
-     fontSize: 9,
-     fontFamily: Typography.extraBold,
-     color: '#FFF',
-     letterSpacing: 1,
+    fontSize: 9,
+    fontFamily: Typography.extraBold,
+    color: '#FFF',
+    letterSpacing: 1,
   },
   parcelTitleText: {
     fontFamily: Typography.bold,
@@ -691,15 +691,15 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: theme.primary,
   },
   routeSection: {
-     marginBottom: 24,
+    marginBottom: 24,
   },
   sectionLabel: {
-     fontSize: 11,
-     fontFamily: Typography.extraBold,
-     color: theme.text.tertiary,
-     letterSpacing: 1.5,
-     marginBottom: 12,
-     marginLeft: 4,
+    fontSize: 11,
+    fontFamily: Typography.extraBold,
+    color: theme.text.tertiary,
+    letterSpacing: 1.5,
+    marginBottom: 12,
+    marginLeft: 4,
   },
   routeCard: {
     flexDirection: 'row',
@@ -721,16 +721,16 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingVertical: 5,
   },
   nodeTop: {
-     position: 'relative',
-     alignItems: 'center',
-     justifyContent: 'center',
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pulseRing: {
-     position: 'absolute',
-     width: 24,
-     height: 24,
-     borderRadius: 12,
-     backgroundColor: 'rgba(0, 200, 151, 0.2)',
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 200, 151, 0.2)',
   },
   nodeInner: {
     width: 12,
@@ -804,9 +804,9 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     marginLeft: 15,
   },
   nameRow: {
-     flexDirection: 'row',
-     alignItems: 'center',
-     gap: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   senderName: {
     fontFamily: Typography.bold,
@@ -814,12 +814,12 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: theme.text.primary,
   },
   verifiedBadge: {
-     backgroundColor: theme.primary,
-     width: 16,
-     height: 16,
-     borderRadius: 8,
-     alignItems: 'center',
-     justifyContent: 'center',
+    backgroundColor: theme.primary,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   verifiedText: {
     fontFamily: Typography.semiBold,
@@ -932,9 +932,9 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     marginTop: 4,
   },
   closeReasonIcon: {
-     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
-     padding: 10,
-     borderRadius: 14,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+    padding: 10,
+    borderRadius: 14,
   },
   reasonList: {
     gap: 12,

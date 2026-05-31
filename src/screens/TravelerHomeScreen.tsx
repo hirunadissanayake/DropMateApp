@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useRef, useEffect} from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,33 +15,33 @@ import {
   LayoutAnimation,
   UIManager,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, {Path, Rect, G, Defs, ClipPath, Circle} from 'react-native-svg';
+import Svg, { Path, Rect, G, Defs, ClipPath, Circle } from 'react-native-svg';
 import * as authService from '../services/authService';
 import * as notificationService from '../services/notificationService';
 import * as deliveryService from '../services/deliveryService';
-import {useAuthStore} from '../store/authStore';
-import {Typography} from '../constants/Typography';
-import {useFocusEffect} from '@react-navigation/native';
+import { useAuthStore } from '../store/authStore';
+import { Typography } from '../constants/Typography';
+import { useFocusEffect } from '@react-navigation/native';
 import RequestAlertModal, {
   RequestAlertData,
 } from '../components/common/RequestAlertModal';
 import Toast from 'react-native-toast-message';
-import {setDeliveryRequestListener} from '../services/fcmService';
-import {BASE_URL} from '../utils/endPoints';
+import { setDeliveryRequestListener } from '../services/fcmService';
+import { BASE_URL } from '../utils/endPoints';
 import {
   playAlertSound as playGlobalSound,
   stopAlertSound as stopGlobalSound,
 } from '../services/soundService';
-import {useTheme} from '../context/ThemeContext';
-import {AppTheme} from '../constants/Colors';
-import {useAnnouncementStore} from '../store/announcementStore';
-import {useNotificationStore} from '../store/notificationStore';
+import { useTheme } from '../context/ThemeContext';
+import { AppTheme } from '../constants/Colors';
+import { useAnnouncementStore } from '../store/announcementStore';
+import { useNotificationStore } from '../store/notificationStore';
 import * as bannerService from '../services/bannerService';
 
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const BANNER_HEIGHT = Math.round(width * 6 / 16);
 
 //Icons for toggle
@@ -90,11 +90,11 @@ const STATIC_BANNERS = [
   },
 ];
 
-const TravelerHomeScreen = ({navigation}: any) => {
-  const {theme, isDark, toggleTheme} = useTheme();
-  const {user, token, setUser} = useAuthStore();
-  const {unreadCount: announcementUnread} = useAnnouncementStore();
-  const {unreadCount, fetchUnreadCount} = useNotificationStore();
+const TravelerHomeScreen = ({ navigation }: any) => {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { user, token, setUser } = useAuthStore();
+  const { unreadCount: announcementUnread } = useAnnouncementStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const [refreshing, setRefreshing] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -111,7 +111,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
   };
 
   const [displayBanners, setDisplayBanners] = useState<any[]>(STATIC_BANNERS);
-  const extendedBanners = [...displayBanners, displayBanners.length > 0 ? {...displayBanners[0], id: 'clone-1'} : null].filter(Boolean);
+  const extendedBanners = [...displayBanners, displayBanners.length > 0 ? { ...displayBanners[0], id: 'clone-1' } : null].filter(Boolean);
 
   const fetchBanners = useCallback(async () => {
     try {
@@ -228,7 +228,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         const createdAt = new Date(match.createdAt).getTime();
         const now = new Date().getTime();
         const diffSeconds = Math.floor((now - createdAt) / 1000);
-        const MAX_SECONDS = 15 * 60; 
+        const MAX_SECONDS = 15 * 60;
         const remainingSeconds = Math.max(0, MAX_SECONDS - diffSeconds);
 
         if (remainingSeconds <= 0) {
@@ -358,7 +358,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
           const rawUrls = JSON.parse(fcmData.imageUrls);
           parcelPhotos = rawUrls.map((url: string) => formatImageUrl(url));
         }
-      } catch (e) {}
+      } catch (e) { }
 
       const createdAt = fcmData.createdAt ? new Date(fcmData.createdAt).getTime() : new Date().getTime();
       const now = new Date().getTime();
@@ -416,12 +416,12 @@ const TravelerHomeScreen = ({navigation}: any) => {
     const interval = setInterval(() => {
       let nextIndex = currentIndexRef.current + 1;
       if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({x: nextIndex * width, animated: true});
+        scrollViewRef.current.scrollTo({ x: nextIndex * width, animated: true });
       }
       currentIndexRef.current = nextIndex;
       if (nextIndex === displayBanners.length) {
         setTimeout(() => {
-          if (scrollViewRef.current) scrollViewRef.current.scrollTo({x: 0, animated: false});
+          if (scrollViewRef.current) scrollViewRef.current.scrollTo({ x: 0, animated: false });
           currentIndexRef.current = 0;
         }, 500);
       }
@@ -461,7 +461,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
         <TouchableOpacity style={s.userInfoRow} activeOpacity={0.7}>
           <View style={s.avatarBorder}>
             {user?.selfieUrl ? (
-              <Image source={{uri: user.selfieUrl}} style={s.avatarImage} />
+              <Image source={{ uri: user.selfieUrl }} style={s.avatarImage} />
             ) : (
               <View style={s.avatarPlaceholder}>
                 <Text style={s.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
@@ -469,7 +469,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
             )}
           </View>
           <View style={s.greetingTextContainer}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={s.greetingText}>{getGreeting()}</Text>
               <View style={s.modeIndicator}>
                 <View style={s.activeDot} />
@@ -505,8 +505,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
 
           {showActions && (
             <View style={s.dropdownActions}>
-              <TouchableOpacity 
-                style={s.notificationBtn} 
+              <TouchableOpacity
+                style={s.notificationBtn}
                 activeOpacity={0.7}
                 onPress={() => {
                   toggleTheme();
@@ -514,10 +514,10 @@ const TravelerHomeScreen = ({navigation}: any) => {
                 }}
               >
                 {isDark ? (
-                    <SunIcon color={theme.primary} />
-                  ) : (
-                    <MoonIcon color={theme.primary} />
-                  )}
+                  <SunIcon color={theme.primary} />
+                ) : (
+                  <MoonIcon color={theme.primary} />
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -567,19 +567,19 @@ const TravelerHomeScreen = ({navigation}: any) => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
         }>
-        
+
         <View style={s.bannerSection}>
           <Animated.ScrollView
             ref={scrollViewRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}], {useNativeDriver: false})}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
             onMomentumScrollEnd={(event: any) => {
               const x = event.nativeEvent.contentOffset.x;
               let index = Math.round(x / width);
               if (index === displayBanners.length) {
-                if (scrollViewRef.current) scrollViewRef.current.scrollTo({x: 0, animated: false});
+                if (scrollViewRef.current) scrollViewRef.current.scrollTo({ x: 0, animated: false });
                 index = 0;
               }
               currentIndexRef.current = index;
@@ -587,8 +587,8 @@ const TravelerHomeScreen = ({navigation}: any) => {
             scrollEventThrottle={16}>
             {extendedBanners.map((banner) => (
               <View key={banner.id} style={s.bannerWrapper}>
-                <TouchableOpacity 
-                  activeOpacity={0.9} 
+                <TouchableOpacity
+                  activeOpacity={0.9}
                   onPress={() => {
                     console.log('Banner pressed:', banner.id, 'Link:', banner.link);
                     if (banner.link) {
@@ -599,16 +599,16 @@ const TravelerHomeScreen = ({navigation}: any) => {
                   }}
                   style={s.bannerTouch}
                 >
-                  <LinearGradient 
-                    colors={banner.bgColors || (isDark ? ['#006C52', '#004A38'] : ['#008766', '#006C52'])} 
-                    start={{x: 0, y: 0}} 
-                    end={{x: 1, y: 1}} 
-                    style={s.bannerContainer}
+                  <LinearGradient
+                    colors={banner.bgColors || (isDark ? ['#006C52', '#004A38'] : ['#008766', '#006C52'])}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[s.bannerContainer, banner.imageUrl ? { padding: 0 } : null]}
                   >
                     {banner.imageUrl && (
-                      <Image 
-                        source={{uri: formatImageUrl(banner.imageUrl)}} 
-                        style={StyleSheet.absoluteFillObject}
+                      <Image
+                        source={{ uri: formatImageUrl(banner.imageUrl) }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}
                         resizeMode="cover"
                       />
                     )}
@@ -617,7 +617,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
                       <Text style={s.bannerDesc}>{banner.description || banner.desc}</Text>
                     </View>
                     <View style={s.bannerIconOverlay}>
-                      <Svg width="120" height="120" viewBox="0 0 24 24" fill="none" style={{opacity: 0.1, transform: [{rotate: '-15deg'}, {scale: 1.5}]}}>
+                      <Svg width="120" height="120" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.1, transform: [{ rotate: '-15deg' }, { scale: 1.5 }] }}>
                         <Path d="M5 12h14M12 5l7 7-7 7" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </Svg>
                     </View>
@@ -629,20 +629,20 @@ const TravelerHomeScreen = ({navigation}: any) => {
 
           <View style={s.dotsContainer}>
             {displayBanners.length > 1 && displayBanners.map((_, i) => {
-              const inputRange = i === 0 
-                ? [-width, 0, width, (displayBanners.length - 1) * width, displayBanners.length * width, (displayBanners.length + 1) * width] 
+              const inputRange = i === 0
+                ? [-width, 0, width, (displayBanners.length - 1) * width, displayBanners.length * width, (displayBanners.length + 1) * width]
                 : [(i - 1) * width, i * width, (i + 1) * width];
-              
+
               // Ensure inputRange is monotonically non-decreasing by filtering duplicates and sorting if length is small
               // Actually, if length is > 1 it should be fine except for the cloned parts.
               // Let's simplify for 1 banner case by checking length.
-              
+
               const outputWidth = i === 0 ? [8, 24, 8, 8, 24, 8] : [8, 24, 8];
               const outputOpacity = i === 0 ? [0.3, 1, 0.3, 0.3, 1, 0.3] : [0.3, 1, 0.3];
-              const dotWidth = scrollX.interpolate({inputRange, outputRange: outputWidth, extrapolate: 'clamp'});
-              const opacity = scrollX.interpolate({inputRange, outputRange: outputOpacity, extrapolate: 'clamp'});
+              const dotWidth = scrollX.interpolate({ inputRange, outputRange: outputWidth, extrapolate: 'clamp' });
+              const opacity = scrollX.interpolate({ inputRange, outputRange: outputOpacity, extrapolate: 'clamp' });
               return (
-                <Animated.View key={i.toString()} style={[s.dot, {width: dotWidth, opacity, backgroundColor: theme.primary}]} />
+                <Animated.View key={i.toString()} style={[s.dot, { width: dotWidth, opacity, backgroundColor: theme.primary }]} />
               );
             })}
           </View>
@@ -700,7 +700,7 @@ const TravelerHomeScreen = ({navigation}: any) => {
                 <View style={s.gridIconHeader}>
                   <View style={s.gridIconBox}>
                     <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2">
-                      <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><Circle cx="12" cy="7" r="4"/>
+                      <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><Circle cx="12" cy="7" r="4" />
                     </Svg>
                   </View>
                 </View>
@@ -714,16 +714,11 @@ const TravelerHomeScreen = ({navigation}: any) => {
         <View style={s.exploreSection}>
           <Text style={s.sectionHeader}>Explore DropMate</Text>
           <View style={s.exploreBannerCard}>
-            <LinearGradient
-              colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#F0FDF4', '#DCFCE7']}
-              style={s.exploreGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-            >
+            <View style={s.exploreGradient}>
               <View style={s.exploreInfo}>
                 <Text style={s.exploreTitle}>How DropMate Works?</Text>
                 <Text style={s.exploreDesc}>Learn how to maximize your traveler earnings and provide secure delivery.</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={s.exploreLinkBtn}
                   activeOpacity={0.8}
                   onPress={() => bannerService.openLink('https://www.dropmate.lk')}
@@ -742,11 +737,11 @@ const TravelerHomeScreen = ({navigation}: any) => {
                   </Svg>
                 </View>
               </View>
-            </LinearGradient>
+            </View>
           </View>
         </View>
 
-        <View style={{height: 100}} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       <RequestAlertModal
@@ -931,6 +926,8 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     height: '100%',
     padding: 18,
     justifyContent: 'center',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   bannerContent: {
     zIndex: 2,
@@ -983,7 +980,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
     shadowColor: theme.shadowColor,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: theme.isDark ? 0.3 : 0.03,
     shadowRadius: 8,
     elevation: 2,
@@ -1033,7 +1030,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
     shadowColor: theme.shadowColor,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: theme.isDark ? 0.3 : 0.03,
     shadowRadius: 8,
     elevation: 2,
@@ -1071,24 +1068,21 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 32,
   },
   exploreBannerCard: {
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.border,
-    backgroundColor: theme.card,
-    shadowColor: theme.shadowColor,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: theme.isDark ? 0.3 : 0.05,
-    shadowRadius: 12,
-    elevation: 3,
   },
   exploreGradient: {
+    backgroundColor: theme.isDark ? theme.card : '#F0FDF4',
+    borderRadius: 24,
     flexDirection: 'row',
-    padding: 16,
+    padding: 24,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   exploreInfo: {
-    flex: 1,
+    flexShrink: 1,
     paddingRight: 8,
   },
   exploreTitle: {
@@ -1132,7 +1126,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
