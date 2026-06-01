@@ -95,7 +95,7 @@ const SplashScreen = ({ navigation }: any) => {
       duration: 2500,
       delay: 400,
       easing: Easing.out(Easing.exp),
-      useNativeDriver: false, 
+      useNativeDriver: true, 
     }).start(() => {
       checkNavigation();
     });
@@ -130,9 +130,9 @@ const SplashScreen = ({ navigation }: any) => {
 
   }, []);
 
-  const progressWidth = progressAnim.interpolate({
+  const progressTranslateX = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: [-200, 0], 
   });
 
   return (
@@ -170,11 +170,14 @@ const SplashScreen = ({ navigation }: any) => {
 
           <Animated.View style={[styles.loadingContainer, { opacity: textFade }]}>
             <View style={styles.progressBarTrack}>
-              <AnimatedLinearGradient
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                colors={[theme.primary, theme.primary]}
-                style={[styles.progressBarFill, { width: progressWidth }]}
+              <Animated.View
+                style={[
+                  styles.progressBarFill, 
+                  { 
+                    backgroundColor: theme.primary,
+                    transform: [{ translateX: progressTranslateX }] 
+                  }
+                ]}
               />
             </View>
             <Text style={styles.initializingText}>INITIALIZING...</Text>
@@ -258,6 +261,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   progressBarFill: {
     height: 4,
     borderRadius: 2,
+    width: 200, // Fixed width, animated via scaleX
   },
   initializingText: {
     color: theme.text.secondary,

@@ -36,7 +36,7 @@ class SocketService {
     this.socket.on('global_message', (message: any) => {
       if (message.type === 'BROADCAST') {
         useAnnouncementStore.getState().addAnnouncement(message);
-        
+
         Toast.show({
           type: 'info',
           text1: 'New Announcement 📢',
@@ -49,7 +49,7 @@ class SocketService {
 
     this.socket.on('support_message', (message: any) => {
       useSupportStore.getState().addMessage(message);
-      
+
       if (message.isAdmin) {
         // Only toast if it's from admin
         Toast.show({
@@ -65,11 +65,11 @@ class SocketService {
     this.socket.on('support_history', (history: any[]) => {
       useSupportStore.getState().setMessages(history);
     });
-    
+
     this.socket.on('user_status_updated', (updatedUser: any) => {
       const prevUser = useAuthStore.getState().user;
       useAuthStore.getState().setUser(updatedUser);
-      
+
       // If user is suddenly blocked
       if (!prevUser?.isBlocked && updatedUser.isBlocked) {
         Toast.show({
@@ -79,7 +79,7 @@ class SocketService {
           visibilityTime: 5000,
         });
       }
-      
+
       console.log('User status updated via socket:', updatedUser.isBlocked);
     });
 

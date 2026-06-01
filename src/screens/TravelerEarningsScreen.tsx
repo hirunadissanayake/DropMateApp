@@ -59,12 +59,12 @@ const TravelerEarningsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
-  
+
   // Date filter state
   const [startDate, setStartDate] = useState<Date>(dayjs().subtract(1, 'month').toDate());
   const [endDate, setEndDate] = useState<Date>(dayjs().toDate());
   const [activePreset, setActivePreset] = useState<FilterPeriod>('Last 30 Days');
-  
+
   const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
@@ -147,11 +147,11 @@ const TravelerEarningsScreen = () => {
   };
 
   // Stats derived directly from summary
-  const displayEarned    = summary?.periodEarned || 0;
-  const displayCash      = summary?.periodCashEarnings || 0;
-  const displayOnline    = summary?.periodOnlineEarnings || 0;
-  const totalPayout      = (summary?.totalEarned || 0) - (summary?.walletBalance || 0); // Approx total withdrawn + pending
-  const displayPending   = summary?.pendingWithdrawals || 0;
+  const displayEarned = summary?.periodEarned || 0;
+  const displayCash = summary?.periodCashEarnings || 0;
+  const displayOnline = summary?.periodOnlineEarnings || 0;
+  const totalPayout = (summary?.totalEarned || 0) - (summary?.walletBalance || 0); // Approx total withdrawn + pending
+  const displayPending = summary?.pendingWithdrawals || 0;
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
@@ -210,6 +210,17 @@ const TravelerEarningsScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.isDark ? theme.primary : '#fff'} colors={[theme.primary]} />}
           >
+            {/* iOS overscroll bounce fix — fills the rubber-band area above the hero */}
+            {Platform.OS === 'ios' && (
+              <View style={{
+                position: 'absolute',
+                top: -400,
+                left: 0,
+                right: 0,
+                height: 400,
+                backgroundColor: theme.isDark ? '#05100C' : theme.primary,
+              }} />
+            )}
             {/*Hero Header*/}
             <LinearGradient
               colors={theme.isDark ? ['#05100C', '#0D1F18'] : [theme.primary, theme.primaryDark]}
@@ -225,7 +236,7 @@ const TravelerEarningsScreen = () => {
                 <View style={styles.balanceContainer}>
                   <Text style={styles.balanceLabel}>Available Payout</Text>
                   <Text style={styles.balanceAmount}>{formatLKR(summary?.walletBalance || 0)}</Text>
-                  
+
                   {(summary?.walletBalance || 0) < CONFIG.MIN_WITHDRAWAL_AMOUNT ? (
                     <View style={{ alignItems: 'center' }}>
                       <View style={styles.withdrawDisabledBtn}>
@@ -263,7 +274,7 @@ const TravelerEarningsScreen = () => {
 
               {/* Date Range Pickers */}
               <View style={styles.datePickerContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.filterTitleRow, { justifyContent: 'space-between', marginBottom: isFiltersExpanded ? 12 : 0 }]}
                   onPress={() => setIsFiltersExpanded(!isFiltersExpanded)}
                   activeOpacity={0.7}
@@ -298,14 +309,14 @@ const TravelerEarningsScreen = () => {
                     <View style={{ height: 16 }} />
 
                     <View style={styles.dateButtonGrid}>
-                      <TouchableOpacity 
-                        style={styles.dateButton} 
+                      <TouchableOpacity
+                        style={styles.dateButton}
                         onPress={() => setStartDatePickerVisibility(true)}
                         activeOpacity={0.7}
                       >
                         <View style={styles.dateIconBox}>
                           <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><Path d="M16 2v4M8 2v4M3 10h18" />
                           </Svg>
                         </View>
                         <View>
@@ -313,21 +324,21 @@ const TravelerEarningsScreen = () => {
                           <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
                         </View>
                       </TouchableOpacity>
-                      
+
                       <View style={styles.dateArrowBox}>
                         <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
                           <Path d="M5 12h14M12 5l7 7-7 7" />
                         </Svg>
                       </View>
 
-                      <TouchableOpacity 
-                        style={styles.dateButton} 
+                      <TouchableOpacity
+                        style={styles.dateButton}
                         onPress={() => setEndDatePickerVisibility(true)}
                         activeOpacity={0.7}
                       >
                         <View style={styles.dateIconBox}>
                           <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2">
-                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><Path d="M16 2v4M8 2v4M3 10h18"/>
+                            <Rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><Path d="M16 2v4M8 2v4M3 10h18" />
                           </Svg>
                         </View>
                         <View>
@@ -453,38 +464,36 @@ const TravelerEarningsScreen = () => {
               </View>
 
               {/* ── Total Payout Card ─────────────────────────────────── */}
+              {/* ── Total Payout Card ─────────────────────────────────── */}
               <View style={styles.totalPayoutCard}>
-                <LinearGradient
-                  colors={theme.isDark ? ['#0D1F18', '#152B21'] : ['#F0FFF8', '#E6FBF2']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.totalPayoutGradient}
-                >
-                  <View style={styles.totalPayoutLeft}>
-                    <View style={[styles.totalPayoutIconBox, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.15)' : '#D1FAE5' }]}>
-                      <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M12 2L2 7l10 5 10-5-10-5z" />
-                        <Path d="M2 17l10 5 10-5" />
-                        <Path d="M2 12l10 5 10-5" />
-                      </Svg>
-                    </View>
-                    <View>
-                      <Text style={styles.totalPayoutLabel}>Total Payout</Text>
-                      <Text style={styles.totalPayoutSubLabel}>
-                        {formatLKR(summary?.pendingWithdrawals || 0)} pending
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.totalPayoutRight}>
-                    {isFetching ? (
-                      <ActivityIndicator size="small" color={theme.primary} />
-                    ) : (
-                      <Text style={styles.totalPayoutAmount}>
-                        {formatLKR((summary?.totalWithdrawn || 0) + (summary?.pendingWithdrawals || 0))}
-                      </Text>
-                    )}
-                  </View>
-                </LinearGradient>
+                {/* Left: Icon */}
+                <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5', marginBottom: 0, marginRight: 16 }]}>
+                  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <Path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <Path d="M2 17l10 5 10-5" />
+                    <Path d="M2 12l10 5 10-5" />
+                  </Svg>
+                </View>
+
+                {/* Center: Label + Amount */}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.totalPayoutLabel}>Total Payout</Text>
+                  {isFetching ? (
+                    <ActivityIndicator size="small" color={theme.primary} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+                  ) : (
+                    <Text style={styles.totalPayoutAmount}>
+                      {formatLKR((summary?.totalWithdrawn || 0) + (summary?.pendingWithdrawals || 0))}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Right: Pending Badge */}
+                <View style={styles.totalPayoutBadge}>
+                  <Text style={styles.totalPayoutBadgeText}>Pending</Text>
+                  <Text style={[styles.totalPayoutBadgeText, { fontSize: 12, marginTop: 2 }]}>
+                    {formatLKR(summary?.pendingWithdrawals || 0).replace('LKR ', '')}
+                  </Text>
+                </View>
               </View>
 
               {/* ── Recent Transactions Heading ───────────────────────── */}
@@ -518,101 +527,101 @@ const TravelerEarningsScreen = () => {
 
           {/* ── Withdrawal Modal ──────────────────────────────────────── */}
           <Modal visible={showWithdrawModal} animationType="slide" transparent onRequestClose={() => setShowWithdrawModal(false)}>
-            <TouchableOpacity 
-              style={styles.modalOverlay} 
-              activeOpacity={1} 
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
               onPress={() => setShowWithdrawModal(false)}
             >
-              <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1, justifyContent: 'flex-end' }}
                 pointerEvents="box-none"
               >
-                <TouchableWithoutFeedback onPress={() => {}}>
+                <TouchableWithoutFeedback onPress={() => { }}>
                   <View style={styles.modalSheet}>
-                <View style={styles.modalHeader}>
-                  <View style={styles.modalIndicator} />
-                  <Text style={styles.modalTitle}>Withdrawal Request</Text>
-                  <Text style={styles.modalSubtitle}>Funds will be sent to your bank account</Text>
-                </View>
-
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Amount to Withdraw</Text>
-                    <TextInput
-                      style={styles.modalInput}
-                      placeholder="0.00"
-                      keyboardType="numeric"
-                      value={withdrawAmount}
-                      onChangeText={setWithdrawAmount}
-                      placeholderTextColor={theme.text.placeholder}
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <View style={styles.bankHeaderRow}>
-                      <Text style={styles.inputLabel}>Payout Method</Text>
-                      <TouchableOpacity onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}>
-                        <Text style={styles.manageBanksText}>Manage Accounts</Text>
-                      </TouchableOpacity>
+                    <View style={styles.modalHeader}>
+                      <View style={styles.modalIndicator} />
+                      <Text style={styles.modalTitle}>Withdrawal Request</Text>
+                      <Text style={styles.modalSubtitle}>Funds will be sent to your bank account</Text>
                     </View>
 
-                    {bankAccounts.length > 0 ? (
-                      <View style={styles.bankSelector}>
-                        {bankAccounts.map((bank) => (
-                          <TouchableOpacity
-                            key={bank.id}
-                            style={[styles.bankSelectOption, selectedBankId === bank.id && styles.bankSelectOptionActive]}
-                            onPress={() => setSelectedBankId(bank.id)}
-                          >
-                            <View style={[styles.radioCircle, selectedBankId === bank.id && styles.radioCircleActive]}>
-                              {selectedBankId === bank.id && <View style={styles.radioInner} />}
-                            </View>
-                            <View style={styles.bankSelectInfo}>
-                              <Text style={styles.bankSelectName}>{bank.bankName}</Text>
-                              <Text style={styles.bankSelectAcc}>Acc: {bank.accountNumber}</Text>
-                            </View>
-                          </TouchableOpacity>
-                        ))}
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Amount to Withdraw</Text>
+                        <TextInput
+                          style={styles.modalInput}
+                          placeholder="0.00"
+                          keyboardType="numeric"
+                          value={withdrawAmount}
+                          onChangeText={setWithdrawAmount}
+                          placeholderTextColor={theme.text.placeholder}
+                        />
                       </View>
-                    ) : (
+
+                      <View style={styles.inputGroup}>
+                        <View style={styles.bankHeaderRow}>
+                          <Text style={styles.inputLabel}>Payout Method</Text>
+                          <TouchableOpacity onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}>
+                            <Text style={styles.manageBanksText}>Manage Accounts</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {bankAccounts.length > 0 ? (
+                          <View style={styles.bankSelector}>
+                            {bankAccounts.map((bank) => (
+                              <TouchableOpacity
+                                key={bank.id}
+                                style={[styles.bankSelectOption, selectedBankId === bank.id && styles.bankSelectOptionActive]}
+                                onPress={() => setSelectedBankId(bank.id)}
+                              >
+                                <View style={[styles.radioCircle, selectedBankId === bank.id && styles.radioCircleActive]}>
+                                  {selectedBankId === bank.id && <View style={styles.radioInner} />}
+                                </View>
+                                <View style={styles.bankSelectInfo}>
+                                  <Text style={styles.bankSelectName}>{bank.bankName}</Text>
+                                  <Text style={styles.bankSelectAcc}>Acc: {bank.accountNumber}</Text>
+                                </View>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.noBanksBtn}
+                            onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}
+                          >
+                            <Text style={styles.noBanksText}>+ Add Saved Bank Account</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      <View style={styles.infoNotice}>
+                        <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="2">
+                          <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
+                        </Svg>
+                        <Text style={styles.infoNoticeText}>
+                          Withdrawals are typically processed within 48 hours.
+                        </Text>
+                      </View>
+
                       <TouchableOpacity
-                        style={styles.noBanksBtn}
-                        onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}
+                        style={[styles.confirmBtn, isWithdrawing && { opacity: 0.6 }]}
+                        onPress={handleWithdraw}
+                        disabled={isWithdrawing}
                       >
-                        <Text style={styles.noBanksText}>+ Add Saved Bank Account</Text>
+                        {isWithdrawing
+                          ? <ActivityIndicator color="#fff" />
+                          : <Text style={styles.confirmBtnText}>Confirm Withdrawal</Text>}
                       </TouchableOpacity>
-                    )}
+
+                      <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowWithdrawModal(false)}>
+                        <Text style={styles.cancelBtnText}>Back</Text>
+                      </TouchableOpacity>
+                    </ScrollView>
                   </View>
-
-                  <View style={styles.infoNotice}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="2">
-                      <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
-                    </Svg>
-                    <Text style={styles.infoNoticeText}>
-                      Withdrawals are typically processed within 48 hours.
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.confirmBtn, isWithdrawing && { opacity: 0.6 }]}
-                    onPress={handleWithdraw}
-                    disabled={isWithdrawing}
-                  >
-                    {isWithdrawing
-                      ? <ActivityIndicator color="#fff" />
-                      : <Text style={styles.confirmBtnText}>Confirm Withdrawal</Text>}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowWithdrawModal(false)}>
-                    <Text style={styles.cancelBtnText}>Back</Text>
-                  </TouchableOpacity>
-                </ScrollView>
-                </View>
-              </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-          </TouchableOpacity>
-        </Modal>
+                </TouchableWithoutFeedback>
+              </KeyboardAvoidingView>
+            </TouchableOpacity>
+          </Modal>
         </>
       )}
     </View>
@@ -846,72 +855,44 @@ function makeStyles(theme: AppTheme) {
 
     // ── Total Payout Card ────────────────────────────────────────────────────
     totalPayoutCard: {
-      borderRadius: 24,
-      overflow: 'hidden',
-      marginBottom: 20,
+      backgroundColor: theme.card,
+      borderRadius: 20,
+      padding: 16,
+      marginBottom: 16,
       borderWidth: 1,
-      borderColor: theme.isDark ? 'rgba(16,185,129,0.2)' : '#A7F3D0',
-      shadowColor: theme.primary,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 3,
-    },
-    totalPayoutGradient: {
+      borderColor: theme.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.03,
+      shadowRadius: 10,
+      elevation: 2,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 20,
-    },
-    totalPayoutLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-      flex: 1,
-    },
-    totalPayoutIconBox: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     totalPayoutLabel: {
-      fontSize: 14,
-      fontFamily: Typography.bold,
-      color: theme.text.primary,
-      marginBottom: 2,
-    },
-    totalPayoutSubLabel: {
-      fontSize: 11,
+      fontSize: 12,
       fontFamily: Typography.medium,
       color: theme.text.secondary,
-      flexShrink: 1,
-    },
-    totalPayoutRight: {
-      alignItems: 'flex-end',
-      gap: 6,
+      marginBottom: 4,
     },
     totalPayoutAmount: {
-      fontSize: 18,
+      fontSize: 20,
       fontFamily: Typography.extraBold,
-      color: theme.primary,
+      color: theme.text.primary,
       letterSpacing: -0.5,
     },
-    pendingBadge: {
-      backgroundColor: theme.isDark ? 'rgba(245,158,11,0.15)' : '#FEF3C7',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.isDark ? 'rgba(245,158,11,0.3)' : '#FDE68A',
-      top: 12,
+    totalPayoutBadge: {
+      backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 10,
+      alignItems: 'center',
+      minWidth: 80,
     },
-    pendingBadgeText: {
+    totalPayoutBadgeText: {
       fontSize: 10,
       fontFamily: Typography.bold,
-      color: '#D97706',
-      
+      color: theme.primary,
     },
 
     // ── Transactions ─────────────────────────────────────────────────────────

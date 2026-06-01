@@ -45,20 +45,20 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = DropMate/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = DropMate/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-DropMate-DropMateTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DropMate-DropMateTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D9E4A819EC3CE019BDDC2FA /* Inter-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = "Inter-Medium.ttf"; path = "Fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
+		1D9E4A819EC3CE019BDDC2FA /* Inter-Medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Inter-Medium.ttf"; path = "Fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-DropMate.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropMate.debug.xcconfig"; path = "Target Support Files/Pods-DropMate/Pods-DropMate.debug.xcconfig"; sourceTree = "<group>"; };
 		462B26F12FCB64E9000DEB4A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		4CB6354B2DC01864ACE5F653 /* Inter-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = "Inter-Regular.ttf"; path = "Fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
+		4CB6354B2DC01864ACE5F653 /* Inter-Regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Inter-Regular.ttf"; path = "Fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
 		5110280EEFFFF2142832C155 /* request_alert.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; path = request_alert.mp3; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-DropMate.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropMate.release.xcconfig"; path = "Target Support Files/Pods-DropMate/Pods-DropMate.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-DropMate-DropMateTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropMate-DropMateTests.debug.xcconfig"; path = "Target Support Files/Pods-DropMate-DropMateTests/Pods-DropMate-DropMateTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-DropMate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DropMate.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		627774902B3F2471600EF6E7 /* Inter-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = "Inter-Bold.ttf"; path = "Fonts/Inter-Bold.ttf"; sourceTree = "<group>"; };
+		627774902B3F2471600EF6E7 /* Inter-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Inter-Bold.ttf"; path = "Fonts/Inter-Bold.ttf"; sourceTree = "<group>"; };
 		6E83B167B65181ED4A705B52 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		777F4E07A45795421C6DB2A3 /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = "Inter-SemiBold.ttf"; path = "Fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; };
+		777F4E07A45795421C6DB2A3 /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Inter-SemiBold.ttf"; path = "Fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = DropMate/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-DropMate-DropMateTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DropMate-DropMateTests.release.xcconfig"; path = "Target Support Files/Pods-DropMate-DropMateTests/Pods-DropMate-DropMateTests.release.xcconfig"; sourceTree = "<group>"; };
-		D697A587CDF5F2299BD2583F /* Inter-ExtraBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = "Inter-ExtraBold.ttf"; path = "Fonts/Inter-ExtraBold.ttf"; sourceTree = "<group>"; };
+		D697A587CDF5F2299BD2583F /* Inter-ExtraBold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Inter-ExtraBold.ttf"; path = "Fonts/Inter-ExtraBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -644,10 +644,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -716,10 +713,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

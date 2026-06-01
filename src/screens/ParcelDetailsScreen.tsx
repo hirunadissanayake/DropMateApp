@@ -634,46 +634,52 @@ const ParcelDetailsScreen = () => {
           )}
 
           {/* Pricing Section */}
-          <View style={styles.priceCard}>
-            <LinearGradient
-              colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#006C52', '#004D3A']}
-              style={styles.priceGradient}
-            >
-              <View style={styles.priceRow}>
-                <View>
-                  <Text style={styles.priceLabel}>Total Price</Text>
-                  <Text style={styles.priceValue}>LKR {parcel.price?.toLocaleString()}</Text>
+          <View style={styles.priceCardContainer}>
+            <View style={styles.priceCard}>
+              <LinearGradient
+                colors={theme.isDark ? ['#1A3D30', '#0D1F18'] : ['#006C52', '#004D3A']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.priceGradient}>
+                <View style={styles.priceRow}>
+                  <View>
+                    <Text style={styles.priceLabel}>Total Price</Text>
+                    <Text style={styles.priceValue}>LKR {parcel.price?.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.paymentBadge}>
+                    <Text style={styles.paymentMethodText}>
+                      {parcel.paymentMethod === 'ONLINE' ? 'CARD' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
+                    </Text>
+                    <Text style={[styles.paymentStatusText, { color: parcel.paymentStatus === 'PAID' ? '#4ADE80' : '#F87171' }]}>
+                      {parcel.paymentStatus}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.paymentBadge}>
-                  <Text style={styles.paymentMethodText}>
-                    {parcel.paymentMethod === 'ONLINE' ? 'CARD' : parcel.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH ON PICKUP' : 'CASH ON DELIVERY'}
-                  </Text>
-                  <Text style={[styles.paymentStatusText, { color: parcel.paymentStatus === 'PAID' ? '#4ADE80' : '#F87171' }]}>
-                    {parcel.paymentStatus}
-                  </Text>
+                <View style={styles.priceDivider} />
+                <View style={styles.priceSubRows}>
+                  <View style={styles.pSubRow}>
+                    <Text style={styles.pSubLabel}>Service Fee</Text>
+                    <Text style={styles.pSubValue}>LKR {parcel.platformFee?.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.pSubRow}>
+                    <Text style={styles.pSubLabel}>Traveler Payout</Text>
+                    <Text style={styles.pSubValue}>LKR {parcel.travelerPayout?.toLocaleString()}</Text>
+                  </View>
                 </View>
               </View>
-              <View style={styles.priceDivider} />
-              <View style={styles.priceSubRows}>
-                <View style={styles.pSubRow}>
-                  <Text style={styles.pSubLabel}>Service Fee</Text>
-                  <Text style={styles.pSubValue}>LKR {parcel.platformFee?.toLocaleString()}</Text>
-                </View>
-                <View style={styles.pSubRow}>
-                  <Text style={styles.pSubLabel}>Traveler Payout</Text>
-                  <Text style={styles.pSubValue}>LKR {parcel.travelerPayout?.toLocaleString()}</Text>
-                </View>
-              </View>
-            </LinearGradient>
+            </View>
           </View>
 
           {/* Customer Online Payment */}
           {isSender && statusUpper === 'MATCHED' && parcel.paymentMethod === 'ONLINE' && parcel.paymentStatus === 'PENDING' && (
             <View style={styles.actionSection}>
               <TouchableOpacity style={styles.primaryActionButton} onPress={handlePay}>
-                <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
-                  <Text style={styles.actionButtonText}>Pay Now (LKR {parcel.price?.toLocaleString()})</Text>
-                </LinearGradient>
+                <View style={styles.primaryActionButtonShadow}>
+                  <View style={styles.primaryActionButtonInner}>
+                    <LinearGradient colors={['#006C52', '#004D3A']} style={StyleSheet.absoluteFill} />
+                    <Text style={styles.actionButtonText}>Pay Now (LKR {parcel.price?.toLocaleString()})</Text>
+                  </View>
+                </View>
               </TouchableOpacity>
               <Text style={styles.paymentWaitText}>Traveler is waiting for payment confirmation.</Text>
             </View>
@@ -684,24 +690,33 @@ const ParcelDetailsScreen = () => {
             <View style={styles.actionSection}>
               {actionLoading ? (
                 <TouchableOpacity style={[styles.primaryActionButton, { opacity: 0.7 }]} disabled>
-                  <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
-                    <ActivityIndicator color="#FFFFFF" />
-                  </LinearGradient>
+                    <View style={styles.primaryActionButtonShadow}>
+                      <View style={styles.primaryActionButtonInner}>
+                        <LinearGradient colors={['#006C52', '#004D3A']} style={StyleSheet.absoluteFill} />
+                        <ActivityIndicator color="#FFFFFF" />
+                      </View>
+                    </View>
                 </TouchableOpacity>
               ) : (
                 <>
                   {parcel.status === 'MATCHED' && (
                     <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiatePickup}>
-                      <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                    <View style={styles.primaryActionButtonShadow}>
+                      <View style={styles.primaryActionButtonInner}>
+                        <LinearGradient colors={['#006C52', '#004D3A']} style={StyleSheet.absoluteFill} />
                         <Text style={styles.actionButtonText}>Confirm Pickup</Text>
-                      </LinearGradient>
+                      </View>
+                    </View>
                     </TouchableOpacity>
                   )}
                   {parcel.status === 'PICKED_UP' && (
                     <TouchableOpacity style={styles.primaryActionButton} onPress={handleInitiateDelivery}>
-                      <LinearGradient colors={['#006C52', '#004D3A']} style={styles.actionGradient}>
+                    <View style={styles.primaryActionButtonShadow}>
+                      <View style={styles.primaryActionButtonInner}>
+                        <LinearGradient colors={['#006C52', '#004D3A']} style={StyleSheet.absoluteFill} />
                         <Text style={styles.actionButtonText}>Complete Delivery</Text>
-                      </LinearGradient>
+                      </View>
+                    </View>
                     </TouchableOpacity>
                   )}
                 </>
@@ -828,13 +843,16 @@ const ParcelDetailsScreen = () => {
                     setRatingModalVisible(true);
                   }}
                 >
-                  <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
-                    {ratingSubmitting ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.actionButtonText}>Rate Traveler ⭐</Text>
-                    )}
-                  </LinearGradient>
+                  <View style={styles.primaryActionButtonShadow}>
+                    <View style={styles.primaryActionButtonInner}>
+                      <LinearGradient colors={['#10B981', '#059669']} style={StyleSheet.absoluteFill} />
+                      {ratingSubmitting ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.actionButtonText}>Rate Traveler ⭐</Text>
+                      )}
+                    </View>
+                  </View>
                 </TouchableOpacity>
               )}
 
@@ -889,13 +907,16 @@ const ParcelDetailsScreen = () => {
                     setRatingModalVisible(true);
                   }}
                 >
-                  <LinearGradient colors={['#10B981', '#059669']} style={styles.actionGradient}>
-                    {ratingSubmitting ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.actionButtonText}>Rate Sender ⭐</Text>
-                    )}
-                  </LinearGradient>
+                  <View style={styles.primaryActionButtonShadow}>
+                    <View style={styles.primaryActionButtonInner}>
+                      <LinearGradient colors={['#10B981', '#059669']} style={StyleSheet.absoluteFill} />
+                      {ratingSubmitting ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.actionButtonText}>Rate Sender ⭐</Text>
+                      )}
+                    </View>
+                  </View>
                 </TouchableOpacity>
               )}
 
@@ -1089,7 +1110,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.background,
   },
-  scrollContent: { paddingBottom: 0 },
+  scrollContent: { paddingBottom: 40 },
   imageContainer: {
     width: width,
     height: width * 0.85,
@@ -1191,7 +1212,17 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   descText: { fontSize: 14, color: theme.text.secondary, lineHeight: 20 },
   noteCard: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : '#FFFBEB', borderColor: theme.isDark ? theme.border : '#FEF3C7' },
   noteText: { fontSize: 14, color: theme.text.primary, fontFamily: Typography.medium, fontStyle: 'italic' },
-  priceCard: { borderRadius: 24, overflow: 'hidden', marginBottom: 24 },
+  priceCardContainer: {
+    marginBottom: 24,
+    borderRadius: 24,
+    backgroundColor: theme.isDark ? '#0D1F18' : '#004D3A', // iOS shadow requirement
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  priceCard: { borderRadius: 24, overflow: 'hidden' },
   priceGradient: { padding: 24 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priceLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: Typography.bold },
@@ -1205,8 +1236,25 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   pSubLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
   pSubValue: { fontSize: 12, color: '#FFFFFF', fontFamily: Typography.bold },
   actionSection: { gap: 16, marginBottom: 40 },
-  primaryActionButton: { borderRadius: 18, overflow: 'hidden', elevation: 4 },
-  actionGradient: { paddingVertical: 18, alignItems: 'center' },
+  primaryActionButton: { borderRadius: 18, height: 60 },
+  primaryActionButtonShadow: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: '#004D3A', // iOS shadow requirement
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  primaryActionButtonInner: {
+    flex: 1,
+    paddingVertical: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
   actionButtonText: { color: '#FFFFFF', fontSize: 16, fontFamily: Typography.extraBold },
   paymentWaitText: { fontSize: 12, color: theme.text.tertiary, textAlign: 'center', marginTop: 4 },
   cashWarningCard: { flexDirection: 'row', padding: 16, backgroundColor: theme.isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB', borderRadius: 16, gap: 12, alignItems: 'center' },

@@ -197,26 +197,29 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
               {/* Premium Banner */}
-              <View style={styles.premiumBanner}>
-                <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.bannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <View style={styles.bannerContent}>
-                    <View style={styles.bannerLeft}>
-                      <View style={styles.liveIndicator}>
-                        <View style={styles.liveDot} />
-                        <Text style={styles.liveText}>NEW OPPORTUNITY</Text>
+              <View style={styles.premiumBannerContainer}>
+                <View style={styles.premiumBanner}>
+                  <LinearGradient colors={[theme.primary, theme.primaryDark]} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
+                  <View style={styles.bannerContentWrapper}>
+                    <View style={styles.bannerContent}>
+                      <View style={styles.bannerLeft}>
+                        <View style={styles.liveIndicator}>
+                          <View style={styles.liveDot} />
+                          <Text style={styles.liveText}>NEW OPPORTUNITY</Text>
+                        </View>
+                        <Text style={styles.mainTitle}>Parcel Match Found!</Text>
                       </View>
-                      <Text style={styles.mainTitle}>Parcel Match Found!</Text>
+                      <Animated.View style={[styles.timerContainer, isUrgent && { transform: [{ scale: pulseAnim }] }]}>
+                        <Text style={[styles.timerLabel, isUrgent && styles.urgentText]}>EXPIRES IN</Text>
+                        <Text style={[styles.timerValue, isUrgent && styles.urgentText]}>{formatTime(timeLeft)}</Text>
+                      </Animated.View>
                     </View>
-                    <Animated.View style={[styles.timerContainer, isUrgent && { transform: [{ scale: pulseAnim }] }]}>
-                      <Text style={[styles.timerLabel, isUrgent && styles.urgentText]}>EXPIRES IN</Text>
-                      <Text style={[styles.timerValue, isUrgent && styles.urgentText]}>{formatTime(timeLeft)}</Text>
-                    </Animated.View>
+                    {/* Progress bar */}
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressBar, { width: `${progressWidth}%`, backgroundColor: isUrgent ? '#F87171' : '#FFF' }]} />
+                    </View>
                   </View>
-                  {/* Progress bar */}
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.progressBar, { width: `${progressWidth}%`, backgroundColor: isUrgent ? '#F87171' : '#FFF' }]} />
-                  </View>
-                </LinearGradient>
+                </View>
               </View>
 
               {/* Immersive Image Section */}
@@ -346,121 +349,124 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                   disabled={isAccepting}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={[theme.primary, theme.primaryDark]} style={styles.acceptGrad}>
-                    {isAccepting ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <>
-                        <Text style={styles.acceptBtnText}>Confirm Delivery</Text>
-                        <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" style={{ marginLeft: 8 }}>
-                          <Path d="M5 12h14M12 5l7 7-7 7" />
-                        </Svg>
-                      </>
-                    )}
-                  </LinearGradient>
+                  <View style={styles.acceptBtnShadow}>
+                    <View style={styles.acceptBtnInner}>
+                      <LinearGradient colors={[theme.primary, theme.primaryDark]} style={StyleSheet.absoluteFill} />
+                      {isAccepting ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <>
+                          <Text style={styles.acceptBtnText}>Confirm Delivery</Text>
+                          <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" style={{ marginLeft: 8 }}>
+                            <Path d="M5 12h14M12 5l7 7-7 7" />
+                          </Svg>
+                        </>
+                      )}
+                    </View>
+                  </View>
                 </TouchableOpacity>
               </View>
             </ScrollView>
           </Animated.View>
-        </Animated.View>
-      </Modal>
 
-      {/* Modern Reason Selection */}
-      <Modal transparent visible={showReasonModal} animationType="fade">
-        <View style={styles.reasonOverlay}>
-          <Animated.View style={styles.reasonSheet}>
-            <View style={styles.reasonHeader}>
-              <View>
-                <Text style={styles.reasonTitle}>Decline Request</Text>
-                <Text style={styles.reasonSubtitle}>Tell us why you're skipping this match.</Text>
+          {/* Internal Reason Selection Overlay — Fixed for iOS */}
+          {showReasonModal && (
+            <View style={styles.reasonOverlay}>
+              <View style={styles.reasonSheet}>
+                <View style={styles.reasonHeader}>
+                  <View>
+                    <Text style={styles.reasonTitle}>Decline Request</Text>
+                    <Text style={styles.reasonSubtitle}>Tell us why you're skipping this match.</Text>
+                  </View>
+                  <TouchableOpacity style={styles.closeReasonIcon} onPress={() => setShowReasonModal(false)}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
+                      <Path d="M18 6L6 18M6 6l12 12" />
+                    </Svg>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.reasonList}>
+                  {!isOtherSelected ? (
+                    DECLINE_REASONS.map((r) => (
+                      <TouchableOpacity
+                        key={r.value}
+                        style={styles.reasonItem}
+                        onPress={() => handleConfirmDecline(r.label)}
+                      >
+                        <Text style={styles.reasonItemText}>{r.label}</Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <View style={styles.otherInputWrapper}>
+                      <TextInput
+                        style={styles.otherTextInput}
+                        placeholder="Type your reason here..."
+                        placeholderTextColor={theme.text.tertiary}
+                        value={customReason}
+                        onChangeText={setCustomReason}
+                        multiline
+                        autoFocus
+                        maxLength={150}
+                      />
+                      <View style={styles.otherActions}>
+                        <TouchableOpacity
+                          style={styles.backReasonBtn}
+                          onPress={() => setIsOtherSelected(false)}
+                        >
+                          <Text style={styles.backReasonText}>Back</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.submitOtherBtn, !customReason.trim() && { opacity: 0.5 }]}
+                          disabled={!customReason.trim() || isDeclining}
+                          onPress={() => handleConfirmDecline('', true)}
+                        >
+                          <Text style={styles.submitOtherText}>Confirm Decline</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                {isDeclining && (
+                  <View style={styles.loadingOver}>
+                    <ActivityIndicator size="large" color={theme.primary} />
+                  </View>
+                )}
               </View>
-              <TouchableOpacity style={styles.closeReasonIcon} onPress={() => setShowReasonModal(false)}>
-                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="2.5">
+            </View>
+          )}
+
+          {/* Immersive Gallery — Fixed for iOS */}
+          {showGallery && (
+            <View style={styles.galleryOverlay}>
+              <TouchableOpacity
+                style={styles.galleryClose}
+                onPress={() => setShowGallery(false)}
+              >
+                <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5">
                   <Path d="M18 6L6 18M6 6l12 12" />
                 </Svg>
               </TouchableOpacity>
-            </View>
 
-            <View style={styles.reasonList}>
-              {!isOtherSelected ? (
-                DECLINE_REASONS.map((r) => (
-                  <TouchableOpacity
-                    key={r.value}
-                    style={styles.reasonItem}
-                    onPress={() => handleConfirmDecline(r.label)}
-                  >
-                    <Text style={styles.reasonItemText}>{r.label}</Text>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <View style={styles.otherInputWrapper}>
-                  <TextInput
-                    style={styles.otherTextInput}
-                    placeholder="Type your reason here..."
-                    placeholderTextColor={theme.text.tertiary}
-                    value={customReason}
-                    onChangeText={setCustomReason}
-                    multiline
-                    autoFocus
-                    maxLength={150}
-                  />
-                  <View style={styles.otherActions}>
-                    <TouchableOpacity
-                      style={styles.backReasonBtn}
-                      onPress={() => setIsOtherSelected(false)}
-                    >
-                      <Text style={styles.backReasonText}>Back</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.submitOtherBtn, !customReason.trim() && { opacity: 0.5 }]}
-                      disabled={!customReason.trim() || isDeclining}
-                      onPress={() => handleConfirmDecline('', true)}
-                    >
-                      <Text style={styles.submitOtherText}>Confirm Decline</Text>
-                    </TouchableOpacity>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.galleryScroll}
+              >
+                {data?.parcelPhotos?.map((url, index) => (
+                  <View key={index} style={styles.galleryItem}>
+                    <Image
+                      source={{ uri: url }}
+                      style={styles.galleryImage}
+                      resizeMode="contain"
+                    />
                   </View>
-                </View>
-              )}
+                ))}
+              </ScrollView>
             </View>
-
-            {isDeclining && (
-              <View style={styles.loadingOver}>
-                <ActivityIndicator size="large" color={theme.primary} />
-              </View>
-            )}
-          </Animated.View>
-        </View>
-      </Modal>
-
-      {/* Immersive Gallery */}
-      <Modal visible={showGallery} transparent animationType="fade">
-        <View style={styles.galleryOverlay}>
-          <TouchableOpacity
-            style={styles.galleryClose}
-            onPress={() => setShowGallery(false)}
-          >
-            <Svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2">
-              <Path d="M18 6L6 18M6 6l12 12" />
-            </Svg>
-          </TouchableOpacity>
-
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            style={styles.galleryScroll}
-          >
-            {data?.parcelPhotos?.map((url, index) => (
-              <View key={index} style={styles.galleryItem}>
-                <Image
-                  source={{ uri: url }}
-                  style={styles.galleryImage}
-                  resizeMode="contain"
-                />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+          )}
+        </Animated.View>
       </Modal>
     </>
   );
@@ -494,17 +500,21 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  premiumBanner: {
-    borderRadius: 15,
-    overflow: 'hidden',
+  premiumBannerContainer: {
     marginBottom: 20,
-    elevation: 5,
     shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 15,
+    elevation: 5,
+    borderRadius: 15,
+    backgroundColor: theme.primary, // iOS shadow requirement
   },
-  bannerGradient: {
+  premiumBanner: {
+    borderRadius: 15,
+    overflow: 'hidden',
+  },
+  bannerContentWrapper: {
     padding: 18,
     paddingTop: 24,
   },
@@ -868,20 +878,25 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   acceptBtn: {
     flex: 1.8,
     height: 64,
-    borderRadius: 15,
-    overflow: 'hidden',
+  },
+  acceptBtnShadow: {
+    flex: 1,
     shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.35,
     shadowRadius: 15,
     elevation: 8,
+    borderRadius: 15,
+    backgroundColor: theme.primary, // iOS shadow requirement
   },
-  acceptGrad: {
+  acceptBtnInner: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    borderRadius: 15,
+    overflow: 'hidden',
   },
   acceptBtnText: {
     fontFamily: Typography.bold,
@@ -898,10 +913,11 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     lineHeight: 16,
   },
   reasonOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     padding: 24,
+    zIndex: 1000,
   },
   reasonSheet: {
     backgroundColor: theme.card,
@@ -1007,15 +1023,15 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     color: '#FFF',
   },
   galleryOverlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000',
-    justifyContent: 'center',
+    zIndex: 2000,
   },
   galleryClose: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 70 : 50,
+    top: Platform.OS === 'ios' ? 60 : 40,
     right: 25,
-    zIndex: 100,
+    zIndex: 2100,
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
     borderRadius: 15,

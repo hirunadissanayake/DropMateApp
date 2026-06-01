@@ -195,23 +195,26 @@ const HelpCenterScreen = () => {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* Hero Section */}
-          <LinearGradient
-            colors={[theme.primary, theme.primaryDark]}
-            style={styles.heroCard}
-          >
-            <Text style={styles.heroTitle}>How can we help you?</Text>
-            <CustomInput 
-              placeholder="Search for topics..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              icon={<Icon name="search" size={20} color={theme.isDark ? "#FFF" : "#006C52"} />}
-              theme={theme}
-              containerStyle={styles.searchCustomStyle}
-              inputWrapperStyle={styles.searchInputWrapper}
-              inputStyle={styles.searchTextInput}
-              placeholderTextColor={theme.isDark ? "rgba(255,255,255,0.6)" : "#999"}
-            />
-          </LinearGradient>
+          <View style={styles.heroCardContainer}>
+            <View style={styles.heroCard}>
+              <LinearGradient
+                colors={[theme.primary, theme.primaryDark]}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={styles.heroTitle}>How can we help you?</Text>
+              <CustomInput 
+                placeholder="Search for topics..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                icon={<Icon name="search" size={20} color={theme.isDark ? "#FFF" : "#006C52"} />}
+                theme={theme}
+                containerStyle={styles.searchCustomStyle}
+                inputWrapperStyle={styles.searchInputWrapper}
+                inputStyle={styles.searchTextInput}
+                placeholderTextColor={theme.isDark ? "rgba(255,255,255,0.6)" : "#999"}
+              />
+            </View>
+          </View>
 
           {/* FAQ Sections */}
           <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
@@ -272,25 +275,30 @@ const HelpCenterScreen = () => {
           })()}
 
           {/* Contact Support Section */}
-          <View style={styles.contactCard}>
-            <View style={styles.contactInfo}>
-              <Text style={styles.contactTitle}>Still need help?</Text>
-              <Text style={styles.contactSubtitle}>Our support team is available 24/7 to assist you with any issues.</Text>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.chatButton}
-              onPress={() => navigation.navigate('SupportChat')}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[theme.primary, theme.primaryDark]}
-                style={styles.chatButtonGradient}
+          <View style={styles.contactCardContainer}>
+            <View style={styles.contactCard}>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactTitle}>Still need help?</Text>
+                <Text style={styles.contactSubtitle}>Our support team is available 24/7 to assist you with any issues.</Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.chatButton}
+                onPress={() => navigation.navigate('SupportChat')}
+                activeOpacity={0.8}
               >
-                <Icon name="headset" size={20} color="#FFF" />
-                <Text style={[styles.chatButtonText, { backgroundColor: 'transparent' }]}>Chat with Support</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <View style={styles.chatButtonShadow}>
+                  <View style={styles.chatButtonInner}>
+                    <LinearGradient
+                      colors={[theme.primary, theme.primaryDark]}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <Icon name="headset" size={20} color="#FFF" />
+                    <Text style={[styles.chatButtonText, { backgroundColor: 'transparent' }]}>Chat with Support</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
           
           <View style={{ height: 40 }} />
@@ -327,16 +335,22 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 60, // Added significant extra padding at bottom
   },
-  heroCard: {
-    padding: 28,
-    borderRadius: 28,
+  heroCardContainer: {
     marginBottom: 30,
     shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.3,
     shadowRadius: 18,
     elevation: 10,
+    borderRadius: 28,
+  },
+  heroCard: {
+    padding: 28,
+    paddingBottom: 40,
+    borderRadius: 28,
+    overflow: 'hidden', // Now we can use it safely because the shadow is on heroCardContainer
   },
   heroTitle: {
     fontSize: 26,
@@ -416,19 +430,24 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.medium,
     paddingRight: 10,
   },
-  contactCard: {
-    backgroundColor: theme.card,
-    borderRadius: 28,
-    padding: 30,
+  contactCardContainer: {
     marginTop: 15,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 3,
+    borderRadius: 28,
+  },
+  contactCard: {
+    backgroundColor: theme.card,
+    borderRadius: 28,
+    padding: 30,
+    paddingBottom: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.border,
+    overflow: 'hidden', // Now we can use it safely because the shadow is on contactCardContainer
   },
   contactInfo: {
     alignItems: 'center',
@@ -451,18 +470,23 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   chatButton: {
     width: '100%',
   },
-  chatButtonGradient: {
+  chatButtonShadow: {
+    shadowColor: theme.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+    borderRadius: 18,
+    backgroundColor: theme.primary, // Required for iOS shadow
+  },
+  chatButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 18,
     borderRadius: 18,
     gap: 12,
-    shadowColor: theme.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    overflow: 'hidden',
   },
   chatButtonText: {
     color: '#FFF',

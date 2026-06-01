@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Platform, 
-  TouchableOpacity, 
-  FlatList, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
   RefreshControl,
   Image,
   Modal,
@@ -127,7 +127,7 @@ const ShipmentsScreen = () => {
 
   const confirmCancel = async () => {
     if (!token || !cancellingParcelId) return;
-    
+
     setActionLoading(true);
     try {
       await parcelService.cancelParcel(token, cancellingParcelId);
@@ -155,7 +155,7 @@ const ShipmentsScreen = () => {
 
   const confirmDelete = async () => {
     if (!token || !deletingParcelId) return;
-    
+
     setActionLoading(true);
     try {
       await parcelService.deleteParcel(token, deletingParcelId);
@@ -177,13 +177,13 @@ const ShipmentsScreen = () => {
   };
 
   const renderParcelItem = ({ item }: { item: Parcel }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={s.parcelCard}
       activeOpacity={0.9}
       onPress={() => navigation.navigate('ParcelDetails', { parcelId: item.id })}
     >
       <View style={s.cardHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={s.imageWrapper}
           onPress={() => item.imageUrls && item.imageUrls.length > 0 && setActiveGallery({ images: item.imageUrls, index: 0 })}
         >
@@ -216,26 +216,28 @@ const ShipmentsScreen = () => {
           </View>
 
           <View style={[
-            s.paymentBadge, 
-            { backgroundColor: item.paymentMethod === 'ONLINE' 
-              ? (theme.isDark ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF') 
-              : (theme.isDark ? 'rgba(217, 119, 6, 0.15)' : '#FFFBEB') }
+            s.paymentBadge,
+            {
+              backgroundColor: item.paymentMethod === 'ONLINE'
+                ? (theme.isDark ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF')
+                : (theme.isDark ? 'rgba(217, 119, 6, 0.15)' : '#FFFBEB')
+            }
           ]}>
-             <Text style={[
-               s.paymentBadgeText, 
-               { color: item.paymentMethod === 'ONLINE' ? (theme.isDark ? '#60A5FA' : '#2563EB') : (theme.isDark ? '#FBBF24' : '#D97706') }
-             ]}>
-               {item.paymentMethod === 'ONLINE' ? 'CARD' : item.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH (PICKUP)' : 'CASH (DELIVERY)'}
-             </Text>
-             <Text style={[s.paymentStatusDot, { color: item.paymentStatus === 'PAID' ? '#10B981' : theme.text.tertiary }]}>
-               {" • "}
-             </Text>
-             <Text style={[
-               s.paymentStatusText, 
-               { color: item.paymentStatus === 'PAID' ? '#10B981' : (theme.isDark ? '#FBBF24' : '#D97706') }
-             ]}>
-               {item.paymentStatus}
-             </Text>
+            <Text style={[
+              s.paymentBadgeText,
+              { color: item.paymentMethod === 'ONLINE' ? (theme.isDark ? '#60A5FA' : '#2563EB') : (theme.isDark ? '#FBBF24' : '#D97706') }
+            ]}>
+              {item.paymentMethod === 'ONLINE' ? 'CARD' : item.paymentMethod === 'CASH_ON_PICKUP' ? 'CASH (PICKUP)' : 'CASH (DELIVERY)'}
+            </Text>
+            <Text style={[s.paymentStatusDot, { color: item.paymentStatus === 'PAID' ? '#10B981' : theme.text.tertiary }]}>
+              {" • "}
+            </Text>
+            <Text style={[
+              s.paymentStatusText,
+              { color: item.paymentStatus === 'PAID' ? '#10B981' : (theme.isDark ? '#FBBF24' : '#D97706') }
+            ]}>
+              {item.paymentStatus}
+            </Text>
           </View>
 
           {item.isRequested && item.status === 'PENDING' && (
@@ -265,9 +267,9 @@ const ShipmentsScreen = () => {
           <Text style={s.detailLabel}>WEIGHT</Text>
           <Text style={s.detailValue}>{item.weight} kg</Text>
         </View>
-        
+
         <View style={s.footerDivider} />
-        
+
         <View style={s.detailItem}>
           <Text style={s.detailLabel}>PRICE</Text>
           <Text style={s.detailValue}>LKR {item.price.toLocaleString()}</Text>
@@ -323,7 +325,7 @@ const ShipmentsScreen = () => {
   return (
     <View style={s.container}>
       <StatusBar barStyle={theme.statusBar} backgroundColor="transparent" translucent />
-      
+
       <SafeAreaView style={s.safeArea} edges={['top']}>
         <View style={s.header}>
           <View style={s.headerTop}>
@@ -331,7 +333,7 @@ const ShipmentsScreen = () => {
               <Text style={s.screenTitle}>My Shipments</Text>
               <Text style={s.screenSubtitle}>Manage yours delivery parcels</Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={s.headerAddBtn}
               onPress={() => navigation.navigate('CreateParcel')}
             >
@@ -342,14 +344,14 @@ const ShipmentsScreen = () => {
           </View>
         </View>
         <View style={s.tabContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[s.tabButton, activeTab === 'ongoing' && s.activeTabButton]}
             onPress={() => setActiveTab('ongoing')}
             activeOpacity={0.8}
           >
             <Text style={[s.tabText, activeTab === 'ongoing' && s.activeTabText]}>Ongoing</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[s.tabButton, activeTab === 'history' && s.activeTabButton]}
             onPress={() => setActiveTab('history')}
             activeOpacity={0.8}
@@ -389,7 +391,7 @@ const ShipmentsScreen = () => {
               </View>
               <Text style={s.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
               <Text style={s.emptySubtitle}>
-                {activeTab === 'ongoing' 
+                {activeTab === 'ongoing'
                   ? "Once you create a parcel, it will appear here for tracking."
                   : "You don't have any delivered parcels yet."}
               </Text>
@@ -398,7 +400,7 @@ const ShipmentsScreen = () => {
         />
       </SafeAreaView>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={s.fab}
         onPress={() => navigation.navigate('CreateParcel')}
       >
@@ -414,43 +416,43 @@ const ShipmentsScreen = () => {
         onRequestClose={() => setActiveGallery(null)}
       >
         <View style={s.modalBackground}>
-          <SafeAreaView style={s.modalSafeArea}>
-            <View style={s.modalHeaderPreview}>
-              <Text style={s.modalCounter}>
-                {activeGallery ? `${activeGallery.index + 1} / ${activeGallery.images.length}` : ''}
-              </Text>
-              <TouchableOpacity 
-                style={s.modalCloseBtn}
-                onPress={() => setActiveGallery(null)}
-              >
-                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-                  <Path d="M18 6L6 18M6 6l12 12" />
-                </Svg>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => {
-                if (activeGallery) {
-                  const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
-                  setActiveGallery({ ...activeGallery, index: newIndex });
-                }
-              }}
+          <View style={[s.modalHeaderPreview, { top: insets.top + 10 }]}>
+            <Text style={s.modalCounter}>
+              {activeGallery ? `${activeGallery.index + 1} / ${activeGallery.images.length}` : ''}
+            </Text>
+            <TouchableOpacity 
+              style={s.modalCloseBtn}
+              onPress={() => setActiveGallery(null)}
+              hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
+              activeOpacity={0.7}
             >
-              {activeGallery?.images.map((url, idx) => (
-                <View key={idx} style={s.fullImageWrapper}>
-                  <Image 
-                    source={{ uri: url }} 
-                    style={s.fullImage}
-                    resizeMode="contain"
-                  />
-                </View>
-              ))}
-            </ScrollView>
-          </SafeAreaView>
+              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                <Path d="M18 6L6 18M6 6l12 12" />
+              </Svg>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              if (activeGallery) {
+                const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
+                setActiveGallery({ ...activeGallery, index: newIndex });
+              }
+            }}
+          >
+            {activeGallery?.images.map((url, idx) => (
+              <View key={idx} style={s.fullImageWrapper}>
+                <Image 
+                  source={{ uri: url }} 
+                  style={s.fullImage}
+                  resizeMode="contain"
+                />
+              </View>
+            ))}
+          </ScrollView>
         </View>
       </Modal>
 
@@ -809,6 +811,10 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
   },
   modalHeaderPreview: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -821,7 +827,12 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.bold,
   },
   modalCloseBtn: {
-    padding: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fullImageWrapper: {
     width: width,

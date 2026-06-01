@@ -244,24 +244,27 @@ export default function PaymentScreen() {
             disabled={isProcessing}
             activeOpacity={0.8}
           >
-            <LinearGradient 
-              colors={isProcessing ? (theme.isDark ? ['#334155', '#1E293B'] : ['#CBD5E1', '#94A3B8']) : [BRAND_GREEN, BRAND_DARK]} 
-              style={styles.payGradient}
-            >
-              {isProcessing ? (
-                <View style={styles.processingRow}>
-                  <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 12 }} />
-                  <Text style={styles.processingText}>{statusText || 'Processing...'}</Text>
-                </View>
-              ) : (
-                <View style={styles.payBtnRow}>
-                   <Text style={styles.payButtonText}>Pay LKR {amount.toLocaleString()}</Text>
-                   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
-                      <Path d="M5 12h14M12 5l7 7-7 7" />
-                   </Svg>
-                </View>
-              )}
-            </LinearGradient>
+            <View style={styles.payButtonShadow}>
+              <View style={styles.payButtonInner}>
+                <LinearGradient 
+                  colors={isProcessing ? (theme.isDark ? ['#334155', '#1E293B'] : ['#CBD5E1', '#94A3B8']) : [BRAND_GREEN, BRAND_DARK]} 
+                  style={StyleSheet.absoluteFill} 
+                />
+                {isProcessing ? (
+                  <View style={styles.processingRow}>
+                    <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 12 }} />
+                    <Text style={styles.processingText}>{statusText || 'Processing...'}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.payBtnRow}>
+                     <Text style={styles.payButtonText}>Pay LKR {amount.toLocaleString()}</Text>
+                     <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
+                        <Path d="M5 12h14M12 5l7 7-7 7" />
+                     </Svg>
+                  </View>
+                )}
+              </View>
+            </View>
           </TouchableOpacity>
           <Text style={styles.secureNote}>🔒 SSL SECURE PAYMENT</Text>
         </View>
@@ -380,15 +383,26 @@ function makeStyles(theme: AppTheme) {
       backgroundColor: theme.background
     },
     payButton: { 
-      borderRadius: 20, 
-      overflow: 'hidden',
+      height: 64,
       marginBottom: 16
     },
     payButtonDisabled: { opacity: 0.8 },
-    payGradient: { 
-      paddingVertical: 18, 
+    payButtonShadow: {
+      flex: 1,
+      borderRadius: 20,
+      backgroundColor: theme.isDark ? BRAND_DARK : BRAND_GREEN,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    payButtonInner: {
+      flex: 1,
       alignItems: 'center', 
-      justifyContent: 'center' 
+      justifyContent: 'center',
+      borderRadius: 20,
+      overflow: 'hidden'
     },
     payBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     payButtonText: { 
