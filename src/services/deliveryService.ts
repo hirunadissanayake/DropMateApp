@@ -56,6 +56,17 @@ export const rejectMatchWithReason = async (token: string, matchId: string, reas
   }
 };
 
+export const cancelMatch = async (token: string, matchId: string) => {
+  try {
+    const response = await axios.patch(ENDPOINTS.DELIVERY.CANCEL_MATCH(matchId), {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
 export const expireMatch = async (token: string, matchId: string) => {
   try {
     const response = await axios.patch(ENDPOINTS.DELIVERY.EXPIRE_MATCH(matchId), {}, {

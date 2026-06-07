@@ -13,6 +13,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -22,6 +23,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 import * as parcelService from '../services/parcelService';
+import * as deliveryService from '../services/deliveryService';
 import dayjs from 'dayjs';
 import CustomAlert from '../components/common/CustomAlert';
 import Toast from 'react-native-toast-message';
@@ -42,6 +44,7 @@ interface Parcel {
   imageUrls: string[];
   createdAt: string;
   isRequested?: boolean;
+  pendingMatchId?: string | null;
   paymentMethod: string;
   paymentStatus: string;
 }
@@ -60,8 +63,10 @@ const ShipmentsScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isCancelAlertVisible, setIsCancelAlertVisible] = useState(false);
   const [isDeleteAlertVisible, setIsDeleteAlertVisible] = useState(false);
+  const [isWithdrawAlertVisible, setIsWithdrawAlertVisible] = useState(false);
   const [cancellingParcelId, setCancellingParcelId] = useState<string | null>(null);
   const [deletingParcelId, setDeletingParcelId] = useState<string | null>(null);
+  const [withdrawingMatchId, setWithdrawingMatchId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
 
@@ -176,6 +181,33 @@ const ShipmentsScreen = () => {
     }
   };
 
+  const handleWithdrawMatch = (matchId: string) => {
+    setWithdrawingMatchId(matchId);
+    setIsWithdrawAlertVisible(true);
+  };
+
+  const confirmWithdraw = async () => {
+    if (!token || !withdrawingMatchId) return;
+
+    setActionLoading(true);
+    try {
+      await deliveryService.cancelMatch(token, withdrawingMatchId);
+      setIsWithdrawAlertVisible(false);
+      Toast.show({
+        type: 'success',
+        text1: 'Request Withdrawn',
+        text2: 'The traveler has been notified.',
+      });
+      onRefresh();
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Could not withdraw request.');
+      setIsWithdrawAlertVisible(false);
+    } finally {
+      setActionLoading(false);
+      setWithdrawingMatchId(null);
+    }
+  };
+
   const renderParcelItem = ({ item }: { item: Parcel }) => (
     <TouchableOpacity
       style={s.parcelCard}
@@ -287,6 +319,21 @@ const ShipmentsScreen = () => {
               <Path d="M18 6L6 18M6 6l12 12" />
             </Svg>
             <Text style={s.cancelBtnTextSmall}>Cancel Parcel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {item.status.toUpperCase() === 'PENDING' && item.isRequested && item.pendingMatchId && (
+        <View style={s.actionRow}>
+          <TouchableOpacity
+            style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
+            onPress={(e) => { e.stopPropagation(); handleWithdrawMatch(item.pendingMatchId!); }}
+            activeOpacity={0.8}
+          >
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
+              <Path d="M18 6L6 18M6 6l12 12" />
+            </Svg>
+            <Text style={s.cancelBtnTextSmall}>Withdraw Request</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -477,6 +524,19 @@ const ShipmentsScreen = () => {
         onCancel={() => setIsDeleteAlertVisible(false)}
         onConfirm={confirmDelete}
         confirmText="Yes, Delete"
+        cancelText="No, Keep"
+        type="warning"
+        loading={actionLoading}
+      />
+
+      <CustomAlert
+        visible={isWithdrawAlertVisible}
+        title="Withdraw Request"
+        theme={theme}
+        message="Are you sure you want to withdraw this delivery request? You can request another traveler afterwards."
+        onCancel={() => setIsWithdrawAlertVisible(false)}
+        onConfirm={confirmWithdraw}
+        confirmText="Yes, Withdraw"
         cancelText="No, Keep"
         type="warning"
         loading={actionLoading}

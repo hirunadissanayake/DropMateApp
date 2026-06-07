@@ -9,6 +9,7 @@ import {
   RefreshControl,
   StatusBar,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -54,6 +55,28 @@ const RequestsScreen = () => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchRequests();
+  };
+
+  const handleCancelRequest = (matchId: string) => {
+    Alert.alert(
+      'Cancel Request',
+      'Are you sure you want to withdraw this delivery request? You can send a new request after cancelling.',
+      [
+        { text: 'No, Keep it', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deliveryService.cancelMatch(token!, matchId);
+              fetchRequests();
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Could not cancel request. Please try again.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderRequestItem = ({ item }: { item: any }) => {
@@ -109,6 +132,17 @@ const RequestsScreen = () => {
               <Path d="M9 18l6-6-6-6" />
             </Svg>
           </View>
+
+          {/* Cancel button — only for Sent Requests that are still PENDING */}
+          {!isIncoming && item.status === 'PENDING' && (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => handleCancelRequest(item.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cancelBtnText}>Cancel Request</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -327,6 +361,20 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 40,
     lineHeight: 22,
     fontFamily: Typography.regular,
+  },
+  cancelBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontFamily: Typography.bold,
+    color: '#EF4444',
   },
 });
 

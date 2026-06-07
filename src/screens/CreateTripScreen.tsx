@@ -308,7 +308,7 @@ const CreateTripScreen = () => {
             </View>
 
             <View style={styles.contentCard}>
-              <Text style={styles.fieldLabel}>EXACT MEETING POINTS (GPS LINKS)</Text>
+              <Text style={styles.fieldLabel}>EXACT MEETING POINTS (OPTIONAL)</Text>
               <View style={styles.inputWrapper}>
                 <Text style={styles.innerLabel}>Pickup GPS Link</Text>
                 <TextInput

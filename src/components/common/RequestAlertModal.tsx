@@ -21,8 +21,8 @@ import { AppTheme } from '../../constants/Colors';
 
 const { width, height } = Dimensions.get('window');
 
-// 15 minutes in seconds
-const EXPIRY_SECONDS = 15 * 60;
+// 10 minutes in seconds
+const EXPIRY_SECONDS = 10 * 60;
 
 const DECLINE_REASONS = [
   { label: 'Item is too heavy', value: 'too_heavy' },

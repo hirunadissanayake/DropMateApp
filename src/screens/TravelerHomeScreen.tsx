@@ -39,6 +39,7 @@ import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useNotificationStore } from '../store/notificationStore';
 import * as bannerService from '../services/bannerService';
+import { socketService } from '../services/socketService';
 
 
 const { width } = Dimensions.get('window');
@@ -228,7 +229,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
         const createdAt = new Date(match.createdAt).getTime();
         const now = new Date().getTime();
         const diffSeconds = Math.floor((now - createdAt) / 1000);
-        const MAX_SECONDS = 15 * 60;
+        const MAX_SECONDS = 10 * 60;
         const remainingSeconds = Math.max(0, MAX_SECONDS - diffSeconds);
 
         if (remainingSeconds <= 0) {
@@ -363,7 +364,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       const createdAt = fcmData.createdAt ? new Date(fcmData.createdAt).getTime() : new Date().getTime();
       const now = new Date().getTime();
       const diffSeconds = Math.floor((now - createdAt) / 1000);
-      const MAX_SECONDS = 15 * 60;
+      const MAX_SECONDS = 10 * 60;
       const remainingSeconds = Math.max(0, MAX_SECONDS - diffSeconds);
 
       if (remainingSeconds <= 0) {
@@ -392,6 +393,44 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       setDeliveryRequestListener(null);
     };
   }, [token, fetchPendingRequests, showOrQueueRequest]);
+
+  // 🔌 Socket listener: auto-close modal when customer cancels their request
+  useEffect(() => {
+    const socket = (socketService as any).socket;
+    if (!socket) return;
+
+    const handleRequestCancelled = ({ matchId }: { matchId: string }) => {
+      console.log('Socket: request_cancelled received for matchId:', matchId);
+
+      // Remove from queue if it was waiting
+      requestQueueRef.current = requestQueueRef.current.filter(
+        (r) => r.matchId !== matchId
+      );
+
+      // If the modal is currently showing this exact request → close it
+      if (currentMatchIdRef.current === matchId) {
+        stopAlertSound();
+        currentMatchIdRef.current = null;
+        requestModalVisibleRef.current = false;
+        setRequestModalVisible(false);
+        setPendingRequestData(null);
+        Toast.show({
+          type: 'info',
+          text1: 'Request Withdrawn',
+          text2: 'The sender has cancelled this delivery request.',
+          visibilityTime: 4000,
+        });
+        // Show next queued request if any
+        setTimeout(() => showNextQueuedRequest(), 600);
+      }
+    };
+
+    socket.on('request_cancelled', handleRequestCancelled);
+
+    return () => {
+      socket.off('request_cancelled', handleRequestCancelled);
+    };
+  }, [stopAlertSound, showNextQueuedRequest]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
