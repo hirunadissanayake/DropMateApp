@@ -76,6 +76,16 @@ class MainApplication : Application(), ReactApplication {
       val notificationManager: NotificationManager =
         getSystemService(NOTIFICATION_SERVICE) as NotificationManager
       notificationManager.createNotificationChannel(channel)
+
+      // 2. Silent channel for Cancellations/Updates
+      val silentName = "Updates & Cancellations"
+      val silentDesc = "Silent notifications for withdrawn requests"
+      val silentChannel = NotificationChannel("silent", silentName, NotificationManager.IMPORTANCE_LOW).apply {
+        description = silentDesc
+        enableVibration(false)
+        setSound(null, null)
+      }
+      notificationManager.createNotificationChannel(silentChannel)
     }
   }
 }

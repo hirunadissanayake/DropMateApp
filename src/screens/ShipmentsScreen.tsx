@@ -69,6 +69,7 @@ const ShipmentsScreen = () => {
   const [withdrawingMatchId, setWithdrawingMatchId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
+  const [isInitialRefreshing, setIsInitialRefreshing] = useState(false);
 
   const s = makeStyles(theme);
 
@@ -89,11 +90,13 @@ const ShipmentsScreen = () => {
       setLoading(false);
       setRefreshing(false);
       setLoadingMore(false);
+      setIsInitialRefreshing(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
+      setIsInitialRefreshing(true);
       setPage(1);
       setHasMore(true);
       fetchParcels(1);
@@ -308,34 +311,56 @@ const ShipmentsScreen = () => {
         </View>
       </View>
 
-      {item.status.toUpperCase() === 'PENDING' && !item.isRequested && (
-        <View style={s.actionRow}>
-          <TouchableOpacity
-            style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
-            onPress={(e) => { e.stopPropagation(); handleCancelPress(item.id); }}
-            activeOpacity={0.8}
-          >
-            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
-              <Path d="M18 6L6 18M6 6l12 12" />
-            </Svg>
-            <Text style={s.cancelBtnTextSmall}>Cancel Parcel</Text>
-          </TouchableOpacity>
+      {isInitialRefreshing ? (
+        <View style={[s.actionRow, { justifyContent: 'center', height: 40 }]}>
+          <ActivityIndicator size="small" color={theme.primary} />
         </View>
-      )}
+      ) : (
+        <>
+          {item.status.toUpperCase() === 'PENDING' && !item.isRequested && (
+            <View style={s.actionRow}>
+              <TouchableOpacity
+                style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
+                onPress={(e) => { e.stopPropagation(); handleCancelPress(item.id); }}
+                activeOpacity={0.8}
+                disabled={actionLoading}
+              >
+                {actionLoading && cancellingParcelId === item.id ? (
+                  <ActivityIndicator size="small" color="#EF4444" />
+                ) : (
+                  <>
+                    <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
+                      <Path d="M18 6L6 18M6 6l12 12" />
+                    </Svg>
+                    <Text style={s.cancelBtnTextSmall}>Cancel Parcel</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
 
-      {item.status.toUpperCase() === 'PENDING' && item.isRequested && item.pendingMatchId && (
-        <View style={s.actionRow}>
-          <TouchableOpacity
-            style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
-            onPress={(e) => { e.stopPropagation(); handleWithdrawMatch(item.pendingMatchId!); }}
-            activeOpacity={0.8}
-          >
-            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
-              <Path d="M18 6L6 18M6 6l12 12" />
-            </Svg>
-            <Text style={s.cancelBtnTextSmall}>Withdraw Request</Text>
-          </TouchableOpacity>
-        </View>
+          {item.status.toUpperCase() === 'PENDING' && item.isRequested && item.pendingMatchId && (
+            <View style={s.actionRow}>
+              <TouchableOpacity
+                style={[s.actionBtnBase, s.cancelBtnSmall, { flex: 1 }]}
+                onPress={(e) => { e.stopPropagation(); handleWithdrawMatch(item.pendingMatchId!); }}
+                activeOpacity={0.8}
+                disabled={actionLoading}
+              >
+                {actionLoading && withdrawingMatchId === item.pendingMatchId ? (
+                  <ActivityIndicator size="small" color="#EF4444" />
+                ) : (
+                  <>
+                    <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" style={{ marginRight: 5 }}>
+                      <Path d="M18 6L6 18M6 6l12 12" />
+                    </Svg>
+                    <Text style={s.cancelBtnTextSmall}>Withdraw Request</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
       )}
 
       {item.status.toUpperCase() === 'CANCELLED' && (

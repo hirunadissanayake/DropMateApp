@@ -251,7 +251,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
           offerPrice: match.offerPrice?.toString() || parcel.price?.toString() || parcel.offerPrice?.toString(),
           paymentMethod: parcel.paymentMethod,
           remainingSeconds: remainingSeconds,
-        });
+        }, false); // False for background catch-up
       }
     } catch (error) {
       console.log('Error fetching pending requests:', error);
