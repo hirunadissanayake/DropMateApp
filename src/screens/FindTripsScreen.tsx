@@ -38,9 +38,9 @@ const FindTripsScreen = () => {
   const [availableTo, setAvailableTo] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const fetchFilterCities = async () => {
     try {
@@ -57,7 +57,7 @@ const FindTripsScreen = () => {
   const fetchTrips = async (pageNum = 1, isRefreshing = false) => {
     if (!fromLocation) {
       setTrips([]);
-      setTotalPages(1);
+      setHasMore(false);
       setLoading(false);
       setRefreshing(false);
       setLoadingMore(false);
@@ -86,7 +86,9 @@ const FindTripsScreen = () => {
         setTrips(prev => [...prev, ...newTrips]);
       }
       
-      setTotalPages(response.totalPages);
+      // Since backend filter might reduce results per page, we use empty array or hasMore from response if added
+      // Or we can check if newTrips.length < limit. But let's check response.totalPages
+      setHasMore(pageNum < response.totalPages);
       setPage(pageNum);
     } catch (error) {
       console.error('Fetch active trips error:', error);
@@ -106,14 +108,16 @@ const FindTripsScreen = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
     fetchTrips(1, true);
     fetchFilterCities();
   };
 
   const handleLoadMore = () => {
-    if (!loadingMore && page < totalPages) {
-      fetchTrips(page + 1);
-    }
+    if (!hasMore || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchTrips(page + 1);
   };
 
   const swapLocations = () => {
@@ -293,7 +297,9 @@ const FindTripsScreen = () => {
                 <View style={s.footerLoader}>
                   <ActivityIndicator color={theme.primary} />
                 </View>
-              ) : null
+              ) : !hasMore && trips.length > 0 ? (
+                <Text style={s.endText}>No more travelers available</Text>
+              ) : <View style={{ height: 100 }} />
             }
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
@@ -666,6 +672,13 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  endText: {
+    textAlign: 'center',
+    color: theme.text.tertiary,
+    fontSize: 14,
+    paddingVertical: 20,
+    fontFamily: Typography.medium,
   },
 });
 

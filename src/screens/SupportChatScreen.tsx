@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -59,16 +61,42 @@ const SupportChatScreen = () => {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const navigation = useNavigation<any>();
-  const { messages } = useSupportStore();
+  const { messages, hasMore } = useSupportStore();
   const { user } = useAuthStore();
   const [inputValue, setInputValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     if (user?.id) {
-      socketService.getSupportHistory(user.id);
+      setPage(1);
+      socketService.getSupportHistory(user.id, 1);
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    setLoadingMore(false);
+    if (messages.length > 0) {
+      setInitialLoading(false);
+    }
+  }, [messages]);
+
+  // If after 2 seconds messages are still empty, we stop initial loading to show empty state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore || !user?.id) return;
+    setLoadingMore(true);
+    socketService.getSupportHistory(user.id, page + 1);
+    setPage(prev => prev + 1);
+  };
 
   const handleSend = () => {
     if (!inputValue.trim() || !user?.id) return;
@@ -82,6 +110,8 @@ const SupportChatScreen = () => {
 
     socketService.sendSupportMessage(messageData);
     setInputValue('');
+    // Auto scroll to bottom after sending
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   const renderMessage = ({ item }: { item: any }) => {
@@ -152,25 +182,48 @@ const SupportChatScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item, index) => item.id || index.toString()}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messageList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
-                <Icon name="chatbubbles-outline" size={40} color={theme.primary} opacity={0.4} />
+        {initialLoading ? (
+          <View style={styles.centerLoading}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={styles.loadingText}>Loading conversation...</Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item, index) => (item.id || index).toString()}
+            renderItem={renderMessage}
+            contentContainerStyle={styles.messageList}
+            showsVerticalScrollIndicator={false}
+            onScroll={(event) => {
+              const { contentOffset } = event.nativeEvent;
+              if (contentOffset.y <= 0 && !loadingMore && hasMore && messages.length > 0) {
+                handleLoadMore();
+              }
+            }}
+            onContentSizeChange={() => {
+              if (page === 1) {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }
+            }}
+            ListHeaderComponent={() => (
+              loadingMore ? (
+                <View style={{ paddingVertical: 10 }}>
+                  <ActivityIndicator size="small" color={theme.primary} />
+                </View>
+              ) : null
+            )}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconCircle}>
+                  <Icon name="chatbubbles-outline" size={40} color={theme.primary} opacity={0.4} />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text style={styles.emptySubtitle}>Our support team is here to help you. Send a message to get started.</Text>
               </View>
-              <Text style={styles.emptyTitle}>Start a conversation</Text>
-              <Text style={styles.emptySubtitle}>Our support team is here to help you. Send a message to get started.</Text>
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
 
         {/* Input area */}
         <SafeAreaView edges={['bottom']} style={styles.inputWrapperSafeArea}>
@@ -276,6 +329,18 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     paddingBottom: 30,
     flexGrow: 1,
   },
+  centerLoading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.background,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: theme.text.secondary,
+    fontFamily: Typography.medium,
+  },
   messageWrapper: {
     marginBottom: 16,
     maxWidth: '82%',
@@ -344,8 +409,8 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: '40%',
     paddingHorizontal: 40,
+    height: Dimensions.get('window').height * 0.6, // Ensure it fills enough space to center
   },
   emptyIconCircle: {
     width: 90,

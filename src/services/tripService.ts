@@ -14,9 +14,10 @@ export const createTrip = async (token: string, data: any) => {
   }
 };
 
-export const getMyTrips = async (token: string) => {
+export const getMyTrips = async (token: string, params?: { page?: number, limit?: number }) => {
   try {
     const response = await axios.get(ENDPOINTS.TRIPS.MY_TRIPS, {
+      params,
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

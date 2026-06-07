@@ -62,8 +62,18 @@ class SocketService {
       }
     });
 
-    this.socket.on('support_history', (history: any[]) => {
-      useSupportStore.getState().setMessages(history);
+    this.socket.on('support_history', (data: any) => {
+      if (data.messages && Array.isArray(data.messages)) {
+        if (data.page === 1) {
+          useSupportStore.getState().setMessages(data.messages);
+        } else {
+          useSupportStore.getState().addOlderMessages(data.messages);
+        }
+        useSupportStore.getState().setHasMore(data.hasMore ?? false);
+      } else if (Array.isArray(data)) {
+        // Fallback for old version
+        useSupportStore.getState().setMessages(data);
+      }
     });
 
     this.socket.on('user_status_updated', (updatedUser: any) => {
@@ -153,15 +163,15 @@ class SocketService {
     }
   }
 
-  getSupportHistory(userId: string) {
+  getSupportHistory(userId: string, page: number = 1, limit: number = 20) {
     if (this.socket?.connected) {
-      this.socket.emit('get_support_history', userId);
+      this.socket.emit('get_support_history', { userId, page, limit });
     } else {
       console.warn('Socket not connected, cannot fetch history');
       this.connect(userId);
       setTimeout(() => {
         if (this.socket?.connected) {
-          this.socket.emit('get_support_history', userId);
+          this.socket.emit('get_support_history', { userId, page, limit });
         }
       }, 2000);
     }

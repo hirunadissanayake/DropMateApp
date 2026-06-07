@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -35,6 +36,9 @@ const TravelerTripsScreen = () => {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
   
   const [alertVisible, setAlertVisible] = useState(false);
@@ -55,15 +59,18 @@ const TravelerTripsScreen = () => {
 
   const styles = makeStyles(theme);
 
-  const fetchTrips = async () => {
+  const fetchTrips = async (pageNum = 1) => {
     try {
-      const data = await tripService.getMyTrips(token!);
-      const sortedTrips = data.sort((a: any, b: any) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
-        return timeB - timeA;
-      });
-      setTrips(sortedTrips);
+      if (pageNum === 1 && !refreshing) setLoading(true);
+      const data = await tripService.getMyTrips(token!, { page: pageNum, limit: 10 });
+      
+      if (pageNum === 1) {
+        setTrips(data.trips);
+      } else {
+        setTrips(prev => [...prev, ...data.trips]);
+      }
+      setHasMore(data.hasMore);
+      setPage(pageNum);
     } catch (error: any) {
       console.error('Fetch trips error:', error);
       Toast.show({
@@ -74,20 +81,31 @@ const TravelerTripsScreen = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
       if (token) {
-        fetchTrips();
+        setPage(1);
+        setHasMore(true);
+        fetchTrips(1);
       }
     }, [token])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchTrips();
+    setPage(1);
+    setHasMore(true);
+    fetchTrips(1);
+  };
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchTrips(page + 1);
   };
 
   const handleCreateTrip = () => {
@@ -102,15 +120,17 @@ const TravelerTripsScreen = () => {
       type: 'error',
       action: async () => {
         setAlertVisible(false);
-        try {
-          setLoading(true);
-          await tripService.cancelTrip(token!, tripId);
-          Toast.show({ type: 'success', text1: 'Trip cancelled successfully' });
-          fetchTrips();
-        } catch (err: any) {
-          setLoading(false);
-          Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not cancel trip' });
-        }
+          try {
+            setLoading(true);
+            await tripService.cancelTrip(token!, tripId);
+            Toast.show({ type: 'success', text1: 'Trip cancelled successfully' });
+            setPage(1);
+            setHasMore(true);
+            fetchTrips(1);
+          } catch (err: any) {
+            setLoading(false);
+            Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not cancel trip' });
+          }
       }
     });
     setAlertVisible(true);
@@ -124,15 +144,17 @@ const TravelerTripsScreen = () => {
       type: 'error',
       action: async () => {
         setAlertVisible(false);
-        try {
-          setLoading(true);
-          await tripService.deleteTrip(token!, tripId);
-          Toast.show({ type: 'success', text1: 'Trip deleted successfully' });
-          fetchTrips();
-        } catch (err: any) {
-          setLoading(false);
-          Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not delete trip' });
-        }
+          try {
+            setLoading(true);
+            await tripService.deleteTrip(token!, tripId);
+            Toast.show({ type: 'success', text1: 'Trip deleted successfully' });
+            setPage(1);
+            setHasMore(true);
+            fetchTrips(1);
+          } catch (err: any) {
+            setLoading(false);
+            Toast.show({ type: 'error', text1: 'Failed', text2: err.message || 'Could not delete trip' });
+          }
       }
     });
     setAlertVisible(true);
@@ -196,58 +218,76 @@ const TravelerTripsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {loading ? (
+        {loading && trips.length === 0 ? (
           <View style={styles.centerContainer}>
             <ActivityIndicator size="large" color={theme.primary} />
           </View>
-        ) : trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).length === 0 ? (
-          <ScrollView
-            contentContainerStyle={styles.emptyScroll}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
-          >
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconContainer}>
-                <Svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                  <Path d="M3 6l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
-                  <Path d="M9 2v14" />
-                  <Path d="M15 6v14" />
-                </Svg>
-                <View style={styles.emptyCircle} />
-              </View>
-              <Text style={styles.emptyTitle}>No trips found</Text>
-              <Text style={styles.emptySubtitle}>
-                {activeTab === 'ongoing' 
-                  ? "You haven't added any upcoming trips yet. Create your first trip to start earning."
-                  : "You don't have any past or completed trips yet."}
-              </Text>
-              {activeTab === 'ongoing' && (
-                <TouchableOpacity 
-                  style={styles.createNowButton}
-                  onPress={handleCreateTrip}
-                >
-                  <Text style={styles.createNowText}>Create Now</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </ScrollView>
         ) : (
-          <ScrollView 
-            showsVerticalScrollIndicator={false} 
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
-          >
-            {trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory).map((trip) => (
+          <FlatList
+            data={trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory)}
+            keyExtractor={(item: any) => item.id}
+            renderItem={({ item }: { item: any }) => (
               <TripCard 
-                key={trip.id} 
-                trip={trip} 
+                trip={item} 
                 theme={theme}
-                onCancel={() => handleCancelTrip(trip.id)} 
-                onDelete={() => handleDeleteTrip(trip.id)}
-                onToggleStatus={() => handleToggleTripStatus(trip.id, trip.status)}
+                onCancel={() => handleCancelTrip(item.id)} 
+                onDelete={() => handleDeleteTrip(item.id)}
+                onToggleStatus={() => handleToggleTripStatus(item.id, item.status)}
               />
-            ))}
-            <View style={{ height: 100 }} />
-          </ScrollView>
+            )}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                colors={[theme.primary]} 
+                tintColor={theme.primary} 
+              />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={() => {
+              const tabTrips = trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory);
+              if (loadingMore) {
+                return (
+                  <View style={{ paddingVertical: 20 }}>
+                    <ActivityIndicator size="small" color={theme.primary} />
+                  </View>
+                );
+              }
+              if (!hasMore && tabTrips.length > 0) {
+                return <Text style={styles.endText}>No more trips</Text>;
+              }
+              return <View style={{ height: 100 }} />;
+            }}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconContainer}>
+                  <Svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                    <Path d="M3 6l6-4 6 4 6-4v14l-6 4-6-4-6 4z" />
+                    <Path d="M9 2v14" />
+                    <Path d="M15 6v14" />
+                  </Svg>
+                  <View style={styles.emptyCircle} />
+                </View>
+                <Text style={styles.emptyTitle}>No trips found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {activeTab === 'ongoing' 
+                    ? "You haven't added any upcoming trips yet. Create your first trip to start earning."
+                    : "You don't have any past or completed trips yet."}
+                </Text>
+                {activeTab === 'ongoing' && (
+                  <TouchableOpacity 
+                    style={styles.createNowButton}
+                    onPress={handleCreateTrip}
+                  >
+                    <Text style={styles.createNowText}>Create Now</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
         )}
 
         <CustomAlert
@@ -757,6 +797,13 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     height: 1,
     backgroundColor: theme.border,
     marginBottom: 12,
+  },
+  endText: {
+    textAlign: 'center',
+    color: theme.text.tertiary,
+    fontSize: 14,
+    paddingVertical: 20,
+    fontFamily: Typography.medium,
   },
 });
 
