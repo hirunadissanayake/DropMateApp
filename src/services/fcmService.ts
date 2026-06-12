@@ -94,6 +94,7 @@ export const setDeliveryRequestListener = (callback: ((data: any) => void) | nul
   onDeliveryRequestCallback = callback;
 };
 
+import { stopAlertSound } from '../services/soundService';
 import { useAnnouncementStore } from '../store/announcementStore';
 
 export const setupFcmListeners = () => {
@@ -119,6 +120,11 @@ export const setupFcmListeners = () => {
 
     const isBroadcast = handleBroadcast(remoteMessage);
     const notifType = remoteMessage.data?.type as string | undefined;
+
+    // If a request was cancelled/expired → stop any active looping sound immediately
+    if (notifType === 'MATCH_CANCELLED' || notifType === 'MATCH_EXPIRED') {
+      stopAlertSound();
+    }
 
     // If this is a delivery request → trigger the request alert modal
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {

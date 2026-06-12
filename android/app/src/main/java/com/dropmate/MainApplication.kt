@@ -77,15 +77,15 @@ class MainApplication : Application(), ReactApplication {
         getSystemService(NOTIFICATION_SERVICE) as NotificationManager
       notificationManager.createNotificationChannel(channel)
 
-      // 2. Silent channel for Cancellations/Updates
-      val silentName = "Updates & Cancellations"
-      val silentDesc = "Silent notifications for withdrawn requests"
-      val silentChannel = NotificationChannel("silent", silentName, NotificationManager.IMPORTANCE_LOW).apply {
-        description = silentDesc
-        enableVibration(false)
-        setSound(null, null)
+      // 2. Standard alerts channel (with system sound and vibration)
+      val updatesName = "Updates & Cancellations"
+      val updatesDesc = "Notifications for withdrawn requests and status updates"
+      val updatesChannel = NotificationChannel("standard_alerts", updatesName, NotificationManager.IMPORTANCE_DEFAULT).apply {
+        description = updatesDesc
+        enableVibration(true)
+        // Uses default system sound and vibration
       }
-      notificationManager.createNotificationChannel(silentChannel)
+      notificationManager.createNotificationChannel(updatesChannel)
     }
   }
 }
