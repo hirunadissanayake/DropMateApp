@@ -82,8 +82,8 @@ android {
         applicationId "com.dropmate"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 36
-        versionName "3.6"
+        versionCode 37
+        versionName "3.7"
     }
     signingConfigs {
         debug {
