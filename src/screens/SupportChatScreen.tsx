@@ -30,6 +30,24 @@ const formatTime = (dateStr: string) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
+const formatDateHeader = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  
+  if (date.toDateString() === now.toDateString()) {
+    return 'Today';
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
 const Icon = ({ name, size = 24, color = "#000", style, opacity = 1 }: any) => {
   if (name === 'checkmark-done') return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={[style, { opacity }]}>
@@ -114,33 +132,65 @@ const SupportChatScreen = () => {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  const renderMessage = ({ item }: { item: any }) => {
+  const renderMessage = ({ item, index }: { item: any; index: number }) => {
     const isMe = !item.isAdmin;
-    
+
+    // Show date header if it's the first message or if the date has changed from the previous message
+    const showDateHeader =
+      index === 0 ||
+      (messages[index - 1] &&
+        new Date(item.createdAt).toDateString() !==
+          new Date(messages[index - 1].createdAt).toDateString());
+
     return (
-      <View style={[
-        styles.messageWrapper,
-        isMe ? styles.myMessageWrapper : styles.theirMessageWrapper
-      ]}>
-        <View style={[
-          styles.messageBubble,
-          isMe ? styles.myMessageBubble : styles.theirMessageBubble
-        ]}>
-          {!isMe && <Text style={styles.senderName}>{item.senderName || 'Support'}</Text>}
-          <Text style={[
-            styles.messageText,
-            isMe ? styles.myMessageText : styles.theirMessageText
-          ]}>
-            {item.message}
-          </Text>
-          <View style={styles.messageFooter}>
-            <Text style={[
-              styles.messageTime,
-              isMe ? styles.myMessageTime : styles.theirMessageTime
-            ]}>
+      <View key={item.id || index}>
+        {showDateHeader && (
+          <View style={styles.dateHeaderContainer}>
+            <View style={styles.dateHeaderBubble}>
+              <Text style={styles.dateHeaderText}>{formatDateHeader(item.createdAt)}</Text>
+            </View>
+          </View>
+        )}
+        <View
+          style={[
+            styles.messageWrapper,
+            isMe ? styles.myMessageWrapper : styles.theirMessageWrapper,
+          ]}
+        >
+          <View
+            style={[
+              styles.messageBubble,
+              isMe ? styles.myMessageBubble : styles.theirMessageBubble,
+            ]}
+          >
+            {!isMe && <Text style={styles.senderName}>{item.senderName || 'Support'}</Text>}
+            <Text
+              style={[
+                styles.messageText,
+                isMe ? styles.myMessageText : styles.theirMessageText,
+              ]}
+            >
+              {item.message}
+            </Text>
+          </View>
+          <View style={[styles.messageFooter, isMe ? styles.myMessageFooter : styles.theirMessageFooter]}>
+            <Text
+              style={[
+                styles.messageTime,
+                isMe ? styles.myMessageTime : styles.theirMessageTime,
+              ]}
+            >
               {formatTime(item.createdAt)}
             </Text>
-            {isMe && <Icon name="checkmark-done" size={12} color="#FFF" style={{ marginLeft: 4 }} opacity={0.6} />}
+            {isMe && (
+              <Icon
+                name="checkmark-done"
+                size={12}
+                color={theme.primary}
+                style={{ marginLeft: 4 }}
+                opacity={0.8}
+              />
+            )}
           </View>
         </View>
       </View>
@@ -342,7 +392,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.medium,
   },
   messageWrapper: {
-    marginBottom: 16,
+    marginBottom: 8,
     maxWidth: '82%',
   },
   myMessageWrapper: {
@@ -352,13 +402,13 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     alignSelf: 'flex-start',
   },
   messageBubble: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 22,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 5,
     elevation: 1,
   },
   myMessageBubble: {
@@ -392,15 +442,21 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   messageFooter: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  myMessageFooter: {
     justifyContent: 'flex-end',
-    marginTop: 6,
+  },
+  theirMessageFooter: {
+    justifyContent: 'flex-start',
   },
   messageTime: {
     fontSize: 10.5,
     fontFamily: Typography.medium,
   },
   myMessageTime: {
-    color: 'rgba(255,255,255,0.7)',
+    color: theme.text.tertiary,
   },
   theirMessageTime: {
     color: theme.text.tertiary,
@@ -474,6 +530,24 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  dateHeaderContainer: {
+    alignItems: 'center',
+    marginVertical: 12,
+    marginBottom: 16,
+  },
+  dateHeaderBubble: {
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  dateHeaderText: {
+    fontSize: 10,
+    fontFamily: Typography.bold,
+    color: theme.text.tertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
 });
 
