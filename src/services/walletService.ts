@@ -42,7 +42,15 @@ export const getWalletSummary = async (token: string, filters?: { startDate?: st
   }
 };
 
-export const getTransactionHistory = async (token: string, filters?: { startDate?: string; endDate?: string; limit?: number }): Promise<WalletTransaction[]> => {
+export interface WalletTransactionResponse {
+  transactions: WalletTransaction[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export const getTransactionHistory = async (token: string, filters?: { startDate?: string; endDate?: string; page?: number; limit?: number }): Promise<WalletTransactionResponse> => {
   try {
     const response = await axios.get(ENDPOINTS.WALLET.TRANSACTIONS, {
       headers: { Authorization: `Bearer ${token}` },

@@ -14,6 +14,7 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -49,6 +50,9 @@ export default function EarningsHistoryScreen() {
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   
   // Date filter state
   const [startDate, setStartDate] = useState<Date>(dayjs().subtract(1, 'month').toDate());
@@ -99,31 +103,51 @@ export default function EarningsHistoryScreen() {
     }
   }, [selectedTx]);
 
-  const fetchTransactions = async () => {
-    setLoading(true);
+  const fetchTransactions = async (pageNum = 1) => {
+    if (!token) return;
+    if (pageNum === 1 && !refreshing) setLoading(true);
+    
     try {
       const filters = activePreset === 'Total' ? {} : {
         startDate: dayjs(startDate).format('YYYY-MM-DD'),
         endDate: dayjs(endDate).format('YYYY-MM-DD'),
       };
       
-      const txData = await walletService.getTransactionHistory(token!, filters);
-      setTransactions(txData);
+      const data = await walletService.getTransactionHistory(token, { ...filters, page: pageNum, limit: 12 });
+      
+      if (pageNum === 1) {
+        setTransactions(data.transactions);
+      } else {
+        setTransactions(prev => [...prev, ...data.transactions]);
+      }
+      setHasMore(data.hasMore);
+      setPage(pageNum);
     } catch (error) {
       console.error('Wallet tx fetch error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
   useFocusEffect(useCallback(() => {
-    fetchTransactions();
+    setPage(1);
+    setHasMore(true);
+    fetchTransactions(1);
   }, [token, startDate, endDate, activePreset]));
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchTransactions();
+    setPage(1);
+    setHasMore(true);
+    fetchTransactions(1);
+  };
+
+  const loadMore = () => {
+    if (!hasMore || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchTransactions(page + 1);
   };
 
   const setPreset = (preset: FilterPeriod) => {
@@ -263,59 +287,77 @@ export default function EarningsHistoryScreen() {
             <ActivityIndicator size="large" color={theme.primary} />
           </View>
         ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.isDark ? theme.primary : "#94A3B8"} />}
-          >
-            {transactions.length === 0 ? (
+        <FlatList
+          data={transactions}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh} 
+              tintColor={theme.isDark ? theme.primary : "#94A3B8"} 
+            />
+          }
+          renderItem={({ item: tx }) => (
+            <TouchableOpacity 
+              key={tx.id} 
+              style={styles.transactionItem}
+              onPress={() => setSelectedTx(tx)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.txIconBg, { 
+                backgroundColor: tx.type === 'DELIVERY_EARNED' 
+                  ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5') 
+                  : (theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFF1F2')
+              }]}>
+                <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                  stroke={tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : theme.primary) : '#EF4444'} strokeWidth="2.5">
+                  {tx.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
+                </Svg>
+              </View>
+              
+              <View style={styles.txMain}>
+                <Text style={styles.txDesc} numberOfLines={1}>{tx.description || 'Earnings'}</Text>
+                <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
+                {tx.status === 'PENDING' && <Text style={styles.pendingText}>Processing</Text>}
+              </View>
+
+              <View style={styles.txRight}>
+                <Text style={[styles.txAmount, { 
+                  color: tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : '#059669') : theme.text.primary
+                }]}>
+                  {tx.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(tx.amount).replace('LKR ', '')}
+                </Text>
+                <Text style={styles.txCurrency}>LKR</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            !loading ? (
               <View style={styles.emptyState}>
                 <View style={styles.emptyIconCircle}>
                   <Svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={theme.isDark ? theme.primary : "#FFFFFF"} strokeWidth="1.5">
-                     <Circle cx="12" cy="12" r="10" /><Path d="M12 8v8M8 12h8" />
+                    <Circle cx="12" cy="12" r="10" /><Path d="M12 8v8M8 12h8" />
                   </Svg>
                 </View>
                 <Text style={styles.emptyText}>No earnings yet</Text>
                 <Text style={styles.emptySubText}>Completed deliveries will show up here</Text>
               </View>
-            ) : (
-              transactions.map((tx) => (
-                <TouchableOpacity 
-                  key={tx.id} 
-                  style={styles.transactionItem}
-                  onPress={() => setSelectedTx(tx)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.txIconBg, { 
-                    backgroundColor: tx.type === 'DELIVERY_EARNED' 
-                      ? (theme.isDark ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5') 
-                      : (theme.isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFF1F2')
-                  }]}>
-                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
-                      stroke={tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : theme.primary) : '#EF4444'} strokeWidth="2.5">
-                      {tx.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
-                    </Svg>
-                  </View>
-                  
-                  <View style={styles.txMain}>
-                    <Text style={styles.txDesc} numberOfLines={1}>{tx.description || 'Earnings'}</Text>
-                    <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
-                    {tx.status === 'PENDING' && <Text style={styles.pendingText}>Processing</Text>}
-                  </View>
-
-                  <View style={styles.txRight}>
-                    <Text style={[styles.txAmount, { 
-                      color: tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#3DD9A4' : '#059669') : theme.text.primary
-                    }]}>
-                      {tx.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(tx.amount).replace('LKR ', '')}
-                    </Text>
-                    <Text style={styles.txCurrency}>LKR</Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            )}
-            <View style={{ height: 40 }} />
-          </ScrollView>
+            ) : null
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color={theme.primary} />
+              </View>
+            ) : !hasMore && transactions.length > 0 ? (
+              <Text style={styles.endText}>No more transactions</Text>
+            ) : <View style={{ height: 40 }} />
+          }
+        />
         )}
       </SafeAreaView>
 
@@ -834,6 +876,13 @@ function makeStyles(theme: AppTheme) {
       fontSize: 16,
       fontFamily: Typography.bold,
       color: theme.text.primary,
+    },
+    endText: {
+      textAlign: 'center',
+      paddingVertical: 20,
+      color: theme.text.tertiary,
+      fontFamily: Typography.medium,
+      fontSize: 13,
     },
   });
 }
