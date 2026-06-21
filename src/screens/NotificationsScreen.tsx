@@ -670,6 +670,8 @@ function makeStyles(theme: AppTheme) {
       elevation: 2,
       borderWidth: 1,
       borderColor: theme.border,
+      borderLeftWidth: 1,
+      borderLeftColor: theme.border,
     },
     unreadCard: {
       borderColor: theme.isDark ? 'rgba(61, 217, 164, 0.3)' : 'rgba(0, 135, 90, 0.2)',

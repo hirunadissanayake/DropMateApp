@@ -14,11 +14,18 @@ export const requestGalleryPermission = async (): Promise<boolean> => {
 
   const apiLevel = Platform.Version as number;
 
-  // Android 13+ uses granular media permissions
-  const permission =
-    apiLevel >= 33
-      ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-      : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+  /**
+   * On Android 13+ (API 33+), we don't need to request READ_EXTERNAL_STORAGE.
+   * Instead, apps should use the System Photo Picker (which react-native-image-picker does).
+   * The Photo Picker does NOT require any manifest permissions.
+   * If we try to request READ_MEDIA_IMAGES without it being in the manifest, it will fail.
+   */
+  if (apiLevel >= 33) {
+    return true;
+  }
+
+  // Android 12 and below still need READ_EXTERNAL_STORAGE
+  const permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
 
   const alreadyGranted = await PermissionsAndroid.check(permission);
   if (alreadyGranted) return true;

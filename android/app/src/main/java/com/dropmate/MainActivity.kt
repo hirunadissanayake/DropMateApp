@@ -5,6 +5,10 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import android.os.Bundle
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.os.Build
 
 class MainActivity : ReactActivity() {
 
@@ -24,5 +28,33 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     // Prevent fragment restoration issues with react-native-screens
     super.onCreate(null)
+    enableImmersiveMode()
+  }
+
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    super.onWindowFocusChanged(hasFocus)
+    if (hasFocus) {
+      enableImmersiveMode()
+    }
+  }
+
+  private fun enableImmersiveMode() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      // Android 11+ (API 30+)
+      window.insetsController?.let { controller ->
+        controller.hide(WindowInsets.Type.navigationBars())
+        controller.systemBarsBehavior =
+            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+      }
+    } else {
+      // Android 10 and below
+      @Suppress("DEPRECATION")
+      window.decorView.systemUiVisibility = (
+          View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+          or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+          or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+      )
+    }
   }
 }
