@@ -80,4 +80,10 @@ export const ENDPOINTS = {
     CREATE: `${BASE_URL}/api/reviews`,
     GET_USER_REVIEWS: (userId: string) => `${BASE_URL}/api/reviews/user/${userId}`,
   },
+  TRIP_TEMPLATES: {
+    CREATE: `${BASE_URL}/api/trip-templates/create`,
+    MY_TEMPLATES: `${BASE_URL}/api/trip-templates/my`,
+    UPDATE: (id: string) => `${BASE_URL}/api/trip-templates/${id}`,
+    DELETE: (id: string) => `${BASE_URL}/api/trip-templates/${id}`,
+  },
 };

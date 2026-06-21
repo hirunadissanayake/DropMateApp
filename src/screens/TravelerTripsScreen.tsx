@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Dimensions,
   FlatList,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -27,6 +28,83 @@ import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
+
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
+const TripSkeleton = () => {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.routeRow}>
+          <View style={styles.dotColumn}>
+            <View style={[styles.routeDotStart, { borderColor: theme.border, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}>
+               <View style={[styles.routeDotInner, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1' }]} />
+            </View>
+            <View style={styles.dashedLine} />
+            <SkeletonItem style={{ width: 16, height: 16, borderRadius: 8 }} />
+          </View>
+          <View style={styles.locationColumn}>
+            <SkeletonItem style={{ width: '80%', height: 18, marginBottom: 24 }} />
+            <SkeletonItem style={{ width: '60%', height: 18 }} />
+          </View>
+        </View>
+        <View style={styles.headerRightCol}>
+           <SkeletonItem style={{ width: 80, height: 24, borderRadius: 10 }} />
+           <SkeletonItem style={{ width: 60, height: 30, borderRadius: 8 }} />
+        </View>
+      </View>
+      <View style={styles.cardFooter}>
+        <View style={styles.infoCol}>
+           <SkeletonItem style={{ width: 40, height: 10, marginBottom: 6 }} />
+           <SkeletonItem style={{ width: 70, height: 14 }} />
+        </View>
+        <View style={styles.infoCol}>
+           <SkeletonItem style={{ width: 40, height: 10, marginBottom: 6 }} />
+           <SkeletonItem style={{ width: 70, height: 14 }} />
+        </View>
+        <View style={styles.infoCol}>
+           <SkeletonItem style={{ width: 40, height: 10, marginBottom: 6 }} />
+           <SkeletonItem style={{ width: 70, height: 14 }} />
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const TravelerTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -218,10 +296,13 @@ const TravelerTripsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {loading && trips.length === 0 ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+        {loading && !refreshing ? (
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+             {[1, 2, 3].map(i => <TripSkeleton key={i} />)}
+          </ScrollView>
         ) : (
           <FlatList
             data={trips.filter(t => activeTab === 'history' ? t.isHistory : !t.isHistory)}
@@ -548,6 +629,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     gap: 16,
+    paddingBottom: 25,
   },
   centerContainer: {
     flex: 1,

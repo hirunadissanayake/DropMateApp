@@ -9,7 +9,9 @@ import {
   TouchableWithoutFeedback,
   Platform,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
+
 import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
 import { Typography } from '../../constants/Typography';
 import { AppTheme } from '../../constants/Colors';
@@ -22,6 +24,7 @@ interface CustomDropdownProps {
   onSelect: (option: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  isLoading?: boolean;
   theme?: AppTheme;
 }
 
@@ -32,6 +35,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onSelect,
   placeholder = 'Select an option',
   disabled = false,
+  isLoading = false,
   theme: propTheme,
 }) => {
   const { theme: contextTheme } = useTheme();
@@ -125,31 +129,41 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         style={[
           s.selectBox, 
           isVisible && s.selectedBoxActive,
-          disabled && s.selectBoxDisabled
+          (disabled || isLoading) && s.selectBoxDisabled
         ]}
-        onPress={() => !disabled && setIsVisible(true)}
-        activeOpacity={disabled ? 1 : 0.7}
+        onPress={() => !disabled && !isLoading && setIsVisible(true)}
+        activeOpacity={(disabled || isLoading) ? 1 : 0.7}
       >
-        <View style={s.selectedContent}>
-          {renderOptionIcon(selectedOption, true)}
-          <Text 
-            style={[s.selectText, !selectedOption && s.placeholderText]} 
-            numberOfLines={1} 
-            ellipsizeMode="tail"
-          >
-            {selectedOption || placeholder}
-          </Text>
-        </View>
-        <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <Path
-            d={isVisible ? "M18 15L12 9L6 15" : "M6 9L12 15L18 9"}
-            stroke={isVisible ? theme.primary : theme.text.tertiary}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        {isLoading ? (
+          <View style={s.loadingContainer}>
+            <View style={s.skeletonIcon} />
+            <View style={s.skeletonText} />
+          </View>
+        ) : (
+          <>
+            <View style={s.selectedContent}>
+              {renderOptionIcon(selectedOption, true)}
+              <Text 
+                style={[s.selectText, !selectedOption && s.placeholderText]} 
+                numberOfLines={1} 
+                ellipsizeMode="tail"
+              >
+                {selectedOption || placeholder}
+              </Text>
+            </View>
+            <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <Path
+                d={isVisible ? "M18 15L12 9L6 15" : "M6 9L12 15L18 9"}
+                stroke={isVisible ? theme.primary : theme.text.tertiary}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </>
+        )}
       </TouchableOpacity>
+
 
       <Modal
         visible={isVisible}
@@ -468,6 +482,25 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     fontFamily: Typography.medium,
     textAlign: 'center',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  skeletonIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+  },
+  skeletonText: {
+    height: 14,
+    width: '50%',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : '#E2E8F0',
+    borderRadius: 4,
+  },
 });
+
 
 export default CustomDropdown;
