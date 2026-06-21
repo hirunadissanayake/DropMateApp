@@ -1,6 +1,8 @@
-pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+pluginManagement { 
+    includeBuild(new File(settingsDir, "../node_modules/@react-native/gradle-plugin").absolutePath) 
+}
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'DropMate'
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
+includeBuild(new File(settingsDir, "../node_modules/@react-native/gradle-plugin").absolutePath)
