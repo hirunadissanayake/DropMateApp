@@ -14,10 +14,12 @@ import {
   RefreshControl,
   Dimensions,
   TouchableWithoutFeedback,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, LinearGradient as SvgGradient, Stop, Defs } from 'react-native-svg';
+
 import { Typography } from '../constants/Typography';
 import { useAuthStore } from '../store/authStore';
 import { useIsFocused } from '@react-navigation/native';
@@ -45,6 +47,41 @@ const formatLKR = (amount: number) =>
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-LK', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
 };
 
 const TravelerEarningsScreen = () => {
@@ -93,7 +130,8 @@ const TravelerEarningsScreen = () => {
       ]);
       setSummary(summaryData);
       setBankAccounts(bankData);
-      setTransactions(txData);
+      // Fix: Extract transactions array from the paginated response
+      setTransactions(txData.transactions || []);
 
       if (bankData.length > 0 && !selectedBankId) {
         const defaultBank = bankData.find(b => b.isDefault) || bankData[0];
@@ -196,32 +234,110 @@ const TravelerEarningsScreen = () => {
     return tx.type.replace('_', ' ');
   };
 
+  const SkeletonItem = ({ style }: { style: any }) => {
+    const { theme } = useTheme();
+    return (
+      <View style={[
+        { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : '#F1F5F9', borderRadius: 12 },
+        style
+      ]} />
+    );
+  };
+
   return (
     <View style={styles.container}>
       {isFocused && <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />}
 
-      {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
-      ) : (
-        <>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.isDark ? theme.primary : '#fff'} colors={[theme.primary]} />}
-          >
-            {/* iOS overscroll bounce fix — fills the rubber-band area above the hero */}
-            {Platform.OS === 'ios' && (
-              <View style={{
-                position: 'absolute',
-                top: -400,
-                left: 0,
-                right: 0,
-                height: 400,
-                backgroundColor: theme.isDark ? '#05100C' : theme.primary,
-              }} />
-            )}
-            {/*Hero Header*/}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.isDark ? theme.primary : '#fff'} colors={[theme.primary]} />}
+      >
+        {Platform.OS === 'ios' && (
+          <View style={{
+            position: 'absolute',
+            top: -400,
+            left: 0,
+            right: 0,
+            height: 400,
+            backgroundColor: (loading && !refreshing) ? (theme.isDark ? '#05100C' : '#F8FAFC') : (theme.isDark ? '#05100C' : theme.primary),
+          }} />
+        )}
+
+        {loading && !refreshing ? (
+          <>
+            <View style={[styles.heroSection, { backgroundColor: theme.isDark ? '#05100C' : '#F8FAFC', paddingBottom: 40 }]}>
+              <SafeAreaView edges={['top']}>
+                <View style={styles.headerRow}>
+                  <BackButton color={theme.isDark ? '#FFFFFF' : theme.primary} onPress={() => navigation.goBack()} />
+                  <Text style={[styles.headerTitle, { color: theme.isDark ? '#FFF' : theme.text.primary }]}>My Wallet</Text>
+                  <View style={{ width: 40 }} />
+                </View>
+                <View style={[styles.balanceContainer, { marginTop: 30 }]}>
+                  <SkeletonItem style={{ width: 100, height: 16, marginBottom: 12 }} />
+                  <SkeletonItem style={{ width: 220, height: 44, marginBottom: 24, borderRadius: 22 }} />
+                  <SkeletonItem style={{ width: 160, height: 48, borderRadius: 24 }} />
+                </View>
+              </SafeAreaView>
+            </View>
+
+            <View style={styles.contentBody}>
+              <View style={[styles.datePickerContainer, { marginTop: 10 }]}>
+                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+                  <SkeletonItem style={{ flex: 1, height: 40 }} />
+                  <SkeletonItem style={{ flex: 1, height: 40 }} />
+                  <SkeletonItem style={{ flex: 1, height: 40 }} />
+                </View>
+                <SkeletonItem style={{ width: '100%', height: 52, borderRadius: 14 }} />
+              </View>
+
+              <View style={styles.statsGrid}>
+                <View style={styles.statsCol}>
+                  <View style={styles.statCard}>
+                    <SkeletonItem style={{ width: 40, height: 40, borderRadius: 12, marginBottom: 12 }} />
+                    <SkeletonItem style={{ width: '70%', height: 12, marginBottom: 8 }} />
+                    <SkeletonItem style={{ width: '90%', height: 24 }} />
+                  </View>
+                  <View style={[styles.statCard, { marginTop: 12 }]}>
+                    <SkeletonItem style={{ width: 40, height: 40, borderRadius: 12, marginBottom: 12 }} />
+                    <SkeletonItem style={{ width: '70%', height: 12, marginBottom: 8 }} />
+                    <SkeletonItem style={{ width: '90%', height: 24 }} />
+                  </View>
+                </View>
+                <View style={styles.statsCol}>
+                  <View style={styles.statCard}>
+                    <SkeletonItem style={{ width: 40, height: 40, borderRadius: 12, marginBottom: 12 }} />
+                    <SkeletonItem style={{ width: '70%', height: 12, marginBottom: 8 }} />
+                    <SkeletonItem style={{ width: '90%', height: 24 }} />
+                  </View>
+                  <View style={[styles.statCard, { marginTop: 12 }]}>
+                    <SkeletonItem style={{ width: 40, height: 40, borderRadius: 12, marginBottom: 12 }} />
+                    <SkeletonItem style={{ width: '70%', height: 12, marginBottom: 8 }} />
+                    <SkeletonItem style={{ width: '90%', height: 24 }} />
+                  </View>
+                </View>
+              </View>
+
+              <View style={[styles.totalPayoutCard, { alignItems: 'center' }]}>
+                <SkeletonItem style={{ width: 44, height: 44, borderRadius: 14, marginRight: 16 }} />
+                <View style={{ flex: 1 }}>
+                  <SkeletonItem style={{ width: 80, height: 12, marginBottom: 8 }} />
+                  <SkeletonItem style={{ width: 140, height: 20 }} />
+                </View>
+                <SkeletonItem style={{ width: 70, height: 40, borderRadius: 12 }} />
+              </View>
+
+              <SkeletonItem style={{ width: 180, height: 18, marginTop: 30, marginBottom: 20 }} />
+              <View style={[styles.viewHistoryBtn, { padding: 12 }]}>
+                 <SkeletonItem style={{ width: 44, height: 44, borderRadius: 14, marginRight: 12 }} />
+                 <View style={{ flex: 1 }}>
+                    <SkeletonItem style={{ width: 120, height: 14, marginBottom: 6 }} />
+                    <SkeletonItem style={{ width: 160, height: 10 }} />
+                 </View>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
             <LinearGradient
               colors={theme.isDark ? ['#05100C', '#0D1F18'] : [theme.primary, theme.primaryDark]}
               style={styles.heroSection}
@@ -252,27 +368,11 @@ const TravelerEarningsScreen = () => {
                       <Text style={styles.withdrawMainText}>Withdraw Funds</Text>
                     </TouchableOpacity>
                   )}
-
-                  {(summary?.walletBalance || 0) < 0 && (
-                    <View style={styles.warningBox}>
-                      <Text style={styles.blockWarning}>
-                        Balance is negative. Auto-block at {formatLKR(Math.abs(CONFIG.WALLET_BLOCK_THRESHOLD))}
-                      </Text>
-                      <TouchableOpacity
-                        style={styles.topUpButtonSecondary}
-                        onPress={() => navigation.navigate('TopUp' as never)}
-                      >
-                        <Text style={styles.topUpButtonSecondaryText}>Top Up Now</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
                 </View>
               </SafeAreaView>
             </LinearGradient>
 
             <View style={styles.contentBody}>
-
-              {/* Date Range Pickers */}
               <View style={styles.datePickerContainer}>
                 <TouchableOpacity
                   style={[styles.filterTitleRow, { justifyContent: 'space-between', marginBottom: isFiltersExpanded ? 12 : 0 }]}
@@ -297,17 +397,15 @@ const TravelerEarningsScreen = () => {
                     <View style={styles.presetRow}>
                       {(['Today', 'Last 30 Days', 'All'] as FilterPeriod[]).map((p) => (
                         <TouchableOpacity
-                          key={p}
-                          style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
-                          onPress={() => setPreset(p)}
+                           key={p}
+                           style={[styles.presetChip, activePreset === p && styles.presetChipActive]}
+                           onPress={() => setPreset(p)}
                         >
-                          <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
+                           <Text style={[styles.presetChipText, activePreset === p && styles.presetChipTextActive]}>{p}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
-
                     <View style={{ height: 16 }} />
-
                     <View style={styles.dateButtonGrid}>
                       <TouchableOpacity
                         style={styles.dateButton}
@@ -324,13 +422,11 @@ const TravelerEarningsScreen = () => {
                           <Text style={styles.dateButtonValue}>{dayjs(startDate).format('DD MMM YYYY')}</Text>
                         </View>
                       </TouchableOpacity>
-
                       <View style={styles.dateArrowBox}>
                         <Svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={theme.text.tertiary} strokeWidth="3">
                           <Path d="M5 12h14M12 5l7 7-7 7" />
                         </Svg>
                       </View>
-
                       <TouchableOpacity
                         style={styles.dateButton}
                         onPress={() => setEndDatePickerVisibility(true)}
@@ -371,10 +467,8 @@ const TravelerEarningsScreen = () => {
                 maximumDate={new Date()}
               />
 
-              {/* Stats Grid */}
               <View style={styles.statsGrid}>
                 <View style={styles.statsCol}>
-                  {/* Card Payments */}
                   <View style={styles.statCard}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(59,130,246,0.1)' : '#EFF6FF' }]}>
                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -385,7 +479,7 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.statCardLabel}>Online Earned</Text>
                     <View style={{ minHeight: 32, justifyContent: 'center' }}>
                       {isFetching ? (
-                        <ActivityIndicator size="small" color={theme.primary} />
+                        <SkeletonItem style={{ width: '80%', height: 24, borderRadius: 6 }} />
                       ) : (
                         <Text style={styles.statCardValue} numberOfLines={1}>
                           {formatLKR(displayOnline).replace('LKR ', '')}
@@ -393,8 +487,6 @@ const TravelerEarningsScreen = () => {
                       )}
                     </View>
                   </View>
-
-                  {/* Cash Collection */}
                   <View style={[styles.statCard, { marginTop: 12 }]}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(234,179,8,0.1)' : '#FEF3C7' }]}>
                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -406,7 +498,7 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.statCardLabel}>Cash Collection</Text>
                     <View style={{ minHeight: 32, justifyContent: 'center' }}>
                       {isFetching ? (
-                        <ActivityIndicator size="small" color={theme.primary} />
+                        <SkeletonItem style={{ width: '80%', height: 24, borderRadius: 6 }} />
                       ) : (
                         <Text style={styles.statCardValue} numberOfLines={1}>
                           {formatLKR(displayCash).replace('LKR ', '')}
@@ -415,9 +507,7 @@ const TravelerEarningsScreen = () => {
                     </View>
                   </View>
                 </View>
-
                 <View style={styles.statsCol}>
-                  {/* Dynamic Period Earned */}
                   <View style={styles.statCard}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5' }]}>
                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -429,7 +519,7 @@ const TravelerEarningsScreen = () => {
                     </Text>
                     <View style={{ minHeight: 32, justifyContent: 'center' }}>
                       {isFetching ? (
-                        <ActivityIndicator size="small" color={theme.primary} />
+                        <SkeletonItem style={{ width: '80%', height: 24, borderRadius: 6 }} />
                       ) : (
                         <Text style={styles.statCardValue} numberOfLines={1}>
                           {formatLKR(displayEarned).replace('LKR ', '')}
@@ -437,8 +527,6 @@ const TravelerEarningsScreen = () => {
                       )}
                     </View>
                   </View>
-
-                  {/* Lifetime Total */}
                   <View style={[styles.statCard, { marginTop: 12 }]}>
                     <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(139,92,246,0.1)' : '#F3E8FF' }]}>
                       <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -452,7 +540,7 @@ const TravelerEarningsScreen = () => {
                     <Text style={styles.statCardLabel}>Lifetime Total</Text>
                     <View style={{ minHeight: 32, justifyContent: 'center' }}>
                       {isFetching ? (
-                        <ActivityIndicator size="small" color={theme.primary} />
+                        <SkeletonItem style={{ width: '80%', height: 24, borderRadius: 6 }} />
                       ) : (
                         <Text style={styles.statCardValue} numberOfLines={1}>
                           {formatLKR(summary?.totalEarned || 0).replace('LKR ', '')}
@@ -463,10 +551,7 @@ const TravelerEarningsScreen = () => {
                 </View>
               </View>
 
-              {/* ── Total Payout Card ─────────────────────────────────── */}
-              {/* ── Total Payout Card ─────────────────────────────────── */}
               <View style={styles.totalPayoutCard}>
-                {/* Left: Icon */}
                 <View style={[styles.statIconContainer, { backgroundColor: theme.isDark ? 'rgba(16,185,129,0.1)' : '#ECFDF5', marginBottom: 0, marginRight: 16 }]}>
                   <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <Path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -474,20 +559,16 @@ const TravelerEarningsScreen = () => {
                     <Path d="M2 12l10 5 10-5" />
                   </Svg>
                 </View>
-
-                {/* Center: Label + Amount */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.totalPayoutLabel}>Total Payout</Text>
                   {isFetching ? (
-                    <ActivityIndicator size="small" color={theme.primary} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+                    <SkeletonItem style={{ width: 120, height: 24, borderRadius: 6, marginTop: 4 }} />
                   ) : (
                     <Text style={styles.totalPayoutAmount}>
                       {formatLKR((summary?.totalWithdrawn || 0) + (summary?.pendingWithdrawals || 0))}
                     </Text>
                   )}
                 </View>
-
-                {/* Right: Pending Badge */}
                 <View style={styles.totalPayoutBadge}>
                   <Text style={styles.totalPayoutBadgeText}>Pending</Text>
                   <Text style={[styles.totalPayoutBadgeText, { fontSize: 12, marginTop: 2 }]}>
@@ -496,10 +577,8 @@ const TravelerEarningsScreen = () => {
                 </View>
               </View>
 
-              {/* ── Recent Transactions Heading ───────────────────────── */}
               <Text style={styles.recentTxTitle}>Recent Transactions</Text>
 
-              {/* ── View Earnings History ─────────────────────────────── */}
               <TouchableOpacity
                 style={styles.viewHistoryBtn}
                 onPress={() => navigation.navigate('EarningsHistory' as never)}
@@ -521,112 +600,105 @@ const TravelerEarningsScreen = () => {
                 </Svg>
               </TouchableOpacity>
             </View>
-
             <View style={{ height: 90 }} />
-          </ScrollView>
+          </>
+        )}
+      </ScrollView>
 
-          {/* ── Withdrawal Modal ──────────────────────────────────────── */}
-          <Modal visible={showWithdrawModal} animationType="slide" transparent onRequestClose={() => setShowWithdrawModal(false)}>
-            <TouchableOpacity
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPress={() => setShowWithdrawModal(false)}
-            >
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1, justifyContent: 'flex-end' }}
-                pointerEvents="box-none"
-              >
-                <TouchableWithoutFeedback onPress={() => { }}>
-                  <View style={styles.modalSheet}>
-                    <View style={styles.modalHeader}>
-                      <View style={styles.modalIndicator} />
-                      <Text style={styles.modalTitle}>Withdrawal Request</Text>
-                      <Text style={styles.modalSubtitle}>Funds will be sent to your bank account</Text>
-                    </View>
-
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Amount to Withdraw</Text>
-                        <TextInput
-                          style={styles.modalInput}
-                          placeholder="0.00"
-                          keyboardType="numeric"
-                          value={withdrawAmount}
-                          onChangeText={setWithdrawAmount}
-                          placeholderTextColor={theme.text.placeholder}
-                        />
-                      </View>
-
-                      <View style={styles.inputGroup}>
-                        <View style={styles.bankHeaderRow}>
-                          <Text style={styles.inputLabel}>Payout Method</Text>
-                          <TouchableOpacity onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}>
-                            <Text style={styles.manageBanksText}>Manage Accounts</Text>
-                          </TouchableOpacity>
-                        </View>
-
-                        {bankAccounts.length > 0 ? (
-                          <View style={styles.bankSelector}>
-                            {bankAccounts.map((bank) => (
-                              <TouchableOpacity
-                                key={bank.id}
-                                style={[styles.bankSelectOption, selectedBankId === bank.id && styles.bankSelectOptionActive]}
-                                onPress={() => setSelectedBankId(bank.id)}
-                              >
-                                <View style={[styles.radioCircle, selectedBankId === bank.id && styles.radioCircleActive]}>
-                                  {selectedBankId === bank.id && <View style={styles.radioInner} />}
-                                </View>
-                                <View style={styles.bankSelectInfo}>
-                                  <Text style={styles.bankSelectName}>{bank.bankName}</Text>
-                                  <Text style={styles.bankSelectAcc}>Acc: {bank.accountNumber}</Text>
-                                </View>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        ) : (
-                          <TouchableOpacity
-                            style={styles.noBanksBtn}
-                            onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}
-                          >
-                            <Text style={styles.noBanksText}>+ Add Saved Bank Account</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      <View style={styles.infoNotice}>
-                        <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="2">
-                          <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
-                        </Svg>
-                        <Text style={styles.infoNoticeText}>
-                          Withdrawals are typically processed within 48 hours.
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={[styles.confirmBtn, isWithdrawing && { opacity: 0.6 }]}
-                        onPress={handleWithdraw}
-                        disabled={isWithdrawing}
-                      >
-                        {isWithdrawing
-                          ? <ActivityIndicator color="#fff" />
-                          : <Text style={styles.confirmBtnText}>Confirm Withdrawal</Text>}
-                      </TouchableOpacity>
-
-                      <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowWithdrawModal(false)}>
-                        <Text style={styles.cancelBtnText}>Back</Text>
-                      </TouchableOpacity>
-                    </ScrollView>
+      <Modal visible={showWithdrawModal} animationType="slide" transparent onRequestClose={() => setShowWithdrawModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowWithdrawModal(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'flex-end' }}
+            pointerEvents="box-none"
+          >
+            <TouchableWithoutFeedback onPress={() => { }}>
+              <View style={styles.modalSheet}>
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalIndicator} />
+                  <Text style={styles.modalTitle}>Withdrawal Request</Text>
+                  <Text style={styles.modalSubtitle}>Funds will be sent to your bank account</Text>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Amount to Withdraw</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      placeholder="0.00"
+                      keyboardType="numeric"
+                      value={withdrawAmount}
+                      onChangeText={setWithdrawAmount}
+                      placeholderTextColor={theme.text.placeholder}
+                    />
                   </View>
-                </TouchableWithoutFeedback>
-              </KeyboardAvoidingView>
-            </TouchableOpacity>
-          </Modal>
-        </>
-      )}
+                  <View style={styles.inputGroup}>
+                    <View style={styles.bankHeaderRow}>
+                      <Text style={styles.inputLabel}>Payout Method</Text>
+                      <TouchableOpacity onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}>
+                        <Text style={styles.manageBanksText}>Manage Accounts</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {bankAccounts.length > 0 ? (
+                      <View style={styles.bankSelector}>
+                        {bankAccounts.map((bank) => (
+                          <TouchableOpacity
+                            key={bank.id}
+                            style={[styles.bankSelectOption, selectedBankId === bank.id && styles.bankSelectOptionActive]}
+                            onPress={() => setSelectedBankId(bank.id)}
+                          >
+                            <View style={[styles.radioCircle, selectedBankId === bank.id && styles.radioCircleActive]}>
+                              {selectedBankId === bank.id && <View style={styles.radioInner} />}
+                            </View>
+                            <View style={styles.bankSelectInfo}>
+                              <Text style={styles.bankSelectName}>{bank.bankName}</Text>
+                              <Text style={styles.bankSelectAcc}>Acc: {bank.accountNumber}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.noBanksBtn}
+                        onPress={() => { setShowWithdrawModal(false); navigation.navigate('BankDetails' as never); }}
+                      >
+                        <Text style={styles.noBanksText}>+ Add Saved Bank Account</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <View style={styles.infoNotice}>
+                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={theme.text.secondary} strokeWidth="2">
+                      <Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4M12 8h.01" />
+                    </Svg>
+                    <Text style={styles.infoNoticeText}>
+                      Withdrawals are typically processed within 48 hours.
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.confirmBtn, isWithdrawing && { opacity: 0.6 }]}
+                    onPress={handleWithdraw}
+                    disabled={isWithdrawing}
+                  >
+                    {isWithdrawing
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={styles.confirmBtnText}>Confirm Withdrawal</Text>}
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowWithdrawModal(false)}>
+                    <Text style={styles.cancelBtnText}>Back</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
+
 
 function makeStyles(theme: AppTheme) {
   return StyleSheet.create({

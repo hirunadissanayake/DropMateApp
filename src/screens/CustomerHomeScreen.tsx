@@ -79,6 +79,71 @@ const STATIC_BANNERS = [
   }
 ];
 
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
+const ActiveShipmentSkeleton = () => {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
+  return (
+    <View style={s.activeOrderCard}>
+      <View style={s.orderHeader}>
+        <SkeletonItem style={{ width: 60, height: 16 }} />
+        <SkeletonItem style={{ width: 80, height: 22, borderRadius: 12 }} />
+      </View>
+      <View style={s.routeContainer}>
+        <View style={s.routeIcons}>
+          <View style={[s.routeDot, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0' }]} />
+          <View style={s.routeLine} />
+          <View style={[s.routeDot, { borderColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0', borderWidth: 2, backgroundColor: theme.card }]} />
+        </View>
+        <View style={s.routeTexts}>
+           <SkeletonItem style={{ width: 120, height: 14, marginBottom: 8 }} />
+           <SkeletonItem style={{ width: 100, height: 14 }} />
+        </View>
+      </View>
+      <View style={s.orderFooter}>
+        <SkeletonItem style={{ width: 50, height: 12 }} />
+        <View style={s.footerAction}>
+           <SkeletonItem style={{ width: 80, height: 12 }} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const CustomerHomeScreen = ({ navigation }: any) => {
   const { user, token, setUser } = useAuthStore();
   const { unreadCount: announcementUnread } = useAnnouncementStore();
@@ -283,7 +348,7 @@ const CustomerHomeScreen = ({ navigation }: any) => {
 
         <View style={s.headerRightActions}>
           <TouchableOpacity
-            style={[s.notificationBtn, showActions && { backgroundColor: theme.primary + '15' }]}
+            style={[s.notificationBtn, { backgroundColor: 'transparent', marginRight: -10 }]}
             activeOpacity={0.7}
             onPress={toggleActions}>
             <View style={{ transform: [{ rotate: showActions ? '180deg' : '0deg' }] }}>
@@ -506,11 +571,15 @@ const CustomerHomeScreen = ({ navigation }: any) => {
                 )}
               </View>
 
-              {loadingParcels ? (
-                <View style={s.loadingBox}>
-                  <ActivityIndicator color={theme.primary} />
-                </View>
-              ) : activeParcels.length > 0 ? (
+              {loadingParcels && !refreshing ? (
+                 <ScrollView
+                   horizontal
+                   showsHorizontalScrollIndicator={false}
+                   contentContainerStyle={s.horizontalScroll}
+                 >
+                   {[1, 2].map(i => <ActiveShipmentSkeleton key={i} />)}
+                 </ScrollView>
+               ) : activeParcels.length > 0 ? (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -769,7 +838,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   dropdownActions: {
     position: 'absolute',
     top: 55,
-    right: 0,
+    right: -10,
     backgroundColor: theme.isDark ? theme.card : '#FFFFFF',
     borderRadius: 22,
     padding: 8,

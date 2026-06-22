@@ -529,7 +529,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
         <View style={s.headerRightActions}>
           <TouchableOpacity
-            style={[s.notificationBtn, showActions && { backgroundColor: theme.primary + '15' }]}
+            style={[s.notificationBtn, { backgroundColor: 'transparent', marginRight: -10 }]}
             activeOpacity={0.7}
             onPress={toggleActions}>
             <View style={{ transform: [{ rotate: showActions ? '180deg' : '0deg' }] }}>
@@ -925,7 +925,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   dropdownActions: {
     position: 'absolute',
     top: 55,
-    right: 0,
+    right: -10,
     backgroundColor: theme.isDark ? theme.card : '#FFFFFF',
     borderRadius: 22,
     padding: 8,

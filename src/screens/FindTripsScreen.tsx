@@ -10,6 +10,7 @@ import {
   StatusBar,
   Dimensions,
   Image,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -26,6 +27,98 @@ import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
 
 const { width } = Dimensions.get('window');
+
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
+const TripTicketSkeleton = () => {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
+  return (
+    <View style={s.premiumTicket}>
+      <View style={s.ticketMainBody}>
+        <View style={s.travelerHeader}>
+          <View style={s.travelerProfile}>
+            <SkeletonItem style={{ width: 48, height: 48, borderRadius: 24 }} />
+            <View style={s.nameRatingRow}>
+              <SkeletonItem style={{ width: 100, height: 16 }} />
+              <SkeletonItem style={{ width: 40, height: 16 }} />
+            </View>
+          </View>
+          <View style={s.capacityIndicator}>
+            <SkeletonItem style={{ width: 60, height: 22 }} />
+          </View>
+        </View>
+
+        <View style={s.routeSection}>
+          <View style={s.routePoint}>
+            <View style={s.routeIconCol}>
+              <View style={[s.startRing, { borderColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0' }]} />
+              <View style={s.routeConnector} />
+            </View>
+            <View style={s.routeInfoCol}>
+              <View style={{ gap: 4 }}>
+                <SkeletonItem style={{ width: 40, height: 10 }} />
+                <SkeletonItem style={{ width: 120, height: 16 }} />
+              </View>
+            </View>
+          </View>
+
+          <View style={s.routePoint}>
+            <View style={s.routeIconCol}>
+               <View style={{ marginTop: 4 }}>
+                 <SkeletonItem style={{ width: 14, height: 14, borderRadius: 7 }} />
+               </View>
+            </View>
+            <View style={s.routeInfoCol}>
+              <View style={{ gap: 4 }}>
+                <SkeletonItem style={{ width: 60, height: 10 }} />
+                <SkeletonItem style={{ width: 140, height: 16 }} />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={s.ticketFooter}>
+          <SkeletonItem style={{ width: 120, height: 14 }} />
+          <SkeletonItem style={{ width: 100, height: 36, borderRadius: 12 }} />
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const FindTripsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -108,6 +201,11 @@ const FindTripsScreen = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
+    setPage(page); // keep page or reset? usually reset to 1
+    onRefreshInternal();
+  };
+
+  const onRefreshInternal = () => {
     setPage(1);
     setHasMore(true);
     fetchTrips(1, true);
@@ -279,10 +377,13 @@ const FindTripsScreen = () => {
           </View>
         </View>
 
-        {loading ? (
-          <View style={s.centerContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+        {loading && !refreshing ? (
+          <FlatList
+            data={[1, 2, 3]}
+            renderItem={() => <TripTicketSkeleton />}
+            keyExtractor={(i) => i.toString()}
+            contentContainerStyle={s.listContent}
+          />
         ) : (
           <FlatList
             data={trips}

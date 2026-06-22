@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  ActivityIndicator,
+  Animated,
   RefreshControl,
   Platform,
 } from 'react-native';
@@ -20,28 +20,66 @@ import { WalletTransaction } from '../services/walletService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import BackButton from '../components/common/BackButton';
 import { useTheme } from '../context/ThemeContext';
-import { AppTheme } from '../constants/Colors';
 import { useIsFocused } from '@react-navigation/native';
 
 const BRAND_GREEN = '#00875A';
-const BRAND_LIGHT = '#E6F5EF';
+
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
 
 const WalletScreen = () => {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { token, user } = useAuthStore();
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchTransactions = async () => {
+    if (!loading) setIsFetching(true);
     try {
       const data = await walletService.getTransactionHistory(token!);
-      setTransactions(data);
+      // Fix: Account for paginated response structure
+      setTransactions(data.transactions || []);
     } catch (error) {
       console.error('Wallet transactions fetch error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setIsFetching(false);
     }
   };
 
@@ -73,17 +111,13 @@ const WalletScreen = () => {
   const isFocused = useIsFocused();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {isFocused && <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={BRAND_GREEN} />
-        </View>
-      ) : (
-        <SafeAreaView style={styles.safeArea}>
+      
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.goBack()} />
-          <Text style={styles.headerTitle}>My Wallet</Text>
+          <BackButton color={theme.text.primary} onPress={() => navigation.goBack()} />
+          <Text style={[styles.headerTitle, { color: theme.text.primary }]}>My Wallet</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -91,97 +125,140 @@ const WalletScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BRAND_GREEN]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} colors={[BRAND_GREEN]} />
           }
         >
-          {/* Balance Card */}
-          <LinearGradient
-            colors={[BRAND_GREEN, '#004D3A']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.balanceCard}
-          >
-            <View style={styles.balanceHeader}>
-              <Text style={styles.balanceLabel}>Current Balance</Text>
-              <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2">
-                <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                <Path d="M1 10h22" />
-              </Svg>
-            </View>
-            <Text style={styles.balanceValue}>{formatLKR(user?.walletBalance || 0)}</Text>
-            <Text style={styles.balanceNote}>Credits available for shipping</Text>
-          </LinearGradient>
+          {loading && !refreshing ? (
+            <>
+               {/* Skeleton Balance Card */}
+               <View style={[styles.balanceCard, { backgroundColor: theme.isDark ? theme.card : '#F8FAFC', shadowColor: 'transparent', elevation: 0, borderWidth: 1, borderColor: theme.border }]}>
+                 <View style={styles.balanceHeader}>
+                   <SkeletonItem style={{ width: 100, height: 16 }} />
+                   <SkeletonItem style={{ width: 24, height: 24, borderRadius: 12 }} />
+                 </View>
+                 <SkeletonItem style={{ width: 220, height: 44, marginBottom: 16 }} />
+                 <SkeletonItem style={{ width: 160, height: 14 }} />
+               </View>
 
-          {/* Quick Actions */}
-          <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionBtn}>
-               <View style={[styles.iconCircle, { backgroundColor: '#DBEAFE' }]}>
-                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5">
-                    <Path d="M12 5v14M5 12l7 7 7-7" />
-                 </Svg>
+               {/* Skeleton Actions */}
+               <View style={styles.quickActions}>
+                 {[1, 2, 3].map(i => (
+                   <View key={i} style={styles.actionBtn}>
+                     <SkeletonItem style={{ width: 54, height: 54, borderRadius: 27, marginBottom: 10 }} />
+                     <SkeletonItem style={{ width: 60, height: 12 }} />
+                   </View>
+                 ))}
                </View>
-               <Text style={styles.actionLabel}>Top Up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn}>
-               <View style={[styles.iconCircle, { backgroundColor: '#F0FDF4' }]}>
-                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5">
-                    <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                 </Svg>
-               </View>
-               <Text style={styles.actionLabel}>Withdraw</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn}>
-               <View style={[styles.iconCircle, { backgroundColor: '#FEF2F2' }]}>
-                 <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5">
-                    <Circle cx="12" cy="12" r="10" /><Path d="M12 8v4M12 16h.01" />
-                 </Svg>
-               </View>
-               <Text style={styles.actionLabel}>Help</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Transaction List */}
-          <View style={styles.historyContainer}>
-            <Text style={styles.historyTitle}>Payment History</Text>
-            
-            {transactions.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
-                  <Path d="M12 2v20M2 12h20" />
-                </Svg>
-                <Text style={styles.emptyText}>No transactions yet</Text>
-              </View>
-            ) : (
-              transactions.map((tx) => (
-                <View key={tx.id} style={styles.txItem}>
-                  <View style={styles.txIcon}>
-                    <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" 
-                      stroke={tx.type === 'DELIVERY_EARNED' ? BRAND_GREEN : '#DC2626'} strokeWidth="2.5">
-                      {tx.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
+               {/* Skeleton History Header */}
+               <View style={styles.historyContainer}>
+                 <SkeletonItem style={{ width: 150, height: 20, marginBottom: 20 }} />
+                 {[1, 2, 3, 4, 5].map(i => (
+                   <View key={i} style={[styles.txItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                     <SkeletonItem style={{ width: 40, height: 40, borderRadius: 12, marginRight: 12 }} />
+                     <View style={styles.txInfo}>
+                       <SkeletonItem style={{ width: 140, height: 14, marginBottom: 6 }} />
+                       <SkeletonItem style={{ width: 100, height: 12 }} />
+                     </View>
+                     <SkeletonItem style={{ width: 80, height: 20 }} />
+                   </View>
+                 ))}
+               </View>
+            </>
+          ) : (
+            <>
+              {/* Balance Card */}
+              <LinearGradient
+                colors={[BRAND_GREEN, '#004D3A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.balanceCard}
+              >
+                <View style={styles.balanceHeader}>
+                  <Text style={styles.balanceLabel}>Current Balance</Text>
+                  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2">
+                    <Rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <Path d="M1 10h22" />
+                  </Svg>
+                </View>
+                {isFetching ? (
+                  <SkeletonItem style={{ width: 200, height: 44, borderRadius: 8, marginBottom: 8 }} />
+                ) : (
+                  <Text style={styles.balanceValue}>{formatLKR(user?.walletBalance || 0)}</Text>
+                )}
+                <Text style={styles.balanceNote}>Credits available for shipping</Text>
+              </LinearGradient>
+
+              {/* Quick Actions */}
+              <View style={styles.quickActions}>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <View style={[styles.iconCircle, { backgroundColor: theme.isDark ? 'rgba(37,99,235,0.1)' : '#DBEAFE' }]}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5">
+                        <Path d="M12 5v14M5 12l7 7 7-7" />
                     </Svg>
                   </View>
-                  <View style={styles.txInfo}>
-                    <Text style={styles.txTitle} numberOfLines={1}>{tx.description || 'Transaction'}</Text>
-                    <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
+                  <Text style={[styles.actionLabel, { color: theme.text.secondary }]}>Top Up</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <View style={[styles.iconCircle, { backgroundColor: theme.isDark ? 'rgba(0,135,90,0.1)' : '#F0FDF4' }]}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_GREEN} strokeWidth="2.5">
+                        <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </Svg>
                   </View>
-                  <Text style={[styles.txAmount, { color: tx.type === 'DELIVERY_EARNED' ? '#059669' : '#0F172A' }]}>
-                    {tx.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(tx.amount)}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
+                  <Text style={[styles.actionLabel, { color: theme.text.secondary }]}>Withdraw</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <View style={[styles.iconCircle, { backgroundColor: theme.isDark ? 'rgba(220,38,38,0.1)' : '#FEF2F2' }]}>
+                    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5">
+                        <Circle cx="12" cy="12" r="10" /><Path d="M12 8v4M12 16h.01" />
+                    </Svg>
+                  </View>
+                  <Text style={[styles.actionLabel, { color: theme.text.secondary }]}>Help</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Transaction List */}
+              <View style={styles.historyContainer}>
+                <Text style={[styles.historyTitle, { color: theme.text.primary }]}>Payment History</Text>
+                
+                {transactions.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5">
+                      <Path d="M12 2v20M2 12h20" />
+                    </Svg>
+                    <Text style={styles.emptyText}>No transactions yet</Text>
+                  </View>
+                ) : (
+                  transactions.map((tx) => (
+                    <View key={tx.id} style={[styles.txItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                      <View style={[styles.txIcon, { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFC' }]}>
+                        <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" 
+                          stroke={tx.type === 'DELIVERY_EARNED' ? BRAND_GREEN : '#DC2626'} strokeWidth="2.5">
+                          {tx.type === 'DELIVERY_EARNED' ? <Path d="M12 19V5M5 12l7-7 7 7" /> : <Path d="M12 5v14M5 12l7 7 7-7" />}
+                        </Svg>
+                      </View>
+                      <View style={styles.txInfo}>
+                        <Text style={[styles.txTitle, { color: theme.text.primary }]} numberOfLines={1}>{tx.description || 'Transaction'}</Text>
+                        <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
+                      </View>
+                      <Text style={[styles.txAmount, { color: tx.type === 'DELIVERY_EARNED' ? (theme.isDark ? '#10b981' : '#059669') : theme.text.primary }]}>
+                        {tx.type === 'DELIVERY_EARNED' ? '+' : '-'}{formatLKR(tx.amount)}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            </>
+          )}
         </ScrollView>
-        </SafeAreaView>
-      )}
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1 },
   safeArea: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -189,7 +266,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  headerTitle: { fontSize: 20, fontFamily: Typography.bold, color: '#0F172A' },
+  headerTitle: { fontSize: 20, fontFamily: Typography.bold },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
   balanceCard: {
     borderRadius: 24,
@@ -208,22 +285,20 @@ const styles = StyleSheet.create({
   quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 30, marginBottom: 40 },
   actionBtn: { alignItems: 'center', flex: 1 },
   iconCircle: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  actionLabel: { fontSize: 13, fontFamily: Typography.medium, color: '#475569' },
+  actionLabel: { fontSize: 13, fontFamily: Typography.medium },
   historyContainer: { flex: 1 },
-  historyTitle: { fontSize: 18, fontFamily: Typography.bold, color: '#0F172A', marginBottom: 20 },
+  historyTitle: { fontSize: 18, fontFamily: Typography.bold, marginBottom: 20 },
   txItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  txIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  txIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   txInfo: { flex: 1 },
-  txTitle: { fontSize: 14, fontFamily: Typography.bold, color: '#1E293B', marginBottom: 4 },
+  txTitle: { fontSize: 14, fontFamily: Typography.bold, marginBottom: 4 },
   txDate: { fontSize: 12, color: '#94A3B8', fontFamily: Typography.regular },
   txAmount: { fontSize: 14, fontFamily: Typography.bold },
   emptyState: { alignItems: 'center', paddingVertical: 60 },

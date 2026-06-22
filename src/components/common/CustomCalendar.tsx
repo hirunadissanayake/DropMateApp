@@ -99,6 +99,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
             markedDates={markedDates}
             minDate={today}
             enableSwipeMonths
+            monthFormat={'MMMM yyyy'}
             theme={{
               backgroundColor: theme.card,
               calendarBackground: theme.card,

@@ -14,6 +14,7 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -48,6 +49,86 @@ interface Parcel {
   paymentMethod: string;
   paymentStatus: string;
 }
+
+const SkeletonItem = ({ style }: { style?: any }) => {
+  const { theme } = useTheme();
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          borderRadius: style?.borderRadius || 8,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
+const ParcelSkeleton = () => {
+  const { theme } = useTheme();
+  const s = makeStyles(theme);
+  return (
+    <View style={s.parcelCard}>
+      <View style={s.cardHeader}>
+        <SkeletonItem style={s.imageWrapper} />
+        <View style={s.headerInfo}>
+          <SkeletonItem style={{ width: '70%', height: 16, marginBottom: 6 }} />
+          <SkeletonItem style={{ width: '40%', height: 12 }} />
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <SkeletonItem style={{ width: 80, height: 22, borderRadius: 20 }} />
+          <SkeletonItem style={{ width: 100, height: 18, borderRadius: 8 }} />
+        </View>
+      </View>
+      
+      <View style={s.routeContainer}>
+        <View style={s.routeTextContainer}>
+          <View>
+            <SkeletonItem style={{ width: 40, height: 10, marginBottom: 4 }} />
+            <SkeletonItem style={{ width: 100, height: 14 }} />
+          </View>
+          <View>
+             <SkeletonItem style={{ width: 40, height: 10, marginBottom: 4 }} />
+             <SkeletonItem style={{ width: 100, height: 14 }} />
+          </View>
+        </View>
+      </View>
+
+      <View style={s.cardFooter}>
+         <View style={s.detailItem}>
+           <SkeletonItem style={{ width: 30, height: 8, marginBottom: 4 }} />
+           <SkeletonItem style={{ width: 40, height: 14 }} />
+         </View>
+         <View style={s.footerDivider} />
+         <View style={s.detailItem}>
+           <SkeletonItem style={{ width: 30, height: 8, marginBottom: 4 }} />
+           <SkeletonItem style={{ width: 60, height: 14 }} />
+         </View>
+      </View>
+    </View>
+  );
+};
 
 const ShipmentsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -380,14 +461,6 @@ const ShipmentsScreen = () => {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={s.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-      </View>
-    );
-  }
-
   const filteredParcels = parcels.filter(p => {
     const status = p.status.toUpperCase();
     const isHistoryStatus = status === 'DELIVERED';
@@ -432,44 +505,53 @@ const ShipmentsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <FlatList
-          data={filteredParcels}
-          renderItem={renderParcelItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={s.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} colors={[theme.primary]} />
-          }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            loadingMore ? (
-              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.primary} />
+        {loading && !refreshing ? (
+          <ScrollView 
+            contentContainerStyle={s.listContent}
+            showsVerticalScrollIndicator={false}
+          >
+             {[1, 2, 3].map(i => <ParcelSkeleton key={i} />)}
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={filteredParcels}
+            renderItem={renderParcelItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={s.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} colors={[theme.primary]} />
+            }
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={theme.primary} />
+                </View>
+              ) : !hasMore && filteredParcels.length > 0 ? (
+                <Text style={s.endText}>No more shipments</Text>
+              ) : null
+            }
+            ListEmptyComponent={
+              <View style={s.emptyContainer}>
+                <View style={s.illustrationBox}>
+                  <Svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
+                    <Path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" />
+                    <Path d="M3 8L12 13L21 8" />
+                    <Path d="M12 21V13" />
+                  </Svg>
+                </View>
+                <Text style={s.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
+                <Text style={s.emptySubtitle}>
+                  {activeTab === 'ongoing'
+                    ? "Once you create a parcel, it will appear here for tracking."
+                    : "You don't have any delivered parcels yet."}
+                </Text>
               </View>
-            ) : !hasMore && filteredParcels.length > 0 ? (
-              <Text style={s.endText}>No more shipments</Text>
-            ) : null
-          }
-          ListEmptyComponent={
-            <View style={s.emptyContainer}>
-              <View style={s.illustrationBox}>
-                <Svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="1.5">
-                  <Path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" />
-                  <Path d="M3 8L12 13L21 8" />
-                  <Path d="M12 21V13" />
-                </Svg>
-              </View>
-              <Text style={s.emptyTitle}>No {activeTab === 'ongoing' ? 'Active' : 'Delivered'} Shipments</Text>
-              <Text style={s.emptySubtitle}>
-                {activeTab === 'ongoing'
-                  ? "Once you create a parcel, it will appear here for tracking."
-                  : "You don't have any delivered parcels yet."}
-              </Text>
-            </View>
-          }
-        />
+            }
+          />
+        )}
       </SafeAreaView>
 
       <TouchableOpacity
