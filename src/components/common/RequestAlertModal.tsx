@@ -38,6 +38,7 @@ export interface RequestAlertData {
   parcelPhotos?: string[];
   parcelTitle?: string;
   parcelWeight?: string;
+  parcelCategory?: string;
   fromLocation?: string;
   toLocation?: string;
   senderName?: string;
@@ -248,6 +249,11 @@ const RequestAlertModal: React.FC<RequestAlertModalProps> = ({
                 )}
 
                 <View style={styles.parcelInfoFloating}>
+                  {!!data?.parcelCategory && (
+                    <View style={styles.parcelCategory}>
+                      <Text style={styles.categoryText}>{data.parcelCategory.toUpperCase()}</Text>
+                    </View>
+                  )}
                   <Text style={styles.parcelTitleText}>{data?.parcelTitle || 'Unnamed Parcel'}</Text>
                 </View>
 

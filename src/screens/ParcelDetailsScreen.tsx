@@ -601,12 +601,20 @@ const ParcelDetailsScreen = () => {
             )}
           </View>
 
+          {/* Category */}
+          <View style={styles.gridItemFull}>
+            <Text style={styles.gridLabel}>CATEGORY</Text>
+            <Text style={styles.gridValue} numberOfLines={1}>{parcel.category?.name || 'General'}</Text>
+          </View>
+
           {/* Parcel Details Grid */}
           <View style={styles.detailsGrid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.gridLabel}>WEIGHT</Text>
-              <Text style={styles.gridValue}>{parcel.weight} Kg</Text>
-            </View>
+            {parcel.weight != null && (
+              <View style={styles.gridItem}>
+                <Text style={styles.gridLabel}>WEIGHT</Text>
+                <Text style={styles.gridValue}>{parcel.weight} Kg</Text>
+              </View>
+            )}
             <View style={styles.gridItem}>
               <Text style={styles.gridLabel}>METHOD</Text>
               <Text style={styles.gridValue}>{parcel.deliveryMethod}</Text>
@@ -1207,6 +1215,7 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
   hiddenInfo: { fontSize: 12, color: theme.text.tertiary, fontStyle: 'italic' },
   detailsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   gridItem: { flex: 1, minWidth: 100, backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
+  gridItemFull: { backgroundColor: theme.card, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: theme.border, marginBottom: 12 },
   gridLabel: { fontSize: 9, color: theme.text.tertiary, fontFamily: Typography.extraBold, marginBottom: 4 },
   gridValue: { fontSize: 14, color: theme.text.primary, fontFamily: Typography.bold },
   descText: { fontSize: 14, color: theme.text.secondary, lineHeight: 20 },
