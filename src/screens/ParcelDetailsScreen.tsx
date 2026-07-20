@@ -497,7 +497,7 @@ const ParcelDetailsScreen = () => {
           
           {/* Back Action */}
           <View style={[styles.absHeader, { top: insets.top + (Platform.OS === 'ios' ? 10 : 35) }]}>
-            <BackButton onPress={() => navigation.goBack()} color={theme.text.primary} />
+            <BackButton onPress={() => navigation.goBack()} color={theme.primary} style={styles.backBtnBg} />
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
               <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={theme.primary} strokeWidth="2.5">
                 <Path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.34832 22 5.8 22H18.2C18.6517 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" />
@@ -1156,6 +1156,14 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  backBtnBg: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 14,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
