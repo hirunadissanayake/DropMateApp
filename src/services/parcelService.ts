@@ -8,7 +8,10 @@ export const createParcel = async (token: string, data: any) => {
   formData.append('name', data.name);
   formData.append('fromLocation', data.fromLocation);
   formData.append('toLocation', data.toLocation);
-  formData.append('weight', String(data.weight));
+  formData.append('categoryId', data.categoryId);
+  if (data.weight !== undefined && data.weight !== null) {
+    formData.append('weight', String(data.weight));
+  }
   formData.append('description', data.description || '');
   formData.append('receiverName', data.receiverName);
   formData.append('receiverPhone', data.receiverPhone);
@@ -66,10 +69,21 @@ export const getToLocations = async (token: string, fromLocation: string) => {
   }
 };
 
-export const getPreviewPrice = async (token: string, fromLocation: string, toLocation: string, weight: number) => {
+export const getPreviewPrice = async (token: string, fromLocation: string, toLocation: string, categoryId: string, weight?: number) => {
   try {
     const response = await axios.get(ENDPOINTS.PARCELS.PREVIEW_PRICE, {
-      params: { fromLocation, toLocation, weight },
+      params: { fromLocation, toLocation, categoryId, weight },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getCategories = async (token: string) => {
+  try {
+    const response = await axios.get(ENDPOINTS.PARCELS.CATEGORIES, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

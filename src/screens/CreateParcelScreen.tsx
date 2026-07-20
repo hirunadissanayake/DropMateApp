@@ -59,15 +59,25 @@ const CreateParcelScreen = () => {
   
   const [fromLocationList, setFromLocationList] = useState<string[]>([]);
   const [toLocationList, setToLocationList] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categoryId, setCategoryId] = useState('');
   const [priceData, setPriceData] = useState<any>(null);
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAlert, setShowAlert] = useState(false);
 
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const isWeightBased = !selectedCategory || selectedCategory.pricingType === 'WEIGHT_BASED';
+  const categoryDescriptions = categories.reduce((acc, c) => {
+    if (c.description) acc[c.name] = c.description;
+    return acc;
+  }, {} as Record<string, string>);
+
   useEffect(() => {
     if (token) {
       fetchFromLocations();
+      fetchCategories();
     }
   }, [token]);
 
@@ -75,9 +85,19 @@ const CreateParcelScreen = () => {
     setRefreshing(true);
     setErrors({}); // Clear errors on refresh
     if (token) {
-      await fetchFromLocations();
+      await Promise.all([fetchFromLocations(), fetchCategories()]);
     }
     setRefreshing(false);
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const data = await parcelService.getCategories(token!);
+      setCategories(data);
+      setCategoryId((prev) => prev || (data.length > 0 ? data[0].id : ''));
+    } catch (err) {
+      console.error('Fetch categories error:', err);
+    }
   };
 
   const ErrorMessage = ({ message }: { message: string }) => {
@@ -113,17 +133,24 @@ const CreateParcelScreen = () => {
   };
 
   useEffect(() => {
-    if (token && fromLocation && toLocation && weight && Number(weight) > 0) {
+    const weightReady = !isWeightBased || (weight && Number(weight) > 0);
+    if (token && fromLocation && toLocation && categoryId && weightReady) {
       fetchPricePreview();
     } else {
       setPriceData(null);
     }
-  }, [fromLocation, toLocation, weight, token]);
+  }, [fromLocation, toLocation, weight, categoryId, isWeightBased, token]);
 
   const fetchPricePreview = async () => {
     setFetchingPrice(true);
     try {
-      const data = await parcelService.getPreviewPrice(token!, fromLocation, toLocation, Number(weight));
+      const data = await parcelService.getPreviewPrice(
+        token!,
+        fromLocation,
+        toLocation,
+        categoryId,
+        isWeightBased ? Number(weight) : undefined
+      );
       setPriceData(data);
     } catch (err) {
       console.error('Fetch price preview error:', err);
@@ -243,7 +270,11 @@ const CreateParcelScreen = () => {
       newErrors.toLocation = 'Please select a drop-off location';
     }
 
-    if (!weight || isNaN(Number(weight)) || Number(weight) <= 0) {
+    if (!categoryId) {
+      newErrors.category = 'Please select a parcel category';
+    }
+
+    if (isWeightBased && (!weight || isNaN(Number(weight)) || Number(weight) <= 0)) {
       newErrors.weight = 'Please enter a valid weight (kg)';
     }
 
@@ -280,7 +311,8 @@ const CreateParcelScreen = () => {
         images: images,
         fromLocation,
         toLocation,
-        weight: Number(weight),
+        categoryId,
+        weight: isWeightBased ? Number(weight) : undefined,
         description,
         receiverName: recipientName,
         receiverPhone: phoneNumber,
@@ -384,6 +416,24 @@ const CreateParcelScreen = () => {
               </View>
             </View>
 
+            {/* Parcel Category Section */}
+            <View style={styles.contentCard}>
+              <Text style={styles.fieldLabel}>PARCEL CATEGORY</Text>
+              <CustomDropdown
+                label=""
+                options={categories.map((c) => c.name)}
+                selectedOption={selectedCategory?.name || ''}
+                onSelect={(val) => {
+                  const cat = categories.find((c) => c.name === val);
+                  if (cat) setCategoryId(cat.id);
+                }}
+                optionSubtitles={categoryDescriptions}
+                placeholder="Select parcel category"
+                theme={theme}
+              />
+              <ErrorMessage message={errors.category} />
+            </View>
+
             {/* Route & Delivery Section */}
             <View style={styles.contentCard}>
               <View style={styles.routeHeader}>
@@ -429,19 +479,23 @@ const CreateParcelScreen = () => {
               <View style={styles.divider} />
 
               <View style={styles.dualFields}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.fieldLabel}>WEIGHT (KG)</Text>
-                  <TextInput
-                    style={styles.minimalInput}
-                    keyboardType="numeric"
-                    value={weight}
-                    onChangeText={setWeight}
-                    placeholder="0.0"
-                    placeholderTextColor={theme.text.tertiary}
-                  />
-                  <ErrorMessage message={errors.weight} />
-                </View>
-                <View style={{ width: 24 }} />
+                {isWeightBased && (
+                  <>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.fieldLabel}>WEIGHT (KG)</Text>
+                      <TextInput
+                        style={styles.minimalInput}
+                        keyboardType="numeric"
+                        value={weight}
+                        onChangeText={setWeight}
+                        placeholder="0.0"
+                        placeholderTextColor={theme.text.tertiary}
+                      />
+                      <ErrorMessage message={errors.weight} />
+                    </View>
+                    <View style={{ width: 24 }} />
+                  </>
+                )}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>METHOD</Text>
                   <TouchableOpacity style={styles.minimalInput} activeOpacity={0.7}>
@@ -514,7 +568,7 @@ const CreateParcelScreen = () => {
               </View>
             </View>
 
-            {/* Description Section */}
+            {/* Description Section - temporarily disabled, category description shown in the category dropdown instead
             <View style={styles.contentCard}>
               <Text style={styles.fieldLabel}>DESCRIPTION</Text>
               <View style={styles.fieldSection}>
@@ -528,6 +582,7 @@ const CreateParcelScreen = () => {
                 />
               </View>
             </View>
+            */}
 
             {/* Additional Note Section */}
             <View style={styles.contentCard}>

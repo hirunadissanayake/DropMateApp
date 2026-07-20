@@ -26,6 +26,7 @@ interface CustomDropdownProps {
   disabled?: boolean;
   isLoading?: boolean;
   theme?: AppTheme;
+  optionSubtitles?: Record<string, string>;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -37,6 +38,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   disabled = false,
   isLoading = false,
   theme: propTheme,
+  optionSubtitles,
 }) => {
   const { theme: contextTheme } = useTheme();
   const theme = propTheme || contextTheme;
@@ -233,12 +235,19 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       ]}>
                         {renderOptionIcon(item, selectedOption === item)}
                       </View>
-                      <Text style={[
-                        s.optionText,
-                        selectedOption === item && s.optionTextActive
-                      ]}>
-                        {item}
-                      </Text>
+                      <View style={s.optionTextColumn}>
+                        <Text style={[
+                          s.optionText,
+                          selectedOption === item && s.optionTextActive
+                        ]}>
+                          {item}
+                        </Text>
+                        {optionSubtitles?.[item] ? (
+                          <Text style={s.optionSubtitleText} numberOfLines={2}>
+                            {optionSubtitles[item]}
+                          </Text>
+                        ) : null}
+                      </View>
                     </View>
                     {selectedOption === item && (
                       <View style={s.checkCircle}>
@@ -397,6 +406,17 @@ const makeStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+    flex: 1,
+    marginRight: 12,
+  },
+  optionTextColumn: {
+    flex: 1,
+  },
+  optionSubtitleText: {
+    fontSize: 12,
+    color: theme.text.tertiary,
+    fontFamily: Typography.medium,
+    marginTop: 2,
   },
   iconContainer: {
     width: 44,
