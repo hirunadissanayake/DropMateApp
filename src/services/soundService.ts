@@ -39,7 +39,7 @@ export const initSound = () => {
 
   // RNSound on iOS uses NSURL URLWithString, which needs a file URL.
   const filename = Platform.OS === 'ios'
-    ? encodeURI(`file://${Sound.MAIN_BUNDLE}/request_alert.mp3`)
+    ? encodeURI(`file://${Sound.MAIN_BUNDLE}/request_alert.caf`)
     : 'request_alert.mp3';
   const sound = new Sound(filename, Platform.OS === 'ios' ? '' : Sound.MAIN_BUNDLE, (error) => {
     if (alertSound !== sound) {

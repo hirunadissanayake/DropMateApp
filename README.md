@@ -68,7 +68,9 @@ You've successfully run and modified your React Native App. :partying_face:
 
 ## iOS parcel alert sound
 
-Foreground requests use the bundled `request_alert.mp3` through `soundService`.
+Foreground iOS requests use the louder bundled `request_alert.caf` through
+`soundService`; Android keeps `request_alert.mp3`. Other foreground iOS messages
+use system notification sounds, while parcel popups use only the looping player.
 Rebuild and install the app after changing native resources or signing settings.
 
 For background/locked-screen delivery alerts, the server must send an APNs alert

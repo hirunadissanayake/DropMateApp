@@ -3,10 +3,55 @@
 #import <React/RCTBundleURLProvider.h>
 #import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
 #import <Firebase.h>
+#import <UserNotifications/UserNotifications.h>
 #if DEBUG
 #import <AudioToolbox/AudioToolbox.h>
-#import <UserNotifications/UserNotifications.h>
 #endif
+
+// Forward Firebase's callbacks while choosing which foreground sounds iOS plays.
+@interface DropMateNotificationDelegate : NSObject <UNUserNotificationCenterDelegate>
+@property(nonatomic, strong) id<UNUserNotificationCenterDelegate> firebaseDelegate;
+@end
+
+@implementation DropMateNotificationDelegate
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+      willPresentNotification:(UNNotification *)notification
+        withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler
+{
+  if ([self.firebaseDelegate respondsToSelector:_cmd]) {
+    // Firebase must still dispatch onMessage to JS. Its completion is consumed
+    // here so the system's completion handler is called exactly once below.
+    [self.firebaseDelegate userNotificationCenter:center
+                         willPresentNotification:notification
+                           withCompletionHandler:^(UNNotificationPresentationOptions options) {}];
+  }
+
+  NSString *type = notification.request.content.userInfo[@"type"];
+  BOOL parcelRequest = [type isEqualToString:@"DELIVERY_REQUEST"] || [type isEqualToString:@"match_request"];
+  UNNotificationPresentationOptions options = UNNotificationPresentationOptionBadge;
+  if (!parcelRequest) options |= UNNotificationPresentationOptionSound;
+  // Parcel requests use the app's looping player; other messages use the
+  // system sound and the user's haptics settings. JS continues showing toasts.
+  completionHandler(options);
+}
+
+- (BOOL)respondsToSelector:(SEL)selector
+{
+  return [super respondsToSelector:selector] || [self.firebaseDelegate respondsToSelector:selector];
+}
+
+- (id)forwardingTargetForSelector:(SEL)selector
+{
+  if ([self.firebaseDelegate respondsToSelector:selector]) return self.firebaseDelegate;
+  return [super forwardingTargetForSelector:selector];
+}
+
+@end
+
+@interface AppDelegate ()
+@property(nonatomic, strong) DropMateNotificationDelegate *notificationPresentationDelegate;
+@end
 
 @implementation AppDelegate
 
@@ -19,7 +64,17 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
 
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+  BOOL launched = [super application:application didFinishLaunchingWithOptions:launchOptions];
+  // RNFirebase installs its delegate on UIApplicationDidFinishLaunchingNotification.
+  // The next main-queue turn runs after that synchronous notification is posted.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    DropMateNotificationDelegate *delegate = [DropMateNotificationDelegate new];
+    delegate.firebaseDelegate = center.delegate;
+    self.notificationPresentationDelegate = delegate;
+    center.delegate = delegate;
+  });
+  return launched;
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge

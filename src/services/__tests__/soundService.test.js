@@ -42,7 +42,7 @@ test('queues a request until the sound has loaded, then activates iOS playback',
   expect(sound.setNumberOfLoops).toHaveBeenCalledWith(-1);
   expect(Sound.setActive).toHaveBeenCalledWith(true);
   expect(Sound).toHaveBeenCalledWith(
-    'file:///App%20Bundle/DropMate.app/request_alert.mp3', '', expect.any(Function),
+    'file:///App%20Bundle/DropMate.app/request_alert.caf', '', expect.any(Function),
   );
 });
 
