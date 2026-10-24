@@ -66,6 +66,42 @@ You've successfully run and modified your React Native App. :partying_face:
 
 # Troubleshooting
 
+## iOS parcel alert sound
+
+Foreground requests use the bundled `request_alert.mp3` through `soundService`.
+Rebuild and install the app after changing native resources or signing settings.
+
+For background/locked-screen delivery alerts, the server must send an APNs alert
+with `aps.sound` set to `request_alert.caf` (the bundled 20-second PCM clip).
+Example Firebase Admin SDK message fragment; keep the existing Android config:
+
+```js
+{
+  token: iosFcmToken,
+  data: { type: 'DELIVERY_REQUEST', matchId: '...' },
+  apns: {
+    headers: { 'apns-push-type': 'alert', 'apns-priority': '10' },
+    payload: {
+      aps: {
+        alert: { title: 'New parcel request', body: 'Open DropMate to respond.' },
+        sound: 'request_alert.caf',
+      },
+    },
+  },
+}
+```
+
+The signing profile must include `aps-environment` and Firebase must have valid
+APNs credentials for `com.dropmate`. The project declares Push Notifications and
+remote-notification background mode; regenerate the profile through Xcode signing
+if the existing profile does not support Push Notifications. Allow notifications
+and Sounds in iPhone settings. Ordinary notification sounds respect Silent Mode
+and Focus settings; suspended JavaScript cannot provide an infinite alert loop.
+
+Verify a new request while the app is open, while locked, and after accepting,
+rejecting, or cancelling a request. In-app looping audio should stop when the
+request is dismissed. The short background notification sound does not loop.
+
 If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
 # Learn More

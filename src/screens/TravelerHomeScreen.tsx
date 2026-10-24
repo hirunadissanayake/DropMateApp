@@ -34,6 +34,7 @@ import {
   playAlertSound as playGlobalSound,
   stopAlertSound as stopGlobalSound,
 } from '../services/soundService';
+import { useIOSParcelAlertSound } from '../services/useIOSParcelAlertSound';
 import { useTheme } from '../context/ThemeContext';
 import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
@@ -143,6 +144,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
   const currentIndexRef = useRef(0);
 
   const [requestModalVisible, setRequestModalVisible] = useState(false);
+  useIOSParcelAlertSound(requestModalVisible);
   const [pendingRequestData, setPendingRequestData] = useState<RequestAlertData | null>(null);
   const requestModalVisibleRef = useRef(false);
   const requestQueueRef = useRef<RequestAlertData[]>([]);

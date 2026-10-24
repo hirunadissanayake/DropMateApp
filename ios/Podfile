@@ -9,11 +9,11 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# Firebase's Objective-C module imports require framework module maps.
+linkage = ENV['USE_FRAMEWORKS'] || 'static'
+Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+use_frameworks! :linkage => linkage.to_sym
+$RNFirebaseAsStaticFramework = linkage == 'static'
 
 target 'DropMate' do
   config = use_native_modules!
@@ -41,5 +41,32 @@ target 'DropMate' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Fix: raise all pods with deployment target below 15.0
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current && current.to_f < 15.0
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        end
+      end
+    end
+
+    # fmt 11.0.2 redefines FMT_CONSTEVAL, so compiler flags cannot disable it.
+    # Patch its Apple Clang detection for all consumers, including RCT-Folly.
+    # https://github.com/fmtlib/fmt/issues/4740
+    fmt_header = installer.sandbox.root.join('fmt/include/fmt/base.h')
+    if fmt_header.exist?
+      original = File.read(fmt_header)
+      patched = original.sub(
+        '#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L',
+        '#elif defined(__apple_build_version__)'
+      )
+      if patched != original
+        File.chmod(File.stat(fmt_header).mode | 0200, fmt_header)
+        File.write(fmt_header, patched)
+        Pod::UI.puts 'Patched fmt Apple Clang consteval compatibility'
+      end
+    end
   end
 end
