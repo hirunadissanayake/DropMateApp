@@ -7,6 +7,7 @@ import App from './App';
 import {name as appName} from './app.json';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import { stopAlertSound, initSound } from './src/services/soundService';
+import { closeParcelRequest } from './src/services/parcelRequestLifecycle';
 
 // Initialize sound globally for both Main and Headless tasks
 initSound();
@@ -21,7 +22,11 @@ setBackgroundMessageHandler(messaging, async remoteMessage => {
     // Stop alert sound if customer withdrew the request
     if (type === 'MATCH_CANCELLED' || type === 'MATCH_EXPIRED') {
         console.log('Background: Stopping alert sound due to cancellation/expiry');
-        stopAlertSound();
+        if (typeof remoteMessage.data?.matchId === 'string') {
+            closeParcelRequest(remoteMessage.data.matchId);
+        } else {
+            stopAlertSound();
+        }
     }
 });
 

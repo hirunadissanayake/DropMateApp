@@ -3,6 +3,7 @@ import { BASE_URL } from '../utils/endPoints';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useSupportStore } from '../store/supportStore';
 import { useAuthStore } from '../store/authStore';
+import { closeParcelRequest } from './parcelRequestLifecycle';
 import Toast from 'react-native-toast-message';
 
 class SocketService {
@@ -137,6 +138,10 @@ class SocketService {
 
     this.socket.on('disconnect', () => {
       console.log('Disconnected from Socket');
+    });
+
+    this.socket.on('request_cancelled', ({matchId}: {matchId: string}) => {
+      closeParcelRequest(matchId);
     });
   }
 

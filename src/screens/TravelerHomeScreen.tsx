@@ -40,7 +40,12 @@ import { AppTheme } from '../constants/Colors';
 import { useAnnouncementStore } from '../store/announcementStore';
 import { useNotificationStore } from '../store/notificationStore';
 import * as bannerService from '../services/bannerService';
-import { socketService } from '../services/socketService';
+import {
+  closeParcelRequest,
+  isParcelRequestClosed,
+  rememberClosedParcelRequest,
+  subscribeParcelRequestClosed,
+} from '../services/parcelRequestLifecycle';
 
 
 const { width } = Dimensions.get('window');
@@ -149,6 +154,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
   const requestModalVisibleRef = useRef(false);
   const requestQueueRef = useRef<RequestAlertData[]>([]);
   const currentMatchIdRef = useRef<string | null>(null);
+  const pendingFetchSequenceRef = useRef(0);
 
 
   const fetchUserProfile = async () => {
@@ -169,6 +175,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
   // Show a request in the modal (or queue it if modal is already busy)
   const showOrQueueRequest = useCallback((requestData: RequestAlertData, shouldPlaySound: boolean = true) => {
+    if (isParcelRequestClosed(requestData.matchId)) return;
     // Skip if this exact match is already being shown
     if (currentMatchIdRef.current === requestData.matchId) return;
 
@@ -195,6 +202,8 @@ const TravelerHomeScreen = ({ navigation }: any) => {
     // Don't show next if modal is already showing something (race condition guard)
     if (requestModalVisibleRef.current) return;
 
+    requestQueueRef.current = requestQueueRef.current.filter(r => !isParcelRequestClosed(r.matchId));
+
     if (requestQueueRef.current.length > 0) {
       const next = requestQueueRef.current.shift()!;
       console.log('Showing next queued request:', next.matchId, 'Remaining in queue:', requestQueueRef.current.length);
@@ -206,15 +215,43 @@ const TravelerHomeScreen = ({ navigation }: any) => {
     }
   }, [playAlertSound]);
 
+  // Both socket events and cancellation pushes close the matching modal and
+  // remove queued requests. Merely stopping audio lets AppState restart it.
+  useEffect(() => subscribeParcelRequestClosed((matchId: string) => {
+    requestQueueRef.current = requestQueueRef.current.filter(r => r.matchId !== matchId);
+    if (currentMatchIdRef.current !== matchId) return;
+    stopAlertSound();
+    currentMatchIdRef.current = null;
+    requestModalVisibleRef.current = false;
+    setRequestModalVisible(false);
+    setPendingRequestData(null);
+    Toast.show({
+      type: 'info',
+      text1: 'Request Closed',
+      text2: 'This delivery request is no longer available.',
+      visibilityTime: 4000,
+    });
+    setTimeout(() => showNextQueuedRequest(), 600);
+  }), [stopAlertSound, showNextQueuedRequest]);
+
   const fetchPendingRequests = useCallback(async () => {
     if (!token) return;
+    const sequence = ++pendingFetchSequenceRef.current;
     try {
       const data = await deliveryService.getPendingMatches(token);
+      if (sequence !== pendingFetchSequenceRef.current) return;
       const matches = Array.isArray(data) ? data : data?.matches || data?.pendingMatches || [];
+
+      // Reconcile on resume/reconnect even if the cancellation push was missed.
+      const pendingIds = new Set(matches.map((match: any) => match.id || match._id));
+      requestQueueRef.current = requestQueueRef.current.filter(r => pendingIds.has(r.matchId));
+      const currentId = currentMatchIdRef.current;
+      if (currentId && !pendingIds.has(currentId)) closeParcelRequest(currentId);
 
       for (const match of matches) {
         const parcel = match.parcel || match;
         const matchId = match.id || match._id;
+        if (isParcelRequestClosed(matchId)) continue;
 
         // Skip if this match is already being shown or already queued
         if (currentMatchIdRef.current === matchId) continue;
@@ -266,6 +303,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       if (!token) return;
       try {
         await deliveryService.acceptMatch(token, matchId);
+        rememberClosedParcelRequest(matchId);
         stopAlertSound();
         currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
@@ -296,6 +334,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       if (!token) return;
       try {
         await deliveryService.rejectMatchWithReason(token, matchId, reason);
+        rememberClosedParcelRequest(matchId);
         stopAlertSound();
         currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
@@ -326,6 +365,7 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       if (!token) return;
       try {
         await deliveryService.expireMatch(token, matchId);
+        rememberClosedParcelRequest(matchId);
         stopAlertSound();
         currentMatchIdRef.current = null;
         requestModalVisibleRef.current = false;
@@ -351,6 +391,12 @@ const TravelerHomeScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     setDeliveryRequestListener(async (fcmData: any) => {
+      // A notification can arrive after withdrawal. On iOS use server state,
+      // rather than letting an old push payload resurrect the request modal.
+      if (Platform.OS === 'ios') {
+        await fetchPendingRequests();
+        return;
+      }
       if (!fcmData || !fcmData.matchId) {
         fetchPendingRequests();
         return;
@@ -397,44 +443,6 @@ const TravelerHomeScreen = ({ navigation }: any) => {
       setDeliveryRequestListener(null);
     };
   }, [token, fetchPendingRequests, showOrQueueRequest]);
-
-  // 🔌 Socket listener: auto-close modal when customer cancels their request
-  useEffect(() => {
-    const socket = (socketService as any).socket;
-    if (!socket) return;
-
-    const handleRequestCancelled = ({ matchId }: { matchId: string }) => {
-      console.log('Socket: request_cancelled received for matchId:', matchId);
-
-      // Remove from queue if it was waiting
-      requestQueueRef.current = requestQueueRef.current.filter(
-        (r) => r.matchId !== matchId
-      );
-
-      // If the modal is currently showing this exact request → close it
-      if (currentMatchIdRef.current === matchId) {
-        stopAlertSound();
-        currentMatchIdRef.current = null;
-        requestModalVisibleRef.current = false;
-        setRequestModalVisible(false);
-        setPendingRequestData(null);
-        Toast.show({
-          type: 'info',
-          text1: 'Request Withdrawn',
-          text2: 'The sender has cancelled this delivery request.',
-          visibilityTime: 4000,
-        });
-        // Show next queued request if any
-        setTimeout(() => showNextQueuedRequest(), 600);
-      }
-    };
-
-    socket.on('request_cancelled', handleRequestCancelled);
-
-    return () => {
-      socket.off('request_cancelled', handleRequestCancelled);
-    };
-  }, [stopAlertSound, showNextQueuedRequest]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {

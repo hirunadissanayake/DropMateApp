@@ -111,6 +111,13 @@ export const setDeliveryRequestListener = (callback: ((data: any) => void) | nul
 
 import { stopAlertSound } from '../services/soundService';
 import { useAnnouncementStore } from '../store/announcementStore';
+import { closeParcelRequest, isParcelRequestClosed } from './parcelRequestLifecycle';
+
+const handleRequestClosure = (data?: FirebaseMessagingTypes.RemoteMessage['data']) => {
+  if (data?.type !== 'MATCH_CANCELLED' && data?.type !== 'MATCH_EXPIRED') return;
+  if (typeof data.matchId === 'string') closeParcelRequest(data.matchId);
+  else stopAlertSound();
+};
 
 export const setupFcmListeners = () => {
   const messaging = getMessaging();
@@ -138,12 +145,11 @@ export const setupFcmListeners = () => {
     const notifType = remoteMessage.data?.type as string | undefined;
 
     // If a request was cancelled/expired → stop any active looping sound immediately
-    if (notifType === 'MATCH_CANCELLED' || notifType === 'MATCH_EXPIRED') {
-      stopAlertSound();
-    }
+    handleRequestClosure(remoteMessage.data);
 
     // If this is a delivery request → trigger the request alert modal
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
+      if (typeof remoteMessage.data?.matchId === 'string' && isParcelRequestClosed(remoteMessage.data.matchId)) return;
       if (onDeliveryRequestCallback) {
         onDeliveryRequestCallback({ ...remoteMessage.data, origin: 'foreground' });
       }
@@ -175,7 +181,10 @@ export const setupFcmListeners = () => {
     const isBroadcast = handleBroadcast(remoteMessage);
     const notifType = remoteMessage.data?.type as string | undefined;
 
+    handleRequestClosure(remoteMessage.data);
+
     if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
+      if (typeof remoteMessage.data?.matchId === 'string' && isParcelRequestClosed(remoteMessage.data.matchId)) return;
       if (onDeliveryRequestCallback) {
         onDeliveryRequestCallback({ ...remoteMessage.data, origin: 'background' });
       }
@@ -194,6 +203,8 @@ export const setupFcmListeners = () => {
 
         const isBroadcast = handleBroadcast(remoteMessage);
         const notifType = remoteMessage.data?.type as string | undefined;
+
+        handleRequestClosure(remoteMessage.data);
 
         if (notifType === 'DELIVERY_REQUEST' || notifType === 'match_request') {
           navigate('TravelerHome' as any);
